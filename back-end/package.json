@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.1",
     "morgan": "^1.10.1",
+    "nodemailer": "^7.0.9",
     "winston": "^3.18.3"
   },
   "devDependencies": {
@@ -33,6 +34,7 @@
     "@types/express": "^5.0.3",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.7.2",
+    "@types/nodemailer": "^6.4.20",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",

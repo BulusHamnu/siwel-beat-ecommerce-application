@@ -7,4 +7,4 @@ export const generateRandCode = (length: number = 6): number | string => {
   return code;
 };
 
-console.log(generateRandCode(6));
+// console.log(generateRandCode(6));
