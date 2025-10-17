@@ -1,18 +1,18 @@
 import type { Response, Request, NextFunction } from "express";
 import logger from "../../utils/logger.js";
-import type { UserBody } from "./userTypes.js";
+import type { createUserBody } from "./userTypes.js";
 import createNewUser from "../../services/createNewUser.js";
 import type { ApiResponse } from "../apiTypes.js";
 import sendEmail from "../../services/sendEmail.js";
 import Template from "../../utils/emailTemplate.js";
 
 const signUpController = async (
-  req: Request<{}, {}, UserBody, {}>,
+  req: Request<{}, {}, createUserBody, {}>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userData: UserBody = req.body;
+    const userData: createUserBody = req.body;
     const newUser = await createNewUser(userData);
     logger.info("User created successully!", { userId: newUser._id });
     // send verification email

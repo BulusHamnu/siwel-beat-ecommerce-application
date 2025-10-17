@@ -1,5 +1,5 @@
 import User from "../models/userShema.js";
-import type { UserBody } from "../controllers/auths/userTypes.js";
+import type { createUserBody } from "../controllers/auths/userTypes.js";
 import type { UserDocument } from "../models/userShema.js";
 import bcrypt from "bcrypt";
 import AppError from "../errors/appError.js";
@@ -15,7 +15,7 @@ const createNewUser = async ({
   provider,
   isVerified,
   role,
-}: UserBody): Promise<UserDocument> => {
+}: createUserBody): Promise<UserDocument> => {
   // check if user already exist
   const emailExist = await User.findOne({ email: email });
   if (emailExist) {

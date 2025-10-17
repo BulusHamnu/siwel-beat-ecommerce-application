@@ -21,7 +21,7 @@ export interface UserDocument extends Document {
   createdAt: Date;
   updatedAt: Date;
   // methods
-  comparePassword(): Promise<boolean>;
+  comparePassword(password: string): Promise<boolean>;
   removeUnwantedField(): UserDocument;
 }
 
@@ -76,7 +76,7 @@ const userSchema = new Schema<UserDocument>(
 userSchema.methods.comparePassword = async function (
   password: string
 ): Promise<boolean> {
-  return await bcrypt.compare(this.password, password);
+  return await bcrypt.compare(password, this.password);
 };
 
 // method to remove secret fields

@@ -1,5 +1,6 @@
+import type { cartInterface } from "../../models/profileSchema.js";
 // userbody types
-export interface UserBody {
+export interface createUserBody {
   firstName: string;
   lastName: string;
   username: string;
@@ -8,4 +9,23 @@ export interface UserBody {
   provider: string;
   role: string;
   isVerified: boolean;
+}
+
+export interface userProfile {
+  _id: string;
+  email: string;
+  isVerified: boolean;
+  firstName: string;
+  lastName: string;
+  gender: string;
+  bio: string;
+  carts: cartInterface[];
+  profilePic: string;
+  createdAt: Date;
+  updatedAt: Date;
+  notification: {
+    emailNotification: {
+      commentAndLikes: boolean;
+    };
+  };
 }

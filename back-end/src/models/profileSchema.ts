@@ -1,7 +1,7 @@
 import mongoose, { type Date } from "mongoose";
 import { Types, Document, Schema, Model, model } from "mongoose";
 
-interface cartInterface {
+export interface cartInterface {
   productId: Types.ObjectId;
   amount: number;
   quantity: number;

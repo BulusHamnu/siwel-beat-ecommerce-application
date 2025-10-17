@@ -6,12 +6,13 @@ import type {
 } from "express";
 import AppError from "../errors/appError.js";
 import logger from "../utils/logger.js";
+import type { ApiResponse } from "../controllers/apiTypes.js";
 
 // error middleware
 const errorHandler: ErrorRequestHandler = (
   err: AppError,
-  req: Request,
-  res: Response,
+  req: Request<{}, ApiResponse<void>, {}, {}>,
+  res: Response<ApiResponse<void>>,
   next: NextFunction
 ) => {
   logger.error("An error occur: ", err);

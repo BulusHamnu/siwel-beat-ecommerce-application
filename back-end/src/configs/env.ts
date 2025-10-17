@@ -3,13 +3,14 @@ configDotenv();
 
 // type definition
 interface Env {
-  MONGO_URI: string | "";
+  MONGO_URI: string;
   PORT: number | string;
   NODE_ENV: string | boolean;
   EMAIL_PASSWORD: string;
   EMAIL_USER: string;
   ADMIN_EMAIL: string;
   APP_NAME: string;
+  SECRET_KEY: string;
 }
 
 const env: Env = {
@@ -20,6 +21,7 @@ const env: Env = {
   EMAIL_PASSWORD: process.env.EMAIL_PASSWORD || "",
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || "",
   APP_NAME: process.env.APP_NAME || "Siwel Beatz App",
+  SECRET_KEY: process.env.SECRET_KEY || "",
 };
 
 export default env;
