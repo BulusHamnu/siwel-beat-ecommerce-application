@@ -1,4 +1,4 @@
-type template = (userName: string, code?: string | number) => string;
+type template = (userName: string, code?: string | number | null) => string;
 
 interface emailTemplate {
   emailVerificationTemplate: template;

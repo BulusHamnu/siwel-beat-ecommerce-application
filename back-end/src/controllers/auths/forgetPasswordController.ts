@@ -1,38 +1,19 @@
 import type { Response, Request, NextFunction } from "express";
-import User, { type UserDocument } from "../../models/userShema.js";
 import { generateRandCode } from "../../utils/helpers.js";
-import sendEmail from "../../services/sendEmail.js";
-import AppError from "../../errors/appError.js";
 generateRandCode;
-import Template from "../../utils/emailTemplate.js";
 import type { ApiResponse } from "../apiTypes.js";
+import forgetPassword from "../../services/forgetPassword.js";
+import logger from "../../utils/logger.js";
 
-const forgetPassword = async (
+const forgetPasswordController = async (
   req: Request<{}, { status: false; message: string }, { email: string }, {}>,
   res: Response<{ status: boolean; message: string }>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const userEmail: string = req.body.email;
-    const user: UserDocument | null = await User.findOne({ email: userEmail });
-    if (!user) throw new AppError("User does not exist.", 404, true);
-
-    // create password reset code
-    const resetCode: string | number | null = generateRandCode(6);
-
-    user.resetPasswordVerification.code = resetCode;
-    user.resetPasswordVerification.expiredAt = new Date(
-      Date.now() + 15 * 60 * 1000
-    );
-
-    await user.save();
-
-    // send email
-    await sendEmail(
-      user.email,
-      "Reset Password Code",
-      Template.resetPasswordTemplate(user.username, resetCode)
-    );
+    await forgetPassword(userEmail);
+    logger.info("Password reset code sent to:", { email: userEmail });
 
     const response: ApiResponse<void> = {
       status: false,
@@ -44,4 +25,4 @@ const forgetPassword = async (
   }
 };
 
-export default forgetPassword;
+export default forgetPasswordController;

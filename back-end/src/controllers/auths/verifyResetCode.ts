@@ -1,24 +1,15 @@
 import type { Response, Request, NextFunction } from "express";
-import User from "../../models/userShema.js";
-import type { UserDocument } from "../../models/userShema.js";
-import AppError from "../../errors/appError.js";
 import type { ApiResponse } from "../apiTypes.js";
+import verifyResetCode from "../../services/verifyResetCode.js";
 
-const verifyResetCode = async (
+const verifyResetCodeController = async (
   req: Request<{}, { status: boolean; message: string }, { code: string }, {}>,
   res: Response<{ status: boolean; message: string }>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const code: string = req.body.code;
-
-    const codeIsValid: UserDocument | null = await User.findOne({
-      "resetPasswordVerification.code": code,
-      "resetPasswordVerification.expiredAt": { $gt: new Date() },
-    });
-
-    if (!codeIsValid)
-      throw new AppError("Code is invalid or Code have expired.", 400, true);
+    await verifyResetCode(code);
 
     const response: ApiResponse<void> = {
       status: true,
@@ -30,4 +21,4 @@ const verifyResetCode = async (
   }
 };
 
-export default verifyResetCode;
+export default verifyResetCodeController;

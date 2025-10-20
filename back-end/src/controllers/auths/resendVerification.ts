@@ -1,37 +1,17 @@
 import type { Response, Request, NextFunction } from "express";
-import User, { type UserDocument } from "../../models/userShema.js";
 import type { ApiResponse } from "../apiTypes.js";
-import AppError from "../../errors/appError.js";
-import { generateRandCode } from "../../utils/helpers.js";
-import sendEmail from "../../services/sendEmail.js";
-import Template from "../../utils/emailTemplate.js";
+import resendVerificationEmail from "../../services/resendVerificationEmail.js";
+import logger from "../../utils/logger.js";
 
-const resendVeficationEmail = async (
+const resendVeficationEmailController = async (
   req: Request<{}, { status: boolean; message: string }, { email: string }, {}>,
   res: Response<{ status: boolean; message: string }>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const userEmail: string = req.body.email;
-    const user: UserDocument | null = await User.findOne({ email: userEmail });
-    if (!user) throw new AppError("User does not exist.", 404, true);
-    if (user.isVerified)
-      throw new AppError("User is already verified.", 400, true);
-
-    // create verification code
-    const verificationCode: string | number | null = generateRandCode(6);
-
-    user.emailVerification.code = verificationCode;
-    user.emailVerification.expiredAt = new Date(Date.now() + 15 * 60 * 1000);
-
-    await user.save();
-
-    // send email
-    await sendEmail(
-      user.email,
-      "Email Verification Code",
-      Template.emailVerificationTemplate(user.username, verificationCode)
-    );
+    await resendVerificationEmail(userEmail);
+    logger.info("Email verification code sent to: ", { email: userEmail });
 
     const response: ApiResponse<void> = {
       status: false,
@@ -43,4 +23,4 @@ const resendVeficationEmail = async (
   }
 };
 
-export default resendVeficationEmail;
+export default resendVeficationEmailController;
