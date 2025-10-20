@@ -15,7 +15,7 @@ const verifyEmailController = async (
     {},
     { status: boolean; message: string },
     { email: string; code: string },
-    { status: boolean; message: string }
+    {}
   >,
   res: Response<{}>,
   next: NextFunction

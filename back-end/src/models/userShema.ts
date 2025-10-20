@@ -11,9 +11,9 @@ export interface UserDocument extends Document {
   provider: string;
   role: string;
   isVerified: boolean;
-  resetPasswordVerification?: {
+  resetPasswordVerification: {
     code: string | null | number;
-    exprireAt: Date | null;
+    expiredAt: Date | null;
   };
   emailVerification: { code: string | null | number; expiredAt: Date | null };
   google: {
