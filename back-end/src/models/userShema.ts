@@ -1,4 +1,4 @@
-import mongoose, { type Date } from "mongoose";
+// import mongoose, { type Date } from "mongoose";
 import { Types, Document, Schema, Model, model } from "mongoose";
 import bcrypt from "bcrypt";
 
@@ -11,8 +11,11 @@ export interface UserDocument extends Document {
   provider: string;
   role: string;
   isVerified: boolean;
-  resetPasswordVerification?: { code: string; exprireAt: Date };
-  emailVerification: { code: string; expireAt: Date };
+  resetPasswordVerification?: {
+    code: string | null | number;
+    exprireAt: Date | null;
+  };
+  emailVerification: { code: string | null | number; expiredAt: Date | null };
   google: {
     googleId: string;
     openId: string;
@@ -62,11 +65,11 @@ const userSchema = new Schema<UserDocument>(
         type: String,
         default: "",
       },
-      expiredAt: { type: Date, default: "" },
+      expiredAt: { type: Date, default: null },
     },
     resetPasswordVerification: {
       code: { type: String, default: "" },
-      expiredAt: { type: Date, default: "" },
+      expiredAt: { type: Date, default: null },
       default: {},
     },
   },
