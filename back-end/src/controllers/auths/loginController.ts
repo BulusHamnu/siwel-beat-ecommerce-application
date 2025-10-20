@@ -51,7 +51,7 @@ const logInController = async (
       httpOnly: true,
     });
 
-    res.status(200).json({
+    const response: ApiResponse<userProfile> = {
       status: true,
       message: "Login successully!",
       data: {
@@ -59,7 +59,8 @@ const logInController = async (
         email: user.email,
         isVerified: user.isVerified,
       },
-    });
+    };
+    res.status(200).json(response);
   } catch (error) {
     next(error);
   }
