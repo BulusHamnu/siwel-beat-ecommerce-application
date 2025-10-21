@@ -20,7 +20,7 @@ export interface ProfileDocument extends Document {
   updatedAt: Date;
   notification: {
     emailNotification: {
-      commentAndLIkes: boolean;
+      commentAndLikes: boolean;
     };
   };
 }
@@ -70,7 +70,7 @@ const profileSchema = new Schema<ProfileDocument>(
     },
     notification: {
       emailNotification: {
-        commentAndLIkes: {
+        commentAndLikes: {
           type: Boolean,
           default: false,
         },

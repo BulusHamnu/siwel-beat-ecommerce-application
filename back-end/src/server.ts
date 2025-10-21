@@ -10,6 +10,7 @@ import AppError from "./errors/appError.js";
 // import type { customAppError } from "./errors/appError.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import authRoutes from "./routes/auths/authRoutes.js";
+import profileRoutes from "./routes/profileRoute.js";
 
 // initiate server
 const app: Express = express();
@@ -42,6 +43,7 @@ app.get(
   }
 );
 app.use("/api", authRoutes);
+app.use("/api", profileRoutes);
 
 // error handler
 app.use(errorHandler);
