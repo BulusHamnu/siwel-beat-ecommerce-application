@@ -6,6 +6,7 @@ import resendVeficationEmail from "../../controllers/auths/resendVerification.js
 import forgetPassword from "../../controllers/auths/forgetPasswordController.js";
 import verifyResetCode from "../../controllers/auths/verifyResetCode.js";
 import resetpasswordController from "../../controllers/auths/resetPassword.js";
+import logoutController from "../../controllers/auths/logoutController.js";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.post("/auth/resend-verification-email", resendVeficationEmail);
 router.post("/auth/forget-password", forgetPassword);
 router.post("/auth/verify-reset-code", verifyResetCode);
 router.post("/auth/reset-password", resetpasswordController);
+router.post("/auth/log-out", logoutController);
 
 export default router;
