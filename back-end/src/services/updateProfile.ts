@@ -5,7 +5,7 @@ import type { userProfile } from "../controllers/auths/userTypes.js";
 import AppError from "../errors/appError.js";
 
 const updateProfile = async (
-  email: string | undefined,
+  id: string | undefined,
   updates: updates
 ): Promise<userProfile> => {
   const allowFields = [
@@ -30,7 +30,7 @@ const updateProfile = async (
     }
   }
 
-  const user: UserDocument | null = await User.findOne({ email });
+  const user: UserDocument | null = await User.findOne({ _id: id });
   if (!user) throw new AppError("User does not exist.", 404, true);
 
   const profile: ProfileDocument | null = await Profile.findOneAndUpdate(

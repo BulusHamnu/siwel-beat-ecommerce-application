@@ -15,7 +15,7 @@ import profileRoutes from "./routes/profileRoute.js";
 // initiate server
 const app: Express = express();
 app.use(express.json());
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "*", credentials: true }));
 app.use(
   morgan("dev", {
     stream: {

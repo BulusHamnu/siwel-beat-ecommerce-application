@@ -15,10 +15,10 @@ const updateProfileController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userEmail: string | undefined = req.body.email;
+    const userId: string | undefined = req.user?.id;
     const updates: updates = req.body;
 
-    const profile: userProfile = await updateProfile(userEmail, updates);
+    const profile: userProfile = await updateProfile(userId, updates);
 
     const response: ApiResponse<userProfile> = {
       status: true,

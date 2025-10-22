@@ -14,8 +14,8 @@ const getProfileController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userEmail = req.body.email;
-    const profile: userProfile = await getProfile(userEmail);
+    const userId: string | undefined = req.user?.id;
+    const profile: userProfile = await getProfile(userId || "");
 
     const response: ApiResponse<userProfile> = {
       status: true,

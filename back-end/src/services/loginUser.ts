@@ -34,6 +34,7 @@ const loginUser = async (
       id: user._id,
       email: user.email,
       isVerified: user.isVerified,
+      role: user.role,
     },
     env.SECRET_KEY,
     { expiresIn: "7d" }
