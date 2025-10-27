@@ -8,6 +8,10 @@ import verifyResetCode from "../../controllers/auths/verifyResetCode.js";
 import resetpasswordController from "../../controllers/auths/resetPassword.js";
 import logoutController from "../../controllers/auths/logoutController.js";
 import withAuth from "../../middlewares/withAuth.js";
+import {
+  googleSignupController,
+  googleSignupFallback,
+} from "../../controllers/auths/googleSignup.js";
 
 const router = Router();
 
@@ -19,5 +23,9 @@ router.post("/auth/forget-password", forgetPassword);
 router.post("/auth/verify-reset-code", verifyResetCode);
 router.post("/auth/reset-password", resetpasswordController);
 router.post("/auth/log-out", withAuth, logoutController);
+
+// google auth endpoint
+router.get("/auth/google/register", googleSignupController);
+router.get("/auth/google/register-fallback", googleSignupFallback);
 
 export default router;
