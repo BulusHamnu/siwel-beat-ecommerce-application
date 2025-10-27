@@ -9,6 +9,7 @@ import retriveGoogleUserPayload, {
 import logger from "../../utils/logger.js";
 import User, { type UserDocument } from "../../models/userShema.js";
 import createNewUser from "../../services/createNewUser.js";
+import jwt from "jsonwebtoken";
 
 // google signup controller: request auth link
 const googleSignupController = async (
@@ -79,6 +80,25 @@ const googleSignupFallback = async (
 
     const newUser = await createNewUser(payload);
     logger.info("User created successully.", { userId: newUser._id });
+
+    // sign token
+    const token: string = jwt.sign(
+      {
+        id: newUser._id,
+        email: newUser.email,
+        isVerified: newUser.isVerified,
+        role: newUser.role,
+      },
+      env.SECRET_KEY,
+      { expiresIn: "7d" }
+    );
+
+    res.cookie("token", token, {
+      secure: env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "strict",
+      httpOnly: true,
+    });
 
     res.status(301).redirect(`${env.FRONTEND_URL}`);
   } catch (error) {
