@@ -14,7 +14,9 @@ interface Env {
   CLIENT_ID: string;
   CLIENT_SECRET: string;
   BACKEND_URL: string;
-  FRONTEND_URL : string
+  FRONTEND_URL: string;
+  FRONTEND_LOGIN_URL: string;
+  FRONTEND_SIGNUP_URL: string;
 }
 
 const env: Env = {
@@ -29,7 +31,9 @@ const env: Env = {
   CLIENT_SECRET: process.env.CLIENT_SECRET || "",
   CLIENT_ID: process.env.CLIENT_ID || "",
   BACKEND_URL: process.env.BACKEND_URL || "http://localhost:8080",
-  FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000"
+  FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
+  FRONTEND_LOGIN_URL: process.env.FRONTEND_LOGIN_URL || "",
+  FRONTEND_SIGNUP_URL: process.env.FRONTEND_SIGNUP_URL || "",
 };
 
 export default env;

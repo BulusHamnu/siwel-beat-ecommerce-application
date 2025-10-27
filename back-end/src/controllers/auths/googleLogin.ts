@@ -17,7 +17,7 @@ const googleLoginFallback = async (
     if (!code)
       return res
         .status(301)
-        .redirect(`${env.FRONTEND_URL}/auth/register?error=cancelled`);
+        .redirect(`${env.FRONTEND_SIGNUP_URL}?error=cancelled`);
 
     const payload: userPayloadInterface = await retriveGoogleUserPayload(code);
 
@@ -28,12 +28,12 @@ const googleLoginFallback = async (
     if (!user) {
       return res
         .status(301)
-        .redirect(`${env.FRONTEND_URL}/auth/register?error=not_found`);
+        .redirect(`${env.FRONTEND_SIGNUP_URL}?error=not_found`);
     }
     if (user && user.provider !== "google") {
       return res
         .status(301)
-        .redirect(`${env.FRONTEND_URL}/auth/register?error=not_linked`);
+        .redirect(`${env.FRONTEND_SIGNUP_URL}?error=not_linked`);
     }
 
     // sign token

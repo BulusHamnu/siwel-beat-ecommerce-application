@@ -20,7 +20,7 @@ const googleSignupFallback = async (
     if (!code)
       return res
         .status(301)
-        .redirect(`${env.FRONTEND_URL}/auth/register?error=cancelled`);
+        .redirect(`${env.FRONTEND_SIGNUP_URL}?error=cancelled`);
     const payload: userPayloadInterface = await retriveGoogleUserPayload(code);
 
     // check if user already exist else create new user
@@ -30,7 +30,7 @@ const googleSignupFallback = async (
     if (user) {
       return res
         .status(301)
-        .redirect(`${env.FRONTEND_URL}/auth/login?error=user_exist`);
+        .redirect(`${env.FRONTEND_LOGIN_URL}?error=user_exist`);
     }
 
     const newUser = await createNewUser(payload);
