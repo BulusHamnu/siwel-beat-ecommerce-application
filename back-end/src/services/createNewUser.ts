@@ -15,6 +15,10 @@ const createNewUser = async ({
   provider,
   isVerified,
   role,
+  picture,
+  accessToken,
+  idToken,
+  googleId,
 }: createUserBody): Promise<UserDocument> => {
   // check if user already exist
   const emailExist = await User.findOne({ email: email });
@@ -31,13 +35,18 @@ const createNewUser = async ({
   };
 
   const user = await User.create({
-    emailVerification,
+    emailVerification: isVerified == true ? {} : emailVerification,
     username,
     email,
     provider,
     role,
     isVerified,
     password: hashPassword,
+    google: {
+      googleId,
+      idToken,
+      accessToken,
+    },
   });
 
   // create user profile
@@ -45,6 +54,7 @@ const createNewUser = async ({
     userId: user._id,
     firstName,
     lastName,
+    profilePic: picture,
   });
 
   return user;

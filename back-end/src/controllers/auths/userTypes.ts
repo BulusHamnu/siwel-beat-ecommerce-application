@@ -1,4 +1,5 @@
 import type { cartInterface } from "../../models/profileSchema.js";
+
 // userbody types
 export interface createUserBody {
   firstName: string;
@@ -9,6 +10,10 @@ export interface createUserBody {
   provider: string;
   role: string;
   isVerified: boolean;
+  googleId: string;
+  idToken: string;
+  accessToken: string;
+  picture: string;
 }
 
 export interface userProfile {
