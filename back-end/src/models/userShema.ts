@@ -18,8 +18,8 @@ export interface UserDocument extends Document {
   emailVerification: { code: string | null | number; expiredAt: Date | null };
   google: {
     googleId: string;
-    openId: string;
-    refreshToken: string;
+    idToken: string;
+    accessToken: string;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -72,6 +72,11 @@ const userSchema = new Schema<UserDocument>(
       expiredAt: { type: Date, default: null },
       default: {},
     },
+    google: {
+      googleId: String,
+      idToken: String,
+      accessToken: String,
+    },
   },
   { timestamps: true }
 );
@@ -88,6 +93,7 @@ userSchema.methods.removeUnwantedField = function (): UserDocument {
   delete obj.resetPasswordVerification;
   delete obj.emailVerification;
   delete obj.password;
+  delete obj.google;
   return obj;
 };
 
