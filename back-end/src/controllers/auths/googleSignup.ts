@@ -1,8 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import AppError from "../../errors/appError.js";
-import { URLSearchParams } from "url";
 import env from "../../configs/env.js";
-import type { ApiResponse } from "../apiTypes.js";
 import retriveGoogleUserPayload, {
   type userPayloadInterface,
 } from "../../services/retriveGoogleIdToken.js";
@@ -10,51 +8,6 @@ import logger from "../../utils/logger.js";
 import User, { type UserDocument } from "../../models/userShema.js";
 import createNewUser from "../../services/createNewUser.js";
 import jwt from "jsonwebtoken";
-
-// google signup controller: request auth link
-const googleSignupController = async (
-  req: Request<
-    {},
-    {
-      status: boolean;
-      message: string;
-      data?: { url: string };
-    },
-    {},
-    {}
-  >,
-  res: Response<{
-    status: boolean;
-    message: string;
-    data?: { url: string };
-  }>,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const googleOauthUrl = "https://accounts.google.com/o/oauth2/v2/auth?";
-
-    const params = new URLSearchParams({
-      client_id: env.CLIENT_ID,
-      redirect_uri: `${env.BACKEND_URL}/api/auth/google/register-fallback`,
-      response_type: "code",
-      scope: "openid profile email",
-      prompt: "consent",
-    });
-
-    const url = googleOauthUrl + params;
-    const response: ApiResponse<{ url: string }> = {
-      status: true,
-      message: "Google oauth2 url retrived successfully.",
-      data: {
-        url,
-      },
-    };
-
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
 
 // google signup fallback controller
 const googleSignupFallback = async (
@@ -113,4 +66,4 @@ const googleSignupFallback = async (
   }
 };
 
-export { googleSignupController, googleSignupFallback };
+export default googleSignupFallback;

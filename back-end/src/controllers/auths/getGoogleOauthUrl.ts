@@ -1,0 +1,55 @@
+import type { Response, Request, NextFunction } from "express";
+import env from "../../configs/env.js";
+import type { ApiResponse } from "../apiTypes.js";
+
+const getGoogleOauthUrlController = async (
+  req: Request<
+    {},
+    {
+      status: boolean;
+      message: string;
+      data?: { url: string };
+    },
+    {},
+    {}
+  >,
+  res: Response<{
+    status: boolean;
+    message: string;
+    data?: { url: string };
+  }>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const googleOauthUrl = "https://accounts.google.com/o/oauth2/v2/auth?";
+    const path = req.path;
+    const redirect_uri = `${env.BACKEND_URL}${
+      path === "/auth/google/register"
+        ? "/api/auth/google/register-fallback"
+        : "/api/auth/google/login-fallback"
+    } `;
+
+    const params = new URLSearchParams({
+      client_id: env.CLIENT_ID,
+      redirect_uri,
+      response_type: "code",
+      scope: "openid profile email",
+      prompt: "consent",
+    });
+
+    const url = googleOauthUrl + params;
+    const response: ApiResponse<{ url: string }> = {
+      status: true,
+      message: "Google oauth2 url retrived successfully.",
+      data: {
+        url,
+      },
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export default getGoogleOauthUrlController;
