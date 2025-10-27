@@ -10,6 +10,7 @@ import logoutController from "../../controllers/auths/logoutController.js";
 import withAuth from "../../middlewares/withAuth.js";
 import googleSignupFallback from "../../controllers/auths/googleSignup.js";
 import getGoogleOauthUrlController from "../../controllers/auths/getGoogleOauthUrl.js";
+import googleLoginFallback from "../../controllers/auths/googleLogin.js";
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.post("/auth/log-out", withAuth, logoutController);
 router.get("/auth/google/register", getGoogleOauthUrlController);
 router.get("/auth/google/register-fallback", googleSignupFallback);
 router.get("/auth/google/login", getGoogleOauthUrlController);
+router.get("/auth/google/login-fallback", googleLoginFallback);
 
 export default router;
