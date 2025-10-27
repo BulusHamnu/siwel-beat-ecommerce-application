@@ -18,12 +18,7 @@ const logInController = async (
     const { password, email } = req.body;
     const result = await loginUser(password, email);
 
-    res.cookie("token", result.token, {
-      secure: env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "strict",
-      httpOnly: true,
-    });
+    res.cookie("token", result.token, env.LOGIN_COOKIE_OPTS);
 
     const response: ApiResponse<userProfile> = {
       status: true,

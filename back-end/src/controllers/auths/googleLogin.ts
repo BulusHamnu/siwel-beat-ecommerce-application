@@ -48,12 +48,7 @@ const googleLoginFallback = async (
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", token, {
-      secure: env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "strict",
-      httpOnly: true,
-    });
+    res.cookie("token", token, env.LOGIN_COOKIE_OPTS);
 
     res.status(301).redirect(`${env.FRONTEND_URL}`);
   } catch (error) {

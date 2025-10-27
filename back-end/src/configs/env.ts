@@ -1,6 +1,13 @@
 import { configDotenv } from "dotenv";
 configDotenv();
 
+interface loginCookieOpts {
+  secure: boolean;
+  maxAge: number;
+  sameSite: boolean | "lax" | "strict" | "none" | undefined;
+  httpOnly: true;
+}
+
 // type definition
 interface Env {
   MONGO_URI: string;
@@ -17,6 +24,7 @@ interface Env {
   FRONTEND_URL: string;
   FRONTEND_LOGIN_URL: string;
   FRONTEND_SIGNUP_URL: string;
+  LOGIN_COOKIE_OPTS: loginCookieOpts;
 }
 
 const env: Env = {
@@ -34,6 +42,12 @@ const env: Env = {
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
   FRONTEND_LOGIN_URL: process.env.FRONTEND_LOGIN_URL || "",
   FRONTEND_SIGNUP_URL: process.env.FRONTEND_SIGNUP_URL || "",
+  LOGIN_COOKIE_OPTS: {
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    sameSite: "strict",
+    httpOnly: true,
+  },
 };
 
 export default env;
