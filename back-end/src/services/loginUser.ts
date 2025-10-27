@@ -20,8 +20,13 @@ const loginUser = async (
 
   // compare password
   const passwordCorrect: boolean = await user.comparePassword(password);
-  console.log(passwordCorrect);
 
+  if (!passwordCorrect && user.provider !== "local")
+    throw new AppError(
+      "Incorrect Password, reset your password or sign in with google.",
+      400,
+      true
+    );
   if (!passwordCorrect) throw new AppError("Incorrect Password!", 400, true);
 
   const profile: ProfileDocument | null = await Profile.findOne({

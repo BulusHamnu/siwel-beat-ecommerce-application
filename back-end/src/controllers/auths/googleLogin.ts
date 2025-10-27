@@ -6,6 +6,7 @@ import retriveGoogleUserPayload, {
 import type { UserDocument } from "../../models/userShema.js";
 import User from "../../models/userShema.js";
 import jwt from "jsonwebtoken";
+import logger from "../../utils/logger.js";
 
 const googleLoginFallback = async (
   req: Request<{}, {}, {}, { code: string }>,
@@ -14,10 +15,12 @@ const googleLoginFallback = async (
 ): Promise<void> => {
   try {
     const code = req.query.code;
-    if (!code)
+    if (!code) {
+      logger.info("Google oauth consent is cancelled, code does not exist.");
       return res
         .status(301)
         .redirect(`${env.FRONTEND_SIGNUP_URL}?error=cancelled`);
+    }
 
     const payload: userPayloadInterface = await retriveGoogleUserPayload(code);
 

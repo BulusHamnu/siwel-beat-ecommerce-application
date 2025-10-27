@@ -17,10 +17,13 @@ const googleSignupFallback = async (
 ): Promise<void> => {
   try {
     const code = req.query.code;
-    if (!code)
+    if (!code) {
+      logger.info("Google oauth consent is cancelled, code does not exist.");
       return res
         .status(301)
         .redirect(`${env.FRONTEND_SIGNUP_URL}?error=cancelled`);
+    }
+
     const payload: userPayloadInterface = await retriveGoogleUserPayload(code);
 
     // check if user already exist else create new user

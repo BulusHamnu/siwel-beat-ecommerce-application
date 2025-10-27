@@ -1,6 +1,7 @@
 import type { Response, Request, NextFunction } from "express";
 import env from "../../configs/env.js";
 import type { ApiResponse } from "../apiTypes.js";
+import logger from "../../utils/logger.js";
 
 const getGoogleOauthUrlController = async (
   req: Request<
@@ -45,6 +46,7 @@ const getGoogleOauthUrlController = async (
         url,
       },
     };
+    logger.info(`Google Oauth prompt url requested for: ${path.split("/")[3]}`);
 
     res.status(200).json(response);
   } catch (error) {
