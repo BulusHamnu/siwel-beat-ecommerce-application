@@ -24,7 +24,7 @@ const googleSignupFallback = async (
         .redirect(`${env.FRONTEND_SIGNUP_URL}?error=cancelled`);
     }
 
-    const payload: userPayloadInterface = await retriveGoogleUserPayload(code);
+    const payload: userPayloadInterface = await retriveGoogleUserPayload(code, "register");
 
     // check if user already exist else create new user
     const user: UserDocument | null = await User.findOne({
@@ -62,7 +62,7 @@ const googleSignupFallback = async (
     );
     res
       .status(301)
-      .redirect(`${env.FRONTEND_URL}/auth/login?error=unexpected_error`);
+      .redirect(`${env.FRONTEND_SIGNUP_URL}?error=unexpected_error`);
   }
 };
 

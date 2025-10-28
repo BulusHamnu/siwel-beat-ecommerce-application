@@ -7,6 +7,7 @@ import type { UserDocument } from "../../models/userShema.js";
 import User from "../../models/userShema.js";
 import jwt from "jsonwebtoken";
 import logger from "../../utils/logger.js";
+import AppError from "../../errors/appError.js";
 
 const googleLoginFallback = async (
   req: Request<{}, {}, {}, { code: string }>,
@@ -22,7 +23,10 @@ const googleLoginFallback = async (
         .redirect(`${env.FRONTEND_SIGNUP_URL}?error=cancelled`);
     }
 
-    const payload: userPayloadInterface = await retriveGoogleUserPayload(code);
+    const payload: userPayloadInterface = await retriveGoogleUserPayload(
+      code,
+      "login"
+    );
 
     // check if user exist
     const user: UserDocument | null = await User.findOne({
@@ -55,7 +59,14 @@ const googleLoginFallback = async (
 
     res.status(301).redirect(`${env.FRONTEND_URL}`);
   } catch (error) {
-    next(error);
+    if (error instanceof AppError) return next(error);
+    logger.error(
+      "An error occur while user is signing in using google oauth2.",
+      error
+    );
+    res
+      .status(301)
+      .redirect(`${env.FRONTEND_LOGIN_URL}?error=unexpected_error`);
   }
 };
 

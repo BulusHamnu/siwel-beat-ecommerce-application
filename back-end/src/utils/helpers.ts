@@ -1,3 +1,5 @@
+import env from "../configs/env.js";
+
 // generate code func
 export const generateRandCode = (length: number = 6): number | string => {
   let code: number | string = "";
@@ -8,3 +10,12 @@ export const generateRandCode = (length: number = 6): number | string => {
 };
 
 // console.log(generateRandCode(6));
+
+export const setRedirect = (route: string = "register"): string => {
+  const loginRedirectUri = `${env.BACKEND_URL}/api/auth/google/login-fallback`;
+  const registerRedirectUri = `${env.BACKEND_URL}/api/auth/google/register-fallback`;
+
+  const r = route === "register" ? registerRedirectUri : loginRedirectUri;
+
+  return r;
+};

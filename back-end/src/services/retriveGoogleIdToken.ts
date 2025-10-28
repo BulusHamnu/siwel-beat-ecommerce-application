@@ -5,7 +5,7 @@ import env from "../configs/env.js";
 import { OAuth2Client } from "google-auth-library";
 ("google-auth-library");
 const oauth = new OAuth2Client(env.CLIENT_ID);
-import { generateRandCode } from "../utils/helpers.js";
+import { generateRandCode, setRedirect } from "../utils/helpers.js";
 import logger from "../utils/logger.js";
 
 export interface userPayloadInterface {
@@ -24,8 +24,11 @@ export interface userPayloadInterface {
 }
 
 const retriveGoogleUserPayload = async (
-  code: string
+  code: string,
+  route: string
 ): Promise<userPayloadInterface> => {
+  const redirectUri = setRedirect(route);
+
   const response = await axios.post(
     googleCallbackUrl,
     qs.stringify({
@@ -33,7 +36,7 @@ const retriveGoogleUserPayload = async (
       client_id: env.CLIENT_ID,
       client_secret: env.CLIENT_SECRET,
       grant_type: "authorization_code",
-      redirect_uri: `${env.BACKEND_URL}/api/auth/google/register-fallback`,
+      redirect_uri: redirectUri,
     }),
     {
       headers: {

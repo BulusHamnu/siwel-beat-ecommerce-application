@@ -2,6 +2,7 @@ import type { Response, Request, NextFunction } from "express";
 import env from "../../configs/env.js";
 import type { ApiResponse } from "../apiTypes.js";
 import logger from "../../utils/logger.js";
+import { setRedirect } from "../../utils/helpers.js"
 
 const getGoogleOauthUrlController = async (
   req: Request<
@@ -24,21 +25,18 @@ const getGoogleOauthUrlController = async (
   try {
     const googleOauthUrl = "https://accounts.google.com/o/oauth2/v2/auth?";
     const path = req.path;
-    const redirect_uri = `${env.BACKEND_URL}${
-      path === "/auth/google/register"
-        ? "/api/auth/google/register-fallback"
-        : "/api/auth/google/login-fallback"
-    } `;
+
+    const redirectUri = setRedirect(path.split("/")[3])
 
     const params = new URLSearchParams({
       client_id: env.CLIENT_ID,
-      redirect_uri,
+      redirect_uri: redirectUri,
       response_type: "code",
       scope: "openid profile email",
       prompt: "consent",
     });
 
-    const url = googleOauthUrl + params;
+    const url = googleOauthUrl + params.toString();
     const response: ApiResponse<{ url: string }> = {
       status: true,
       message: "Google oauth2 url retrived successfully.",
