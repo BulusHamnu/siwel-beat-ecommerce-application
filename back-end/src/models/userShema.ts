@@ -1,101 +1,32 @@
 // import mongoose, { type Date } from "mongoose";
-import { Types, Document, Schema, Model, model } from "mongoose";
-import bcrypt from "bcrypt";
+import { Schema, model } from "mongoose";
+import baseSchema, { type baseSchemaInterface } from "./common/baseSchema.js";
+import { removeUnwantedField, comparePassword } from "../utils/helpers.js";
 
 // user schema types
-export interface UserDocument extends Document {
-  username: string;
-  email: string;
-  password: string;
+export interface UserDocument extends baseSchemaInterface {
   stripeId: string;
-  provider: string;
-  role: string;
-  isVerified: boolean;
-  resetPasswordVerification: {
-    code: string | null | number;
-    expiredAt: Date | null;
-  };
-  emailVerification: { code: string | null | number; expiredAt: Date | null };
-  google: {
-    googleId: string;
-    idToken: string;
-    accessToken: string;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-  // methods
-  comparePassword(password: string): Promise<boolean>;
-  removeUnwantedField(): UserDocument;
 }
 
 // user schema
 const userSchema = new Schema<UserDocument>(
   {
-    username: {
-      type: String,
-      required: true,
-      min: 5,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
     stripeId: {
       type: String,
       default: "",
     },
-    provider: {
-      type: String,
-      default: "local",
-    },
-    role: {
-      type: String,
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    emailVerification: {
-      code: {
-        type: String,
-        default: "",
-      },
-      expiredAt: { type: Date, default: null },
-    },
-    resetPasswordVerification: {
-      code: { type: String, default: "" },
-      expiredAt: { type: Date, default: null },
-      default: {},
-    },
-    google: {
-      googleId: String,
-      idToken: String,
-      accessToken: String,
-    },
   },
   { timestamps: true }
 );
+
+// add base schema
+userSchema.add(baseSchema.obj as any);
+
 // method to compare password
-userSchema.methods.comparePassword = async function (
-  password: string
-): Promise<boolean> {
-  return await bcrypt.compare(password, this.password);
-};
+userSchema.methods.comparePassword = comparePassword;
 
 // method to remove secret fields
-userSchema.methods.removeUnwantedField = function (): UserDocument {
-  const obj = this.toObject();
-  delete obj.resetPasswordVerification;
-  delete obj.emailVerification;
-  delete obj.password;
-  delete obj.google;
-  return obj;
-};
+userSchema.methods.removeUnwantedField = removeUnwantedField;
 
 // user model
 const userModel = model<UserDocument>("User", userSchema);

@@ -1,4 +1,5 @@
 import env from "../configs/env.js";
+import bcrypt from "bcrypt";
 
 // generate code func
 export const generateRandCode = (length: number = 6): number | string => {
@@ -9,8 +10,6 @@ export const generateRandCode = (length: number = 6): number | string => {
   return code;
 };
 
-// console.log(generateRandCode(6));
-
 export const setRedirect = (route: string = "register"): string => {
   const loginRedirectUri = `${env.BACKEND_URL}/api/auth/google/login-fallback`;
   const registerRedirectUri = `${env.BACKEND_URL}/api/auth/google/register-fallback`;
@@ -19,3 +18,22 @@ export const setRedirect = (route: string = "register"): string => {
 
   return r;
 };
+
+// mongoose model functions
+export function removeUnwantedField<T extends Document & { toObject(): any }>(
+  this: T
+): T {
+  const obj = this.toObject();
+  delete obj.resetPasswordVerification;
+  delete obj.emailVerification;
+  delete obj.password;
+  delete obj.google;
+  return obj;
+}
+export async function comparePassword(
+  this: Document & { toObject(): any },
+  password: string
+): Promise<boolean> {
+  const obj = this.toObject();
+  return await bcrypt.compare(password, obj.password);
+}
