@@ -26,7 +26,7 @@ const signUpController = async (
     );
 
     const response: ApiResponse<void> = {
-      status: false,
+      status: true,
       message: "User created successfully, you can now log in.",
     };
 

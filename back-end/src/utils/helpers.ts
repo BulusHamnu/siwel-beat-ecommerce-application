@@ -37,3 +37,24 @@ export async function comparePassword(
   const obj = this.toObject();
   return await bcrypt.compare(password, obj.password);
 }
+
+interface hashpasswordAndEmailVerificationInterface {
+  hashPassword: string;
+  emailVerification: { code: string | number; expiredAt: Date };
+}
+
+// function to hash password and create email verification after sign up
+export const createHashpasswordAndEmailVerification = async (
+  password: string,
+  codeExpirationTime: number
+): Promise<hashpasswordAndEmailVerificationInterface> => {
+  const hashPassword: string = await bcrypt.hash(password, 10);
+  const verificationCode: number | string = generateRandCode(6);
+
+  const emailVerification = {
+    code: verificationCode,
+    expiredAt: new Date(Date.now() + codeExpirationTime * 60 * 1000),
+  };
+
+  return { hashPassword, emailVerification };
+};

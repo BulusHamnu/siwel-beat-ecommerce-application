@@ -3,7 +3,7 @@ import baseSchema, { type baseSchemaInterface } from "./common/baseSchema.js";
 import { removeUnwantedField, comparePassword } from "../utils/helpers.js";
 
 // admin schema
-interface AdminDocument extends Document, baseSchemaInterface {}
+export interface AdminDocument extends Document, baseSchemaInterface {}
 
 const adminSchema = new Schema<AdminDocument>({}, { timestamps: true });
 
@@ -17,5 +17,5 @@ adminSchema.methods.comparePassword = comparePassword;
 adminSchema.methods.removeUnwantedField = removeUnwantedField;
 
 // user model
-const adminModel = model<AdminDocument>("User", adminSchema);
+const adminModel = model<AdminDocument>("Admin", adminSchema);
 export default adminModel;

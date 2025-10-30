@@ -1,9 +1,8 @@
 import User from "../models/userShema.js";
 import type { createUserBody } from "../controllers/auths/userTypes.js";
 import type { UserDocument } from "../models/userShema.js";
-import bcrypt from "bcrypt";
 import AppError from "../errors/appError.js";
-import { generateRandCode } from "../utils/helpers.js";
+import { createHashpasswordAndEmailVerification } from "../utils/helpers.js";
 import Profile, { type ProfileDocument } from "../models/profileSchema.js";
 
 const createNewUser = async ({
@@ -23,16 +22,12 @@ const createNewUser = async ({
   // check if user already exist
   const emailExist = await User.findOne({ email: email });
   if (emailExist) {
-    throw new AppError("User already exist!", 409, true);
+    throw new AppError("User already exist!", 209, true);
   }
-  // hash user password
-  const hashPassword: string = await bcrypt.hash(password, 10);
-  const verificationCode: number | string = generateRandCode(6);
 
-  const emailVerification = {
-    code: verificationCode,
-    expiredAt: new Date(Date.now() + 15 * 60 * 1000),
-  };
+  // hash user password
+  const { hashPassword, emailVerification } =
+    await createHashpasswordAndEmailVerification(password, 15);
 
   const user = await User.create({
     emailVerification: isVerified == true ? {} : emailVerification,
