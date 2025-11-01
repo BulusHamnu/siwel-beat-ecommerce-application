@@ -37,6 +37,19 @@ export interface TrackInterface extends Document {
   relatedTrack: string[];
 }
 
+export interface createTrackBody {
+  title: string;
+  description: string;
+  type: BeatType;
+  key: string;
+  bpm: number;
+  tags: string[];
+  price: number;
+  genre: string;
+}
+
+
+
 const trackSchema = new mongoose.Schema<TrackInterface>(
   {
     title: {

@@ -12,6 +12,7 @@ import errorHandler from "./middlewares/errorHandler.js";
 import authRoutes from "./routes/auths/authRoutes.js";
 import profileRoutes from "./routes/profileRoute.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import trackRoutes from "./routes/trackRoutes.js";
 
 // initiate server
 const app: Express = express();
@@ -46,6 +47,7 @@ app.get(
 app.use("/api", authRoutes);
 app.use("/api", profileRoutes);
 app.use("/api", adminRoutes);
+app.use("/api", trackRoutes);
 
 // error handler
 app.use(errorHandler);
