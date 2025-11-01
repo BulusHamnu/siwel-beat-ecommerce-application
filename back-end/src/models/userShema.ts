@@ -1,26 +1,81 @@
 // import mongoose, { type Date } from "mongoose";
-import { Schema, model } from "mongoose";
-import baseSchema, { type baseSchemaInterface } from "./common/baseSchema.js";
+import { Schema, model, Document } from "mongoose";
 import { removeUnwantedField, comparePassword } from "../utils/helpers.js";
 
 // user schema types
-export interface UserDocument extends baseSchemaInterface {
-  stripeId: string;
+export interface UserDocument extends Document {
+  username: string;
+  email: string;
+  password: string;
+  provider: string;
+  role: string;
+  isVerified: boolean;
+  resetPasswordVerification: {
+    code: string | null | number;
+    expiredAt: Date | null;
+  };
+  emailVerification: { code: string | null | number; expiredAt: Date | null };
+  google: {
+    googleId: string;
+    idToken: string;
+    accessToken: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+
+  // methods
+  comparePassword(password: string): Promise<boolean>;
+  removeUnwantedField<T>(): T;
 }
 
 // user schema
 const userSchema = new Schema<UserDocument>(
   {
-    stripeId: {
+    username: {
       type: String,
-      default: "",
+      required: true,
+      min: 5,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    provider: {
+      type: String,
+      default: "local",
+    },
+    role: {
+      type: String,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerification: {
+      code: {
+        type: String,
+        default: "",
+      },
+      expiredAt: { type: Date, default: null },
+    },
+    resetPasswordVerification: {
+      code: { type: String, default: "" },
+      expiredAt: { type: Date, default: null },
+      default: {},
+    },
+    google: {
+      googleId: String,
+      idToken: String,
+      accessToken: String,
     },
   },
   { timestamps: true }
 );
-
-// add base schema
-userSchema.add(baseSchema.obj as any);
 
 // method to compare password
 userSchema.methods.comparePassword = comparePassword;

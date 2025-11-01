@@ -11,9 +11,9 @@ const createNewUser = async ({
   lastName,
   email,
   password,
-  provider,
+  provider = "local",
   isVerified,
-  role,
+  role = "user",
   picture,
   accessToken,
   idToken,
@@ -44,13 +44,16 @@ const createNewUser = async ({
     },
   });
 
-  // create user profile
-  const profile = await Profile.create({
-    userId: user._id,
-    firstName,
-    lastName,
-    profilePic: picture,
-  });
+  // create user profile if role is user not admin
+  let profile: ProfileDocument | null = null;
+  if (user.role === "user") {
+    profile = await Profile.create({
+      userId: user._id,
+      firstName,
+      lastName,
+      profilePic: picture,
+    });
+  }
 
   return user;
 };

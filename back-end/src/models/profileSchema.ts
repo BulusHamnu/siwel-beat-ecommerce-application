@@ -18,6 +18,7 @@ export interface ProfileDocument extends Document {
   profilePic: string;
   createdAt: Date;
   updatedAt: Date;
+  stripeId: string;
   notification: {
     emailNotification: {
       commentAndLikes: boolean;
@@ -48,6 +49,10 @@ const profileSchema = new Schema<ProfileDocument>(
       type: String,
       enum: ["male", "female", "not-specified"],
       default: "not-specified",
+    },
+    stripeId: {
+      type: String,
+      default: "",
     },
     bio: {
       type: String,
