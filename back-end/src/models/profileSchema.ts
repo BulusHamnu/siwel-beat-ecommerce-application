@@ -1,15 +1,15 @@
-import mongoose, { type Date } from "mongoose";
-import { Types, Document, Schema, Model, model } from "mongoose";
+import mongoose, { type Date, type ObjectId } from "mongoose";
+import { Document, Schema, Model, model } from "mongoose";
 
 export interface cartInterface {
-  productId: Types.ObjectId;
+  productId: ObjectId;
   amount: number;
   quantity: number;
 }
 
 // user schema types
 export interface ProfileDocument extends Document {
-  userId: Types.ObjectId;
+  userId: ObjectId;
   firstName: string;
   lastName: string;
   gender: string;
@@ -31,7 +31,7 @@ const profileSchema = new Schema<ProfileDocument>(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "userModel",
+      ref: "User",
       required: true,
     },
 
@@ -61,7 +61,8 @@ const profileSchema = new Schema<ProfileDocument>(
     carts: [
       {
         productId: {
-          type: Types.ObjectId,
+          type: mongoose.Schema.ObjectId,
+          ref: "Product",
         },
         quantity: {
           type: Number,
