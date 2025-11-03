@@ -107,7 +107,6 @@ trackSchema.methods.removeUnwantedFields = function (): TrackInterface {
   const obj: TrackInterface = this.toObject();
   delete obj.fileUrl;
   delete obj.license;
-
   return obj;
 };
 

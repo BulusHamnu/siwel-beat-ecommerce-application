@@ -1,6 +1,5 @@
 import User, { type UserDocument } from "../models/user.schema.js";
 import Profile, { type ProfileDocument } from "../models/profile.schema.js";
-import type { updates } from "../controllers/types.js";
 import type { userProfile } from "../controllers/userTypes.js";
 import AppError from "../errors/appError.js";
 
@@ -23,9 +22,28 @@ export const getProfile = async (id: string): Promise<userProfile> => {
 };
 
 // UPDATE USER PROFILE SERVICE
+export interface updates {
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  gender?: string;
+  bio?: string;
+  profilePic?: string;
+  email?: string;
+  notification?: {
+    emailNotification: {
+      commentAndLikes: boolean;
+    };
+  };
+}
+
+export interface ProfileUpdates extends updates {
+  "notification.emailNotification.commentAndLikes": boolean | undefined;
+}
+
 export const updateProfile = async (
   id: string | undefined,
-  updates: updates
+  updates: ProfileUpdates
 ): Promise<userProfile> => {
   const allowFields = [
     "username",

@@ -16,8 +16,8 @@ const router = Router();
 //routes
 router.post(
   "/tracks",
-  // withAuth,
-  // allowRole("admin"),
+  withAuth,
+  allowRole("admin"),
   upload,
   postTrackController
 );
@@ -35,8 +35,8 @@ router.get(
 );
 router.patch(
   "/tracks/:id",
-  /* withAuth,
-  allowRole("admin"), */
+  withAuth,
+  allowRole("admin"),
   upload,
   updateTrackController
 );
