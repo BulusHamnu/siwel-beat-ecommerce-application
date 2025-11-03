@@ -18,7 +18,17 @@ router.post(
   upload,
   postTrackController
 );
-router.get("/tracks", withAuth, getTracksController);
-router.get("/tracks/:id", withAuth, getTrackController);
+router.get(
+  "/tracks",
+  withAuth,
+  allowRole("admin", "user"),
+  getTracksController
+);
+router.get(
+  "/tracks/:id",
+  withAuth,
+  allowRole("admin", "user"),
+  getTrackController
+);
 
 export default router;
