@@ -6,7 +6,7 @@ import type {
 } from "express";
 import AppError from "../errors/appError.js";
 import logger from "../utils/logger.js";
-import type { ApiResponse } from "../controllers/apiTypes.js";
+import type { ApiResponse } from "../controllers/responseInterface.js";
 
 // error middleware
 const errorHandler: ErrorRequestHandler = (

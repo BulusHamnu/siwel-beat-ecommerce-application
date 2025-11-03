@@ -1,4 +1,4 @@
-import type { cartInterface } from "../../models/profileSchema.js";
+import type { cartInterface } from "../models/profile.schema.js";
 
 // userbody types
 export interface createUserBody {

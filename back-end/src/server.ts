@@ -9,10 +9,10 @@ import logger from "./utils/logger.js";
 import AppError from "./errors/appError.js";
 // import type { customAppError } from "./errors/appError.js";
 import errorHandler from "./middlewares/errorHandler.js";
-import authRoutes from "./routes/auths/authRoutes.js";
-import profileRoutes from "./routes/profileRoute.js";
-import adminRoutes from "./routes/adminRoutes.js";
-import trackRoutes from "./routes/trackRoutes.js";
+import authRoutes from "./routes/auth.routes.js";
+import profileRoutes from "./routes/profile.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import trackRoutes from "./routes/track.routes.js";
 
 // initiate server
 const app: Express = express();

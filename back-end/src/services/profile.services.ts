@@ -1,10 +1,29 @@
-import User, { type UserDocument } from "../models/userShema.js";
-import Profile, { type ProfileDocument } from "../models/profileSchema.js";
-import type { updates } from "../controllers/profile/types.js";
-import type { userProfile } from "../controllers/auths/userTypes.js";
+import User, { type UserDocument } from "../models/user.schema.js";
+import Profile, { type ProfileDocument } from "../models/profile.schema.js";
+import type { updates } from "../controllers/types.js";
+import type { userProfile } from "../controllers/userTypes.js";
 import AppError from "../errors/appError.js";
 
-const updateProfile = async (
+// GET USER PROFILE SERVICE
+export const getProfile = async (id: string): Promise<userProfile> => {
+  const user: UserDocument | null = await User.findOne({ _id: id });
+  if (!user) throw new AppError("User does not exist.", 404, true);
+
+  const profile: ProfileDocument | null = await Profile.findOne({
+    userId: user?._id,
+  });
+
+  return {
+    username: user.username,
+    isVerified: user.isVerified,
+    email: user.email,
+    role: user.role,
+    ...profile?.toObject(),
+  };
+};
+
+// UPDATE USER PROFILE SERVICE
+export const updateProfile = async (
   id: string | undefined,
   updates: updates
 ): Promise<userProfile> => {
@@ -52,5 +71,3 @@ const updateProfile = async (
     ...profile?.toObject(),
   };
 };
-
-export default updateProfile;

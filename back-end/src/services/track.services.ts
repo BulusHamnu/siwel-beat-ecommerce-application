@@ -1,6 +1,72 @@
+import type mongoose from "mongoose";
+import type { ObjectId } from "mongoose";
 import AppError from "../errors/appError.js";
-import Track, { type TrackInterface } from "../models/trackModel.js";
+import Track, { type TrackInterface } from "../models/track.schema.js";
 
+// CREATE NEW TRACK SERVICE
+// track interface
+export interface TrackData {
+  title: string;
+  description: string;
+  type: string;
+  key: string;
+  bpm: number;
+  tags: string[];
+  price: number;
+  genre: string;
+  taggedFileUrl: string;
+  unTaggedFileUrl: string;
+  basicLicenseUrl: string;
+  premiumLicenseUrl: string;
+}
+
+export const createNewTrack = async ({
+  title,
+  description,
+  type,
+  key,
+  bpm,
+  tags,
+  price,
+  genre,
+  taggedFileUrl,
+  unTaggedFileUrl,
+  basicLicenseUrl,
+  premiumLicenseUrl,
+}: TrackData): Promise<TrackInterface> => {
+  //look for related tracks
+  const tracks = await Track.find({ type, genre, tags: { $in: tags } })
+    .limit(5)
+    .sort({ createdAt: -1 });
+  const relatedTrack: ObjectId[] = tracks.map(
+    (track): ObjectId => track._id as ObjectId
+  );
+
+  // create new track
+  const newTrack: TrackInterface = await Track.create({
+    title,
+    description,
+    type,
+    key,
+    bpm,
+    tags,
+    status: "active",
+    price,
+    genre,
+    fileUrl: {
+      tagged: taggedFileUrl,
+      unTagged: unTaggedFileUrl,
+    },
+    license: {
+      basic: basicLicenseUrl,
+      premium: premiumLicenseUrl,
+    },
+    relatedTrack,
+  });
+  return newTrack;
+};
+
+// GET ALL TRACKS SERVICE
 export interface Queries {
   limit: number;
   page: number;
@@ -22,7 +88,7 @@ export interface tracksResults {
   pagination: Pagination;
 }
 
-const getTracks = async ({
+export const getTracks = async ({
   limit = 10,
   page = 1,
   genre,
@@ -85,5 +151,3 @@ const getTracks = async ({
 
   return { tracks, pagination };
 };
-
-export default getTracks;

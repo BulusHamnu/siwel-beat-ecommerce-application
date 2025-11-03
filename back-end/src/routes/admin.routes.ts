@@ -1,6 +1,8 @@
 import express, { Router } from "express";
-import getAdminProfileController from "../controllers/admin/getProfile.js";
-import updateAdminProfileController from "../controllers/admin/updateProfile.js";
+import {
+  getAdminProfileController,
+  updateAdminProfileController,
+} from "../controllers/admin.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
 
