@@ -70,7 +70,10 @@ const getTracks = async ({
     .sort({ createdAt: -1 });
 
   const hasNext = tracks.length > limit;
+
+  // slice tracks to limit and remove fileurl and license
   tracks = tracks.slice(0, limit);
+  tracks = tracks.map((track) => track.removeUnwantedFields());
 
   // return pagination
   const pagination: Pagination = {

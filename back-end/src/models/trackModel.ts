@@ -35,6 +35,9 @@ export interface TrackInterface extends Document {
   genre: string;
   fileUrl: FileUrlInterface;
   relatedTrack: string[];
+
+  // methods
+  removeUnwantedFields(): TrackInterface;
 }
 
 export interface createTrackBody {
@@ -47,8 +50,6 @@ export interface createTrackBody {
   price: number;
   genre: string;
 }
-
-
 
 const trackSchema = new mongoose.Schema<TrackInterface>(
   {
@@ -101,6 +102,14 @@ const trackSchema = new mongoose.Schema<TrackInterface>(
   },
   { timestamps: true }
 );
+
+trackSchema.methods.removeUnwantedFields = function (): TrackInterface {
+  const obj: TrackInterface = this.toObject();
+  delete obj.fileUrl;
+  delete obj.license;
+
+  return obj;
+};
 
 const Track = mongoose.model<TrackInterface>("Track", trackSchema);
 export default Track;
