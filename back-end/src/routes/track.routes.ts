@@ -5,6 +5,7 @@ import {
   getTrackController,
   deactivateTrack,
   activateTrack,
+  updateTrackController,
 } from "../controllers/track.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -15,8 +16,8 @@ const router = Router();
 //routes
 router.post(
   "/tracks",
-  withAuth,
-  allowRole("admin"),
+  // withAuth,
+  // allowRole("admin"),
   upload,
   postTrackController
 );
@@ -32,6 +33,14 @@ router.get(
   allowRole("admin", "user"),
   getTrackController
 );
+router.patch(
+  "/tracks/:id",
+  /* withAuth,
+  allowRole("admin"), */
+  upload,
+  updateTrackController
+);
+
 // Track activate and deactivate
 router.post(
   "/tracks/:id/activate",

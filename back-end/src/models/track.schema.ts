@@ -12,12 +12,12 @@ enum StatusType {
   inactive = "in-active",
 }
 
-interface FileUrlInterface {
+export interface FileUrlInterface {
   tagged: string;
-  unTagged: string;
+  untagged: string;
 }
 
-interface LicenseInterface {
+export interface LicenseInterface {
   basic: string;
   premium: string;
 }
@@ -93,7 +93,7 @@ const trackSchema = new mongoose.Schema<TrackInterface>(
         type: String,
         required: true,
       },
-      unTagged: {
+      untagged: {
         type: String,
         required: true,
       },

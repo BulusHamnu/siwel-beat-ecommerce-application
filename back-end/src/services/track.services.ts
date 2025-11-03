@@ -1,7 +1,11 @@
 import type mongoose from "mongoose";
 import type { ObjectId } from "mongoose";
 import AppError from "../errors/appError.js";
-import Track, { type TrackInterface } from "../models/track.schema.js";
+import Track, {
+  type FileUrlInterface,
+  type LicenseInterface,
+  type TrackInterface,
+} from "../models/track.schema.js";
 
 // CREATE NEW TRACK SERVICE
 // track interface
@@ -14,26 +18,15 @@ export interface TrackData {
   tags: string[];
   price: number;
   genre: string;
-  taggedFileUrl: string;
-  unTaggedFileUrl: string;
-  basicLicenseUrl: string;
-  premiumLicenseUrl: string;
+  fileUrl: FileUrlInterface;
+  license: LicenseInterface;
 }
 
-export const createNewTrack = async ({
-  title,
-  description,
-  type,
-  key,
-  bpm,
-  tags,
-  price,
-  genre,
-  taggedFileUrl,
-  unTaggedFileUrl,
-  basicLicenseUrl,
-  premiumLicenseUrl,
-}: TrackData): Promise<TrackInterface> => {
+export const createNewTrack = async (
+  trackData: TrackData
+): Promise<TrackInterface> => {
+  const { type, genre, tags } = trackData;
+
   //look for related tracks
   const tracks = await Track.find({ type, genre, tags: { $in: tags } })
     .limit(5)
@@ -44,23 +37,8 @@ export const createNewTrack = async ({
 
   // create new track
   const newTrack: TrackInterface = await Track.create({
-    title,
-    description,
-    type,
-    key,
-    bpm,
-    tags,
+    ...trackData,
     status: "active",
-    price,
-    genre,
-    fileUrl: {
-      tagged: taggedFileUrl,
-      unTagged: unTaggedFileUrl,
-    },
-    license: {
-      basic: basicLicenseUrl,
-      premium: premiumLicenseUrl,
-    },
     relatedTrack,
   });
   return newTrack;
@@ -150,4 +128,50 @@ export const getTracks = async ({
   };
 
   return { tracks, pagination };
+};
+
+// UPDATE TRACK SERVICE
+export interface TrackUpdates extends TrackData {
+  "fileUrl.tagged": string;
+  "fileUrl.untagged": string;
+  "license.basic": string;
+  "license.premium": string;
+}
+
+export const updateTrack = async (
+  trackId: string,
+  trackUpdate: TrackUpdates,
+  files?: any
+): Promise<TrackInterface> => {
+  // filter update data
+  for (const k of Object.keys(trackUpdate) as (keyof TrackData)[]) {
+    if (Array.isArray(trackUpdate[k]) && trackUpdate[k].length <= 0) {
+      // delete trackUpdate[k];
+    } else if (Array.isArray(trackUpdate[k])) {
+      trackUpdate[k] = { $push: trackUpdate[k] };
+    } else if (trackUpdate[k] === "") {
+      // remove empty string
+      delete trackUpdate[k];
+    }
+  }
+
+  if (Object.keys(files).length > 0) {
+    if (files.taggedBeat?.length > 0)
+      trackUpdate["fileUrl.tagged"] = files.taggedBeat[0].path;
+    if (files.untaggedBeat?.length > 0)
+      trackUpdate["fileUrl.untagged"] = files.untaggedBeat[0].path;
+    if (files.basicLicense?.length > 0)
+      trackUpdate["license.basic"] = files.basicLicense[0].path;
+    if (files.premiumLicense?.length > 0)
+      trackUpdate["license.premium"] = files.premiumLicense[0].path;
+  }
+
+  const track = await Track.findOneAndUpdate(
+    { _id: trackId },
+    { $set: { ...trackUpdate } },
+    { new: true }
+  );
+  if (!track) throw new AppError("Track not found", 404, true);
+
+  return track.removeUnwantedFields();
 };

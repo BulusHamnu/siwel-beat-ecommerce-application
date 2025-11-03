@@ -6,10 +6,17 @@ import {
   type Pagination,
 } from "../services/track.services.js";
 import Track, {
+  type FileUrlInterface,
+  type LicenseInterface,
   type TrackInterface,
   type createTrackBody,
 } from "../models/track.schema.js";
-import { createNewTrack, getTracks } from "../services/track.services.js";
+import {
+  createNewTrack,
+  getTracks,
+  updateTrack,
+  type TrackUpdates,
+} from "../services/track.services.js";
 import { deleteFile } from "../middlewares/upload.js";
 import logger from "../utils/logger.js";
 import AppError from "../errors/appError.js";
@@ -31,8 +38,21 @@ export const postTrackController = async (
       price,
       genre,
     }: createTrackBody = req.body;
+    console.log(tags);
 
     const files = req.files as any;
+    if (Object.keys(files).length <= 0)
+      throw new AppError("Missing track files", 400, true);
+
+    // construct files bodies
+    const fileUrl: FileUrlInterface = {
+      tagged: files.taggedBeat[0].path,
+      untagged: files.untaggedBeat[0].path,
+    };
+    const license: LicenseInterface = {
+      basic: files.basicLicense[0].path,
+      premium: files.premiumLicense[0].path,
+    };
 
     const newTrack = await createNewTrack({
       title,
@@ -40,14 +60,13 @@ export const postTrackController = async (
       type: type.toLowerCase(),
       key,
       bpm,
-      tags,
+      tags: tags.map((tag) => tag.toLowerCase()),
       price,
       genre: genre.toLowerCase(),
-      taggedFileUrl: files.taggedBeat[0].path,
-      unTaggedFileUrl: files.untaggedBeat[0].path,
-      basicLicenseUrl: files.basicLicense[0].path,
-      premiumLicenseUrl: files.premiumLicense[0].path,
+      fileUrl,
+      license,
     });
+
     logger.info("New track created succefully.", { trackId: newTrack._id });
 
     const response: ApiResponse<TrackInterface> = {
@@ -167,6 +186,30 @@ export const activateTrack = async (
       status: true,
       message: "Track activated sucessfully.",
       data: track.removeUnwantedFields(),
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// UPDATE TRACK CONTROLLER
+export const updateTrackController = async (
+  req: Request<{ id: string }, ApiResponse<TrackInterface>, TrackUpdates, {}>,
+  res: Response<ApiResponse<TrackInterface>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const trackId = req.params.id;
+    const updates = req.body;
+    const files = req.files as any;
+
+    const track = await updateTrack(trackId, updates, files);
+    const response: ApiResponse<TrackInterface> = {
+      status: true,
+      message: "Track was updated sucessfully.",
+      data: track,
     };
 
     res.status(200).json(response);
