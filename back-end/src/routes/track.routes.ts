@@ -3,6 +3,8 @@ import {
   postTrackController,
   getTracksController,
   getTrackController,
+  deactivateTrack,
+  activateTrack,
 } from "../controllers/track.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -29,6 +31,19 @@ router.get(
   withAuth,
   allowRole("admin", "user"),
   getTrackController
+);
+// Track activate and deactivate
+router.post(
+  "/tracks/:id/activate",
+  withAuth,
+  allowRole("admin"),
+  activateTrack
+);
+router.post(
+  "/tracks/:id/deactivate",
+  withAuth,
+  allowRole("admin"),
+  deactivateTrack
 );
 
 export default router;

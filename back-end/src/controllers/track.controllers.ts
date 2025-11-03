@@ -68,6 +68,7 @@ interface response extends ApiResponse<TrackInterface[]> {
   pagination: Pagination;
 }
 
+// GET ALL TRACK CONTROLLER
 export const getTracksController = async (
   req: Request<{}, ApiResponse<TrackInterface[]>, {}, Queries>,
   res: Response<response>,
@@ -90,7 +91,7 @@ export const getTracksController = async (
   }
 };
 
-// GET TRACK
+// GET TRACK CONTROLLER
 export const getTrackController = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
@@ -105,6 +106,66 @@ export const getTrackController = async (
     const response: ApiResponse<TrackInterface> = {
       status: true,
       message: "Track retrive sucessfully.",
+      data: track.removeUnwantedFields(),
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DEACTIVATE TRACK CONTROLLER
+export const deactivateTrack = async (
+  req: Request<{ id: string }, {}, {}, {}>,
+  res: Response<ApiResponse<TrackInterface>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const trackId = req.params.id;
+
+    const track: TrackInterface | null = await Track.findOneAndUpdate(
+      { _id: trackId },
+      { $set: { status: "in-active" } },
+      { new: true }
+    );
+    if (!track) throw new AppError("Track not found.", 404, true);
+    logger.info("Track status was update to: in-active.", {
+      trackId: track._id,
+    });
+
+    const response: ApiResponse<TrackInterface> = {
+      status: true,
+      message: "Track deactivated sucessfully.",
+      data: track.removeUnwantedFields(),
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DEACTIVATE TRACK CONTROLLER
+export const activateTrack = async (
+  req: Request<{ id: string }, {}, {}, {}>,
+  res: Response<ApiResponse<TrackInterface>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const trackId = req.params.id;
+
+    const track: TrackInterface | null = await Track.findOneAndUpdate(
+      { _id: trackId },
+      { $set: { status: "active" } },
+      { new: true }
+    );
+    if (!track) throw new AppError("Track not found.", 404, true);
+    logger.info("Track status was update to: active.", { trackId: track._id });
+
+    const response: ApiResponse<TrackInterface> = {
+      status: true,
+      message: "Track activated sucessfully.",
       data: track.removeUnwantedFields(),
     };
 
