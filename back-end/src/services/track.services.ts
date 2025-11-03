@@ -100,7 +100,7 @@ export const getTracks = async ({
   const matches: any = {};
   if (genre) matches.genre = genre.toLowerCase();
   if (type) matches.type = type.toLowerCase();
-  matches.status = "active"; // only show active tracks
+  // matches.status = "active"; // only show active tracks
 
   if (tags) {
     tags?.length > 0 && Array.isArray(tags)
