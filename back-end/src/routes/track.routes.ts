@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   postTrackController,
+  getTracksController,
   getTrackController,
 } from "../controllers/track.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
@@ -17,6 +18,7 @@ router.post(
   upload,
   postTrackController
 );
-router.get("/tracks", withAuth, getTrackController);
+router.get("/tracks", withAuth, getTracksController);
+router.get("/tracks/:id", withAuth, getTrackController);
 
 export default router;

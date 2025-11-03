@@ -5,13 +5,14 @@ import {
   type tracksResults,
   type Pagination,
 } from "../services/track.services.js";
-import {
+import Track, {
   type TrackInterface,
   type createTrackBody,
 } from "../models/track.schema.js";
 import { createNewTrack, getTracks } from "../services/track.services.js";
 import { deleteFile } from "../middlewares/upload.js";
 import logger from "../utils/logger.js";
+import AppError from "../errors/appError.js";
 
 // POST NEW TRACK CONTROLLER
 export const postTrackController = async (
@@ -67,7 +68,7 @@ interface response extends ApiResponse<TrackInterface[]> {
   pagination: Pagination;
 }
 
-export const getTrackController = async (
+export const getTracksController = async (
   req: Request<{}, ApiResponse<TrackInterface[]>, {}, Queries>,
   res: Response<response>,
   next: NextFunction
@@ -81,6 +82,30 @@ export const getTrackController = async (
       message: "Tracks retrived sucessfully.",
       data: tracks,
       pagination,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET TRACK
+export const getTrackController = async (
+  req: Request<{ id: string }, {}, {}, {}>,
+  res: Response<ApiResponse<TrackInterface>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const trackId = req.params.id;
+
+    const track: TrackInterface | null = await Track.findOne({ _id: trackId });
+    if (!track) throw new AppError("Track not found.", 404, true);
+
+    const response: ApiResponse<TrackInterface> = {
+      status: true,
+      message: "Track retrive sucessfully.",
+      data: track.removeUnwantedFields(),
     };
 
     res.status(200).json(response);
