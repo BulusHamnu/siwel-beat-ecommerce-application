@@ -15,7 +15,7 @@ export interface ProfileDocument extends Document {
   gender: string;
   bio: string;
   carts: cartInterface[];
-  profilePic: string;
+  picture: string;
   createdAt: Date;
   updatedAt: Date;
   stripeId: string;
@@ -70,7 +70,7 @@ const profileSchema = new Schema<ProfileDocument>(
         },
       },
     ],
-    profilePic: {
+    picture: {
       type: String,
       default: "",
     },

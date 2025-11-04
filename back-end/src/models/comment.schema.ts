@@ -1,14 +1,14 @@
 import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 
-export interface Comment extends Document {
+export interface CommentInterface extends Document {
   trackId: string | ObjectId;
   content: string;
   userId: string | ObjectId;
   parentId: null | ObjectId;
 }
 
-const comment = new mongoose.Schema<Comment>(
+const comment = new mongoose.Schema<CommentInterface>(
   {
     trackId: {
       type: mongoose.Schema.ObjectId,
@@ -30,4 +30,6 @@ const comment = new mongoose.Schema<Comment>(
   { timestamps: true }
 );
 
-const Comment = mongoose.model<Comment>("Comment", comment);
+const Comment = mongoose.model<CommentInterface>("Comment", comment);
+
+export default Comment;

@@ -6,6 +6,9 @@ import {
   deactivateTrack,
   activateTrack,
   updateTrackController,
+  postCommentController,
+  getCommentController,
+  getAllCommentController
 } from "../controllers/track.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -53,6 +56,26 @@ router.post(
   withAuth,
   allowRole("admin"),
   deactivateTrack
+);
+
+// Track comments routes
+router.post(
+  "/tracks/:id/comments",
+  withAuth,
+  allowRole("user", "admin"),
+  postCommentController
+);
+router.get(
+  "/tracks/:id/comments/:commentId",
+  withAuth,
+  allowRole("user", "admin"),
+  getCommentController
+);
+router.get(
+  "/tracks/:id/comments",
+  withAuth,
+  allowRole("user", "admin"),
+  getAllCommentController
 );
 
 export default router;

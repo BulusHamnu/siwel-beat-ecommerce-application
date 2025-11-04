@@ -2,7 +2,7 @@ import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
 import type { userProfile } from "./userTypes.js";
 import { getProfile, updateProfile } from "../services/profile.services.js";
-import type { updates } from "./types.js";
+import type { updates } from "../services/profile.services.js";
 
 // GET USER PROFILE PROFILE CONTROLLER
 export const getProfileController = async (

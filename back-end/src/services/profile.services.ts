@@ -38,7 +38,7 @@ export interface updates {
 }
 
 export interface ProfileUpdates extends updates {
-  "notification.emailNotification.commentAndLikes": boolean | undefined;
+  "notification.emailNotification.commentAndLikes"?: boolean | undefined;
 }
 
 export const updateProfile = async (

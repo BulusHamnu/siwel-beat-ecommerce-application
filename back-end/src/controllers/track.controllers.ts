@@ -1,10 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
-import {
-  type Queries,
-  type tracksResults,
-  type Pagination,
-} from "../services/track.services.js";
 import Track, {
   type FileUrlInterface,
   type LicenseInterface,
@@ -15,11 +10,18 @@ import {
   createNewTrack,
   getTracks,
   updateTrack,
+  getComment,
+  getAllComments,
   type TrackUpdates,
+  type populatedComment,
+  type Queries,
+  type tracksResults,
+  type Pagination,
 } from "../services/track.services.js";
 import { deleteFile } from "../middlewares/upload.js";
 import logger from "../utils/logger.js";
 import AppError from "../errors/appError.js";
+import Comment, { type CommentInterface } from "../models/comment.schema.js";
 
 // POST NEW TRACK CONTROLLER
 export const postTrackController = async (
@@ -210,6 +212,91 @@ export const updateTrackController = async (
       status: true,
       message: "Track was updated sucessfully.",
       data: track,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST COMMENT
+export const postCommentController = async (
+  req: Request<
+    { id: string },
+    ApiResponse<CommentInterface>,
+    CommentInterface,
+    {}
+  >,
+  res: Response<ApiResponse<CommentInterface>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId: string | undefined = req.user?.id;
+    const data = req.body;
+    const trackId = req.params.id;
+
+    // check if track exist
+    const track = await Track.findOne({ _id: trackId });
+    if (!track) throw new AppError("Track does not exist.", 404, true);
+
+    const comment = await Comment.create({ ...data, trackId, userId });
+
+    const response: ApiResponse<CommentInterface> = {
+      status: true,
+      message: "Comment posted sucessfully.",
+      data: comment,
+    };
+
+    res.status(201).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET A COMMENT
+export const getCommentController = async (
+  req: Request<
+    { commentId: string; id: string },
+    ApiResponse<populatedComment>,
+    {},
+    {}
+  >,
+  res: Response<ApiResponse<populatedComment>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { commentId, id } = req.params;
+
+    // get comment
+    const comment: populatedComment = await getComment(commentId, id);
+    const response: ApiResponse<populatedComment> = {
+      status: true,
+      message: "Comment retrive successfully.",
+      data: comment,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET ALL COMMENT
+export const getAllCommentController = async (
+  req: Request<{ id: string }, ApiResponse<populatedComment[]>, {}, {}>,
+  res: Response<ApiResponse<populatedComment[]>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // get comment
+    const comments: populatedComment[] = await getAllComments(id);
+    const response: ApiResponse<populatedComment[]> = {
+      status: true,
+      message: "Comments retrive successfully.",
+      data: comments,
     };
 
     res.status(200).json(response);

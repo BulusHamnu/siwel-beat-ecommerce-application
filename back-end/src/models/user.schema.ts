@@ -84,5 +84,5 @@ userSchema.methods.comparePassword = comparePassword;
 userSchema.methods.removeUnwantedField = removeUnwantedField;
 
 // user model
-const userModel = model<UserDocument>("User", userSchema);
-export default userModel;
+const User = model<UserDocument>("User", userSchema);
+export default User;
