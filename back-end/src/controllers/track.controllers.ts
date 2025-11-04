@@ -10,7 +10,7 @@ import {
   createNewTrack,
   getTracks,
   updateTrack,
-  getComment,
+  getCommentAndReplies,
   getAllComments,
   type TrackUpdates,
   type populatedComment,
@@ -269,7 +269,7 @@ export const getCommentController = async (
     const { commentId, id } = req.params;
 
     // get comment
-    const comment: populatedComment = await getComment(commentId, id);
+    const comment: populatedComment = await getCommentAndReplies(commentId, id);
     const response: ApiResponse<populatedComment> = {
       status: true,
       message: "Comment retrive successfully.",
@@ -282,7 +282,7 @@ export const getCommentController = async (
   }
 };
 
-// GET ALL COMMENT
+// GET ALL COMMENTS
 export const getAllCommentController = async (
   req: Request<{ id: string }, ApiResponse<populatedComment[]>, {}, {}>,
   res: Response<ApiResponse<populatedComment[]>>,
@@ -297,6 +297,95 @@ export const getAllCommentController = async (
       status: true,
       message: "Comments retrive successfully.",
       data: comments,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// UPDATE COMMENT CONTENT
+export const updateCommentController = async (
+  req: Request<
+    { id: string; commentId: string },
+    ApiResponse<populatedComment>,
+    { content: string },
+    {}
+  >,
+  res: Response<ApiResponse<populatedComment>>,
+  next: NextFunction
+): Promise<void> => {
+  const { id, commentId } = req.params;
+  const userId = req.user?.id;
+  const content = req.body.content;
+
+  // find and update comment
+  const updatedComment = await Comment.findByIdAndUpdate(
+    {
+      _id: commentId,
+      trackId: id,
+      userId,
+    },
+    { $set: { content } },
+    { new: true }
+  )
+    .populate("userId", "_id username isVerified")
+    .lean();
+
+  if (!updatedComment) throw new AppError("Comment not found.", 404, true);
+
+  const comment = await getCommentAndReplies(
+    updatedComment._id as string,
+    updatedComment.trackId as string
+  );
+
+  try {
+    const response: ApiResponse<populatedComment> = {
+      status: true,
+      message: "Comment was updated sucessfully.",
+      data: comment,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE A COMMENT AND IT'S REPLIES
+export const deleteCommentController = async (
+  req: Request<
+    { id: string; commentId: string },
+    ApiResponse<void>,
+    { content: string },
+    {}
+  >,
+  res: Response<ApiResponse<void>>,
+  next: NextFunction
+): Promise<void> => {
+  const { id, commentId } = req.params;
+  const userId = req.user?.id;
+
+  // delete comment and replies
+  const comment = await Comment.deleteOne({
+    _id: commentId,
+    trackId: id,
+    userId,
+  });
+
+  await Comment.deleteMany({
+    parentId: commentId,
+    trackId: id,
+    userId,
+  });
+
+  if (!comment) throw new AppError("Comment not found.", 404, true);
+
+  try {
+    const response: ApiResponse<void> = {
+      status: true,
+      message: "Comment was deleted sucessfully.",
     };
 
     res.status(200).json(response);

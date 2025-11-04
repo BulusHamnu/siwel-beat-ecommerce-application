@@ -8,7 +8,9 @@ import {
   updateTrackController,
   postCommentController,
   getCommentController,
-  getAllCommentController
+  getAllCommentController,
+  updateCommentController,
+  deleteCommentController,
 } from "../controllers/track.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -76,6 +78,18 @@ router.get(
   withAuth,
   allowRole("user", "admin"),
   getAllCommentController
+);
+router.patch(
+  "/tracks/:id/comments/:commentId",
+  withAuth,
+  allowRole("user", "admin"),
+  updateCommentController
+);
+router.delete(
+  "/tracks/:id/comments/:commentId",
+  withAuth,
+  allowRole("user", "admin"),
+  deleteCommentController
 );
 
 export default router;

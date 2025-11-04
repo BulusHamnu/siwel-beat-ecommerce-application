@@ -189,7 +189,7 @@ export interface populatedComment extends Omit<CommentInterface, "userId"> {
   replies?: populatedComment[];
 }
 
-export const getComment = async (
+export const getCommentAndReplies = async (
   commentId: string,
   trackId: string
 ): Promise<populatedComment> => {
@@ -217,7 +217,10 @@ export const getComment = async (
   if (!trackReplies) return [] as any;
 
   for (const R of trackReplies) {
-    let reply = await getComment(R._id as string, R.trackId as string);
+    let reply = await getCommentAndReplies(
+      R._id as string,
+      R.trackId as string
+    );
     comment.replies.push(reply);
   }
 
@@ -233,7 +236,7 @@ export const getAllComments = async (
   const comments: CommentInterface[] = await Comment.find({ trackId: id });
   for (const comment of comments) {
     if (comment.parentId === null) {
-      let C = await getComment(
+      let C = await getCommentAndReplies(
         comment._id as string,
         comment.trackId as string
       );
