@@ -214,15 +214,14 @@ export const getCommentAndReplies = async (
 
   // search for replies
   comment.replies = [];
-  if (!trackReplies) return [] as any;
+  if (!trackReplies) return comment;
 
-  for (const R of trackReplies) {
-    let reply = await getCommentAndReplies(
-      R._id as string,
-      R.trackId as string
-    );
-    comment.replies.push(reply);
-  }
+  //
+  comment.replies = await Promise.all(
+    trackReplies.map(async (reply) => {
+      return getCommentAndReplies(reply._id as string, reply.trackId as string);
+    })
+  );
 
   return comment;
 };
@@ -231,18 +230,21 @@ export const getCommentAndReplies = async (
 export const getAllComments = async (
   id: string
 ): Promise<populatedComment[]> => {
-  const allComments = [];
+  let allComments = [];
 
   const comments: CommentInterface[] = await Comment.find({ trackId: id });
-  for (const comment of comments) {
-    if (comment.parentId === null) {
-      let C = await getCommentAndReplies(
+  // get all comments
+
+  allComments = comments.filter((comment) => comment.parentId === null);
+  console.log(allComments);
+  allComments = await Promise.all(
+    allComments.map(async (comment) => {
+      return getCommentAndReplies(
         comment._id as string,
         comment.trackId as string
       );
-      allComments.push(C);
-    }
-  }
+    })
+  );
 
   return allComments;
 };
