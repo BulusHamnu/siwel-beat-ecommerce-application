@@ -11,6 +11,7 @@ import {
   getAllCommentController,
   updateCommentController,
   deleteCommentController,
+  downloadTrackLicense,
 } from "../controllers/track.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -90,6 +91,14 @@ router.delete(
   withAuth,
   allowRole("user", "admin"),
   deleteCommentController
+);
+
+// download routes
+router.get(
+  "/tracks/:id/licenses",
+  withAuth,
+  allowRole("user", "admin"),
+  downloadTrackLicense
 );
 
 export default router;

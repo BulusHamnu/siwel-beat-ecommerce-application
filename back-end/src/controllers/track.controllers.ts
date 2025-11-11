@@ -12,6 +12,7 @@ import {
   updateTrack,
   getCommentAndReplies,
   getAllComments,
+  getLicense,
   type TrackUpdates,
   type populatedComment,
   type Queries,
@@ -389,6 +390,32 @@ export const deleteCommentController = async (
     };
 
     res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET A TRACK LICENSE
+export const downloadTrackLicense = async (
+  req: Request<{ id: string }, {}, {}, { type: string }>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const id = req.params.id;
+    const user = req.user!;
+    const licenseType: string = req.query.type;
+
+    const { fileName, filePath } = await getLicense(user, id, licenseType);
+
+    res.status(200).download(filePath, fileName, (err) => {
+      if (err)
+        throw new AppError(
+          "An error occured while retriving track license",
+          500,
+          false
+        );
+    });
   } catch (error) {
     next(error);
   }

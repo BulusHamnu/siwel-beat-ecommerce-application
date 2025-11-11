@@ -9,6 +9,8 @@ import Track, {
 import Comment, { type CommentInterface } from "../models/comment.schema.js";
 import Profile, { type ProfileDocument } from "../models/profile.schema.js";
 import type { userPayload } from "../middlewares/withAuth.js";
+import Purchase, { type purchase } from "../models/purchase.schema.js";
+import path from "path";
 
 // CREATE NEW TRACK SERVICE
 // track interface
@@ -247,4 +249,46 @@ export const getAllComments = async (
   );
 
   return allComments;
+};
+
+// GET TRACK LICENSE FOR DOWNLOAD
+export const getLicense = async (
+  user: userPayload,
+  trackId: string,
+  licenseType: string
+): Promise<{ fileName: string; filePath: string }> => {
+  const track: TrackInterface | null = await Track.findOne({ _id: trackId });
+  if (!track) throw new AppError("Track not found.", 404, true);
+
+  // add logic later to check if user purchase this track in other to buy it
+  let purchasedTrack: purchase | null | boolean = null;
+  if (user.role !== "admin") {
+    purchasedTrack = await Purchase.findOne({
+      trackId,
+      userId: user.id,
+      type: licenseType,
+    });
+  } else {
+    purchasedTrack = true;
+  }
+
+  if (!purchasedTrack)
+    throw new AppError(
+      "Unable to download license, no purchase found for this track.",
+      404,
+      true
+    );
+
+  let filePath: string = "";
+  // check for license type
+  if (licenseType === "premium") {
+    filePath = track.license.premium;
+  } else {
+    filePath = track.license.basic;
+  }
+
+  let fileName = track.title.replace(" ", "_");
+  fileName = fileName + "_" + `${licenseType}_license` + path.extname(filePath);
+
+  return { fileName, filePath };
 };
