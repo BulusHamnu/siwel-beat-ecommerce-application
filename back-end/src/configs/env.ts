@@ -25,6 +25,9 @@ interface Env {
   FRONTEND_LOGIN_URL: string;
   FRONTEND_SIGNUP_URL: string;
   LOGIN_COOKIE_OPTS: loginCookieOpts;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_NAME: string;
+  CLOUDINARY_SECRET: string;
 }
 
 const env: Env = {
@@ -48,6 +51,9 @@ const env: Env = {
     sameSite: "strict",
     httpOnly: true,
   },
+  CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET || "",
+  CLOUDINARY_NAME: process.env.CLOUDINARY_NAME || "",
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || "",
 };
 
 export default env;

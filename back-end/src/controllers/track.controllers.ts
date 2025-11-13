@@ -19,10 +19,13 @@ import {
   type tracksResults,
   type Pagination,
 } from "../services/track.services.js";
-import { deleteFile } from "../middlewares/upload.js";
+import { deleteFiles } from "../middlewares/upload.js";
 import logger from "../utils/logger.js";
-import AppError from "../errors/appError.js";
+import AppError, { type customAppError } from "../errors/appError.js";
 import Comment, { type CommentInterface } from "../models/comment.schema.js";
+import uploadBuffer from "../utils/cloudinary.js";
+import { determineDest } from "../middlewares/upload.js";
+import { deleteFilesInCloudinary } from "../utils/cloudinary.js";
 
 // POST NEW TRACK CONTROLLER
 export const postTrackController = async (
@@ -41,20 +44,50 @@ export const postTrackController = async (
       price,
       genre,
     }: createTrackBody = req.body;
-    console.log(tags);
 
     const files = req.files as any;
+
     if (Object.keys(files).length <= 0)
       throw new AppError("Missing track files", 400, true);
 
+    // upload files to cloudinary
+    const taggedBeatFileUrl = files.taggedBeat
+      ? await uploadBuffer(
+          files.taggedBeat[0].buffer,
+          files.taggedBeat[0].originalname,
+          determineDest(files.taggedBeat[0].fieldname)
+        )
+      : "";
+    const untaggedBeatFileUrl = files.untaggedBeat
+      ? await uploadBuffer(
+          files.untaggedBeat[0].buffer,
+          files.untaggedBeat[0].originalname,
+          determineDest(files.untaggedBeat[0].fieldname)
+        )
+      : "";
+    const basicLicenseFileUrl = files.basicLicense
+      ? await uploadBuffer(
+          files.basicLicense[0].buffer,
+          files.basicLicense[0].originalname,
+          determineDest(files.basicLicense[0].fieldname)
+        )
+      : "";
+    const premiumLicenseFileUrl = files.premiumLicense
+      ? await uploadBuffer(
+          files.premiumLicense[0].buffer,
+          files.premiumLicense[0].originalname,
+          determineDest(files.premiumLicense[0].fieldname)
+        )
+      : "";
+
     // construct files bodies
     const fileUrl: FileUrlInterface = {
-      tagged: files.taggedBeat[0].path,
-      untagged: files.untaggedBeat[0].path,
+      tagged: taggedBeatFileUrl,
+      untagged: untaggedBeatFileUrl,
     };
     const license: LicenseInterface = {
-      basic: files.basicLicense[0].path,
-      premium: files.premiumLicense[0].path,
+      basic: basicLicenseFileUrl,
+      premium: premiumLicenseFileUrl,
     };
 
     const newTrack = await createNewTrack({
@@ -79,8 +112,8 @@ export const postTrackController = async (
     };
 
     res.status(201).json(response);
-  } catch (error) {
-    if (req.files) deleteFile(req.files);
+  } catch (error: any) {
+    if (req.files) deleteFilesInCloudinary(req.files);
     next(error);
   }
 };
