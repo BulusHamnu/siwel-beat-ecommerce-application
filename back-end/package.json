@@ -13,6 +13,7 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.83.0",
     "@types/cookie-parser": "^1.4.9",
     "@types/mongoose": "^5.11.96",
     "@types/winston": "^2.4.4",

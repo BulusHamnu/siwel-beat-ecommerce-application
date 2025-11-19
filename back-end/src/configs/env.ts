@@ -28,6 +28,9 @@ interface Env {
   CLOUDINARY_API_KEY: string;
   CLOUDINARY_NAME: string;
   CLOUDINARY_SECRET: string;
+  SUPABASE_KEY: string;
+  SUPABASE_SERVICE_KEY: string;
+  SUPABASE_URL: string;
 }
 
 const env: Env = {
@@ -54,6 +57,9 @@ const env: Env = {
   CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET || "",
   CLOUDINARY_NAME: process.env.CLOUDINARY_NAME || "",
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || "",
+  SUPABASE_KEY: process.env.SUPABASE_KEY || "",
+  SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY || "",
+  SUPABASE_URL: process.env.SUPABASE_URL || "",
 };
 
 export default env;
