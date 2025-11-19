@@ -26,6 +26,11 @@ import Comment, { type CommentInterface } from "../models/comment.schema.js";
 import uploadBuffer from "../utils/cloudinary.js";
 import { determineDest } from "../middlewares/upload.js";
 import { deleteFilesInCloudinary } from "../utils/cloudinary.js";
+import fs from "fs";
+import mime, { type Mime } from "mime";
+import axios from "axios";
+import env from "../configs/env.js";
+import crypto from "crypto";
 
 // POST NEW TRACK CONTROLLER
 export const postTrackController = async (
@@ -441,14 +446,15 @@ export const downloadTrackLicense = async (
 
     const { fileName, filePath } = await getLicense(user, id, licenseType);
 
-    res.status(200).download(filePath, fileName, (err) => {
-      if (err)
-        throw new AppError(
-          "An error occured while retriving track license",
-          500,
-          false
-        );
-    });
+    // set headers
+    const contentType = mime.getType(filePath);
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}";`);
+    res.setHeader("Content-Type", contentType!);
+
+    // will work on streaming from cloud later
+    const fileStream = fs.createReadStream(filePath);
+
+    fileStream.pipe(res);
   } catch (error) {
     next(error);
   }

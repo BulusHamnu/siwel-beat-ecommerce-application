@@ -261,7 +261,7 @@ export const getLicense = async (
   if (!track) throw new AppError("Track not found.", 404, true);
 
   // add logic later to check if user purchase this track in other to buy it
-  let purchasedTrack: purchase | null | boolean = null;
+  let purchasedTrack: purchase | null | boolean = true;
   if (user.role !== "admin") {
     purchasedTrack = await Purchase.findOne({
       trackId,
