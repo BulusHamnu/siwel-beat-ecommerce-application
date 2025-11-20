@@ -6,6 +6,7 @@ import type {
   FileUrlInterface,
   LicenseInterface,
 } from "../models/track.schema.js";
+import { fileTypeFromBuffer } from "file-type";
 
 interface uploadedFilesPaths {
   fileUrl: FileUrlInterface;
@@ -34,15 +35,15 @@ class Supabase {
     bucket: string,
     fileName: string,
     folder: string = "/",
-    fileData: Buffer,
-    contentType: string
+    buffer: Buffer
   ): Promise<string> => {
     const name = this.getFileName(fileName);
     const filePath = folder + name;
+    const mimeResult = await fileTypeFromBuffer(buffer);
 
     const { data, error } = await this.client
       .from(bucket)
-      .upload(filePath, fileData, { contentType });
+      .upload(filePath, buffer, { contentType: mimeResult?.mime });
 
     if (error) {
       if (error.stack?.includes("Invalid key")) {
@@ -103,8 +104,7 @@ class Supabase {
           "audios",
           files.taggedBeat[0].originalname,
           `taggedBeat/`,
-          files.taggedBeat[0].buffer,
-          files.taggedBeat[0].mimetype
+          files.taggedBeat[0].buffer
         );
         paths.push(tagged);
       }
@@ -114,20 +114,17 @@ class Supabase {
           "audios",
           files.untaggedBeat[0].originalname,
           `untaggedBeat/`,
-          files.untaggedBeat[0].buffer,
-          files.untaggedBeat[0].mimetype
+          files.untaggedBeat[0].buffer
         );
         paths.push(untagged);
       }
 
       if (files.basicLicense?.length > 0) {
-        console.log("fasa cf");
         basicLicense = await supabase.uploadFile(
           "documents",
           files.basicLicense[0].originalname,
           `basicLicense/`,
-          files.basicLicense[0].buffer,
-          files.basicLicense[0].mimetype
+          files.basicLicense[0].buffer
         );
         paths.push(basicLicense);
       }
@@ -137,8 +134,7 @@ class Supabase {
           "documents",
           files.premiumLicense[0].originalname,
           `premiumLicense/`,
-          files.premiumLicense[0].buffer,
-          files.premiumLicense[0].mimetype
+          files.premiumLicense[0].buffer
         );
         paths.push(premiumLicense);
       }
