@@ -1,4 +1,3 @@
-import type mongoose from "mongoose";
 import type { ObjectId } from "mongoose";
 import AppError from "../errors/appError.js";
 import Track, {
@@ -7,32 +6,35 @@ import Track, {
   type TrackInterface,
 } from "../models/track.schema.js";
 import Comment, { type CommentInterface } from "../models/comment.schema.js";
-import Profile, { type ProfileDocument } from "../models/profile.schema.js";
+import Profile from "../models/profile.schema.js";
 import type { userPayload } from "../middlewares/withAuth.js";
 import Purchase, { type purchase } from "../models/purchase.schema.js";
 import path from "path";
+import { type createTrackBody } from "../models/track.schema.js";
 
-// CREATE NEW TRACK SERVICE
-// track interface
-export interface TrackData {
-  title: string;
-  description: string;
-  type: string;
-  key: string;
-  bpm: number;
-  tags: string[];
-  price: number;
-  genre: string;
-  fileUrl: FileUrlInterface;
+interface trackData extends createTrackBody {
   license: LicenseInterface;
+  fileUrl: FileUrlInterface;
 }
 
+// CREATE NEW TRACK SERVICE
 export const createNewTrack = async (
-  trackData: TrackData
+  trackbody: trackData
 ): Promise<TrackInterface> => {
-  const { type, genre, tags } = trackData;
+  const {
+    title,
+    description,
+    type,
+    key,
+    bpm,
+    tags,
+    price,
+    genre,
+    license,
+    fileUrl,
+  } = trackbody;
 
-  //look for related tracks
+  //retrive for related tracks
   const tracks = await Track.find({ type, genre, tags: { $in: tags } })
     .limit(5)
     .sort({ createdAt: -1 });
@@ -42,7 +44,16 @@ export const createNewTrack = async (
 
   // create new track
   const newTrack: TrackInterface = await Track.create({
-    ...trackData,
+    title,
+    description,
+    type: type.toLowerCase(),
+    key,
+    bpm,
+    tags: tags.map((tag) => tag.toLowerCase()),
+    price,
+    genre: genre.toLowerCase(),
+    fileUrl,
+    license,
     status: "active",
     relatedTrack,
   });
@@ -136,7 +147,7 @@ export const getTracks = async ({
 };
 
 // UPDATE TRACK SERVICE
-export interface TrackUpdates extends TrackData {
+export interface TrackUpdates extends createTrackBody {
   "fileUrl.tagged": string;
   "fileUrl.untagged": string;
   "license.basic": string;
@@ -146,10 +157,10 @@ export interface TrackUpdates extends TrackData {
 export const updateTrack = async (
   trackId: string,
   trackUpdate: TrackUpdates,
-  files?: any
+  files: { fileUrl: FileUrlInterface; license: LicenseInterface }
 ): Promise<TrackInterface> => {
   // filter update data
-  for (const k of Object.keys(trackUpdate) as (keyof TrackData)[]) {
+  for (const k of Object.keys(trackUpdate) as (keyof createTrackBody)[]) {
     if (Array.isArray(trackUpdate[k]) && trackUpdate[k].length <= 0) {
       delete trackUpdate[k];
     } else if (Array.isArray(trackUpdate[k])) {
@@ -161,14 +172,13 @@ export const updateTrack = async (
   }
 
   if (Object.keys(files).length > 0) {
-    if (files.taggedBeat?.length > 0)
-      trackUpdate["fileUrl.tagged"] = files.taggedBeat[0].path;
-    if (files.untaggedBeat?.length > 0)
-      trackUpdate["fileUrl.untagged"] = files.untaggedBeat[0].path;
-    if (files.basicLicense?.length > 0)
-      trackUpdate["license.basic"] = files.basicLicense[0].path;
-    if (files.premiumLicense?.length > 0)
-      trackUpdate["license.premium"] = files.premiumLicense[0].path;
+    if (files.fileUrl.tagged)
+      trackUpdate["fileUrl.tagged"] = files.fileUrl.tagged;
+    if (files.fileUrl.untagged)
+      trackUpdate["fileUrl.untagged"] = files.fileUrl.untagged;
+    if (files.license.basic) trackUpdate["license.basic"] = files.license.basic;
+    if (files.license.premium)
+      trackUpdate["license.premium"] = files.license.premium;
   }
 
   const track = await Track.findOneAndUpdate(

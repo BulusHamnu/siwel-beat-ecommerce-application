@@ -1,8 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
 import Track, {
-  type FileUrlInterface,
-  type LicenseInterface,
   type TrackInterface,
   type createTrackBody,
 } from "../models/track.schema.js";
@@ -19,18 +17,14 @@ import {
   type tracksResults,
   type Pagination,
 } from "../services/track.services.js";
-import { deleteFiles } from "../middlewares/upload.js";
 import logger from "../utils/logger.js";
-import AppError, { type customAppError } from "../errors/appError.js";
+import AppError from "../errors/appError.js";
 import Comment, { type CommentInterface } from "../models/comment.schema.js";
-import uploadBuffer from "../utils/cloudinary.js";
-import { determineDest } from "../middlewares/upload.js";
-import { deleteFilesInCloudinary } from "../utils/cloudinary.js";
 import fs from "fs";
 import mime, { type Mime } from "mime";
 import axios from "axios";
-import env from "../configs/env.js";
 import crypto from "crypto";
+import supabase from "../services/supabase.js";
 
 // POST NEW TRACK CONTROLLER
 export const postTrackController = async (
@@ -38,78 +32,31 @@ export const postTrackController = async (
   res: Response<ApiResponse<TrackInterface>>,
   next: NextFunction
 ): Promise<void> => {
+  let paths: string[] = [];
+
   try {
-    const {
-      title,
-      description,
-      type,
-      key,
-      bpm,
-      tags,
-      price,
-      genre,
-    }: createTrackBody = req.body;
-
     const files = req.files as any;
+    const data: createTrackBody = req.body;
+    // check for files
+    if (Object.keys(files).length <= 3)
+      throw new AppError("Missing some track files.", 404, true);
 
-    if (Object.keys(files).length <= 0)
-      throw new AppError("Missing track files", 400, true);
-
-    // upload files to cloudinary
-    const taggedBeatFileUrl = files.taggedBeat
-      ? await uploadBuffer(
-          files.taggedBeat[0].buffer,
-          files.taggedBeat[0].originalname,
-          determineDest(files.taggedBeat[0].fieldname)
-        )
-      : "";
-    const untaggedBeatFileUrl = files.untaggedBeat
-      ? await uploadBuffer(
-          files.untaggedBeat[0].buffer,
-          files.untaggedBeat[0].originalname,
-          determineDest(files.untaggedBeat[0].fieldname)
-        )
-      : "";
-    const basicLicenseFileUrl = files.basicLicense
-      ? await uploadBuffer(
-          files.basicLicense[0].buffer,
-          files.basicLicense[0].originalname,
-          determineDest(files.basicLicense[0].fieldname)
-        )
-      : "";
-    const premiumLicenseFileUrl = files.premiumLicense
-      ? await uploadBuffer(
-          files.premiumLicense[0].buffer,
-          files.premiumLicense[0].originalname,
-          determineDest(files.premiumLicense[0].fieldname)
-        )
-      : "";
-
-    // construct files bodies
-    const fileUrl: FileUrlInterface = {
-      tagged: taggedBeatFileUrl,
-      untagged: untaggedBeatFileUrl,
-    };
-    const license: LicenseInterface = {
-      basic: basicLicenseFileUrl,
-      premium: premiumLicenseFileUrl,
-    };
+    // upload files
+    const uploaded = await supabase.uploadTrackFiles(files);
+    paths = [
+      uploaded.fileUrl.tagged,
+      uploaded.fileUrl.untagged,
+      uploaded.license.basic,
+      uploaded.license.premium,
+    ];
 
     const newTrack = await createNewTrack({
-      title,
-      description,
-      type: type.toLowerCase(),
-      key,
-      bpm,
-      tags: tags.map((tag) => tag.toLowerCase()),
-      price,
-      genre: genre.toLowerCase(),
-      fileUrl,
-      license,
+      ...data,
+      fileUrl: uploaded.fileUrl,
+      license: uploaded.license,
     });
 
     logger.info("New track created succefully.", { trackId: newTrack._id });
-
     const response: ApiResponse<TrackInterface> = {
       status: true,
       message: "New track created succefully.",
@@ -118,7 +65,11 @@ export const postTrackController = async (
 
     res.status(201).json(response);
   } catch (error: any) {
-    if (req.files) deleteFilesInCloudinary(req.files);
+    // clean files
+    if (paths && paths.length > 0) {
+      await supabase.safeRemoveTrackFiles(paths);
+    }
+
     next(error);
   }
 };
@@ -241,12 +192,24 @@ export const updateTrackController = async (
   res: Response<ApiResponse<TrackInterface>>,
   next: NextFunction
 ): Promise<void> => {
+  let paths: string[] = [];
+
   try {
     const trackId = req.params.id;
     const updates = req.body;
     const files = req.files as any;
 
-    const track = await updateTrack(trackId, updates, files);
+    // upload files if any
+    const uploaded = await supabase.uploadTrackFiles(files);
+
+    paths = [
+      uploaded.fileUrl.tagged,
+      uploaded.fileUrl.untagged,
+      uploaded.license.basic,
+      uploaded.license.premium,
+    ];
+
+    const track = await updateTrack(trackId, updates, uploaded);
     const response: ApiResponse<TrackInterface> = {
       status: true,
       message: "Track was updated sucessfully.",
@@ -255,6 +218,10 @@ export const updateTrackController = async (
 
     res.status(200).json(response);
   } catch (error) {
+    // clean files
+    if (paths && paths.length > 0) {
+      await supabase.safeRemoveTrackFiles(paths);
+    }
     next(error);
   }
 };

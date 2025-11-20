@@ -2,6 +2,15 @@ import AppError from "../errors/appError.js";
 import logger from "../utils/logger.js";
 import { createClient } from "@supabase/supabase-js";
 import env from "../configs/env.js";
+import type {
+  FileUrlInterface,
+  LicenseInterface,
+} from "../models/track.schema.js";
+
+interface uploadedFilesPaths {
+  fileUrl: FileUrlInterface;
+  license: LicenseInterface;
+}
 
 class Supabase {
   client: any;
@@ -14,25 +23,36 @@ class Supabase {
   }
 
   // methods
+  getFileName = (originalname: string): string => {
+    const name_g = originalname.replace(/ /g, "-");
+    let name = Date.now() + "-" + name_g;
+    return name;
+  };
+
   // upload file to supabase storage
   uploadFile = async (
     bucket: string,
     fileName: string,
-    fileData: Buffer
+    folder: string = "/",
+    fileData: Buffer,
+    contentType: string
   ): Promise<string> => {
+    const name = this.getFileName(fileName);
+    const filePath = folder + name;
+
     const { data, error } = await this.client
       .from(bucket)
-      .upload(fileName, fileData);
+      .upload(filePath, fileData, { contentType });
 
     if (error) {
-      logger.error("An error occur while uploading file to supabase.", error);
-      throw new AppError(
-        "An error occur while uploading file to supabase.",
-        500,
-        false
-      );
+      if (error.stack?.includes("Invalid key")) {
+        throw new AppError(`Invalid file name for "${fileName}"`, 400, true);
+      } else {
+        throw error;
+      }
     }
-    return data.fullPath;
+    logger.info("File uploaded to supabase sucessfully.");
+    return data.path;
   };
 
   // download file from supabase storage
@@ -49,6 +69,7 @@ class Supabase {
     }
     // change file blob to buffer
     const buffer = Buffer.from(new Uint8Array(await data.arrayBuffer()));
+    logger.info("File downloaded from supabase sucessfully.");
     return buffer;
   };
 
@@ -59,10 +80,101 @@ class Supabase {
     if (error) {
       logger.error("An error occur while downloading file to supabase.", error);
       throw new AppError(
-        "An error occur while downloading file to supabase.",
+        "An error occur while deleting file to supabase.",
         500,
         false
       );
+    }
+    logger.info("Files deleted from supabase sucessfully.");
+    return true;
+  };
+
+  // function for uploading files
+  uploadTrackFiles = async (files: any): Promise<uploadedFilesPaths> => {
+    const paths: string[] = [];
+    let tagged: string = "";
+    let untagged: string = "";
+    let basicLicense: string = "";
+    let premiumLicense: string = "";
+
+    try {
+      if (files.taggedBeat?.length > 0) {
+        tagged = await supabase.uploadFile(
+          "audios",
+          files.taggedBeat[0].originalname,
+          `taggedBeat/`,
+          files.taggedBeat[0].buffer,
+          files.taggedBeat[0].mimetype
+        );
+        paths.push(tagged);
+      }
+
+      if (files.untaggedBeat?.length > 0) {
+        untagged = await supabase.uploadFile(
+          "audios",
+          files.untaggedBeat[0].originalname,
+          `untaggedBeat/`,
+          files.untaggedBeat[0].buffer,
+          files.untaggedBeat[0].mimetype
+        );
+        paths.push(untagged);
+      }
+
+      if (files.basicLicense?.length > 0) {
+        console.log("fasa cf");
+        basicLicense = await supabase.uploadFile(
+          "documents",
+          files.basicLicense[0].originalname,
+          `basicLicense/`,
+          files.basicLicense[0].buffer,
+          files.basicLicense[0].mimetype
+        );
+        paths.push(basicLicense);
+      }
+
+      if (files.premiumLicense?.length > 0) {
+        premiumLicense = await supabase.uploadFile(
+          "documents",
+          files.premiumLicense[0].originalname,
+          `premiumLicense/`,
+          files.premiumLicense[0].buffer,
+          files.premiumLicense[0].mimetype
+        );
+        paths.push(premiumLicense);
+      }
+
+      return {
+        fileUrl: {
+          tagged,
+          untagged,
+        },
+        license: {
+          basic: basicLicense,
+          premium: premiumLicense,
+        },
+      };
+    } catch (error) {
+      await this.safeRemoveTrackFiles(paths); // clean files
+      throw error;
+    }
+  };
+
+  // safe delete files fucntion
+  safeRemoveTrackFiles = async (paths: string[]): Promise<boolean> => {
+    const audioPaths = paths.filter(
+      (path) =>
+        path.startsWith("taggedBeat/") || path.startsWith("untaggedBeat/")
+    );
+    const licensePaths = paths.filter(
+      (path) =>
+        path.startsWith("basicLicense/") || path.startsWith("premiumLicense/")
+    );
+
+    if (audioPaths?.length > 0) {
+      await this.deleteFiles("audios", audioPaths);
+    }
+    if (licensePaths?.length > 0) {
+      await this.deleteFiles("documents", licensePaths);
     }
     return true;
   };
@@ -70,8 +182,3 @@ class Supabase {
 
 const supabase = new Supabase();
 export default supabase;
-// console.log(await supabase.downloadFile("documents", "basic-license/pirated.pdf"));
-// console.log(
-//   await supabase.uploadFile("documents", "basic-license/pirated.pdf", d)
-// );
-// console.log(await supabase.deleteFiles("documents", ["basic-license/pirated.pdf"]));
