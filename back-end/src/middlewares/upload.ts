@@ -62,15 +62,19 @@ export const determineDest = (fieldName: string): string => {
 const storage = multer.memoryStorage();
 
 // file filter
-const fileFilter = (req: Request, file: Express.Multer.File, cb: any): void => {
-  const m = file.mimetype;
+const fileFilter = async (
+  req: Request,
+  file: Express.Multer.File,
+  cb: any
+): Promise<void> => {
+  const fileType = file.mimetype;
   // check the audio files
   if (file.fieldname === "untaggedBeat" || file.fieldname === "taggedBeat") {
     const allowedAudioMimeTypes = ["audio/mpeg", "audio/wav", "audio/midi"];
-    if (allowedAudioMimeTypes.includes(m)) {
+    if (allowedAudioMimeTypes.includes(fileType)) {
       cb(null, true);
     } else {
-      throw new AppError("Only audio files are allowed!", 400, true);
+      cb(new AppError("Only audio files are allowed!", 400, true), true);
     }
   }
 
@@ -84,12 +88,13 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: any): void => {
       "application/msword",
       "application/pdf",
       "text/plain",
+      "application/wps-office.docx",
     ];
 
-    if (allowedDocumentMimeTypes.includes(m)) {
+    if (allowedDocumentMimeTypes.includes(fileType)) {
       cb(null, true);
     } else {
-      throw new AppError("Only documents files are allowed!", 400, true);
+      cb(new AppError("Only documents files are allowed!", 400, true), true);
     }
   }
 };
