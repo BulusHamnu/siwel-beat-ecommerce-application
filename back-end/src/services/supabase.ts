@@ -56,6 +56,15 @@ class Supabase {
     return data.path;
   };
 
+  // get public url of a resource
+  getPublicUrl = async (bucket: string, filePath: string): Promise<string> => {
+    const { data, error } = await this.client
+      .from(bucket)
+      .getPublicUrl(filePath);
+    if (error) throw error;
+    return data.publicUrl;
+  };
+
   // download file from supabase storage
   downloadFile = async (bucket: string, fileName: string): Promise<Buffer> => {
     const { data, error } = await this.client.from(bucket).download(fileName);

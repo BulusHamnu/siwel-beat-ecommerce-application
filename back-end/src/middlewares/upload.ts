@@ -1,4 +1,4 @@
-import multer from "multer";
+import multer, { type Multer } from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -99,6 +99,27 @@ const fileFilter = async (
   }
 };
 
+// profile picture multer middleware
+export const uploadPicture = multer({
+  limits: { fieldSize: 5000000 },
+  storage,
+  fileFilter: (req: Request, file: Express.Multer.File, cb) => {
+    const allowedFileType: string[] = [
+      "image/jpeg",
+      "image/png",
+      "image/svg+xml",
+      "image/webp",
+    ];
+
+    if (allowedFileType.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new AppError("Only image is allowed", 400, true));
+    }
+  },
+}).single("picture");
+
+// track files upload multer middleware
 const upload = multer({
   storage,
   limits: { fileSize: 6000000 },
