@@ -11,6 +11,7 @@ import type { userPayload } from "../middlewares/withAuth.js";
 import Purchase, { type purchase } from "../models/purchase.schema.js";
 import path from "path";
 import { type createTrackBody } from "../models/track.schema.js";
+import supabase from "./supabase.js";
 
 interface trackData extends createTrackBody {
   license: LicenseInterface;
@@ -159,6 +160,11 @@ export const updateTrack = async (
   trackUpdate: TrackUpdates,
   files: { fileUrl: FileUrlInterface; license: LicenseInterface }
 ): Promise<TrackInterface> => {
+  const T: TrackInterface | null = await Track.findOne({ _id: trackId });
+  const oldFilesPaths: string[] = [];
+
+  if (!T) throw new AppError("Track not found.", 404, true);
+
   // filter update data
   for (const k of Object.keys(trackUpdate) as (keyof createTrackBody)[]) {
     if (Array.isArray(trackUpdate[k]) && trackUpdate[k].length <= 0) {
@@ -172,13 +178,22 @@ export const updateTrack = async (
   }
 
   if (Object.keys(files).length > 0) {
-    if (files.fileUrl.tagged)
+    if (files.fileUrl.tagged) {
       trackUpdate["fileUrl.tagged"] = files.fileUrl.tagged;
-    if (files.fileUrl.untagged)
+      oldFilesPaths.push(T.fileUrl.tagged);
+    }
+    if (files.fileUrl.untagged) {
       trackUpdate["fileUrl.untagged"] = files.fileUrl.untagged;
-    if (files.license.basic) trackUpdate["license.basic"] = files.license.basic;
-    if (files.license.premium)
+      oldFilesPaths.push(T.fileUrl.untagged);
+    }
+    if (files.license.basic) {
+      trackUpdate["license.basic"] = files.license.basic;
+      oldFilesPaths.push(T.license.basic);
+    }
+    if (files.license.premium) {
       trackUpdate["license.premium"] = files.license.premium;
+      oldFilesPaths.push(T.license.premium);
+    }
   }
 
   const track = await Track.findOneAndUpdate(
@@ -186,8 +201,9 @@ export const updateTrack = async (
     { $set: { ...trackUpdate } },
     { new: true }
   );
-  if (!track) throw new AppError("Track not found", 404, true);
+  if (!track) throw new AppError("Unable to update track.", 500, true);
 
+  await supabase.safeRemoveTrackFiles(oldFilesPaths);
   return track.removeUnwantedFields();
 };
 

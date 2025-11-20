@@ -215,6 +215,9 @@ export const updateTrackController = async (
       message: "Track was updated sucessfully.",
       data: track,
     };
+    logger.info("Track was updated succesfully.", {
+      id: track._id,
+    });
 
     res.status(200).json(response);
   } catch (error) {
