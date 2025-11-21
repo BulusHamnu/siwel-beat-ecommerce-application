@@ -1,5 +1,9 @@
 import { configDotenv } from "dotenv";
 configDotenv();
+import path from "path";
+import { fileURLToPath } from "url";
+const homePath = path.dirname(fileURLToPath(import.meta.url));
+const _dirName = path.join(homePath, "..", "..");
 
 interface loginCookieOpts {
   secure: boolean;
@@ -31,6 +35,7 @@ interface Env {
   SUPABASE_KEY: string;
   SUPABASE_SERVICE_KEY: string;
   SUPABASE_URL: string;
+  DIR_NAME: string;
 }
 
 const env: Env = {
@@ -60,6 +65,7 @@ const env: Env = {
   SUPABASE_KEY: process.env.SUPABASE_KEY || "",
   SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY || "",
   SUPABASE_URL: process.env.SUPABASE_URL || "",
+  DIR_NAME: _dirName,
 };
 
 export default env;

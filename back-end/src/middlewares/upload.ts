@@ -1,9 +1,7 @@
 import multer, { type Multer } from "multer";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-const homePath = path.dirname(fileURLToPath(import.meta.url));
-const _dirName = "siwel-app"; //path.join(homePath, "..", "..");
+import env from "../configs/env.js";
 import type { Request, Response } from "express";
 import AppError from "../errors/appError.js";
 
@@ -24,16 +22,16 @@ export const determineDest = (fieldName: string): string => {
 
   switch (fieldName) {
     case "basicLicense":
-      desc = path.join(_dirName, "uploads", "licenses", "basics");
+      desc = path.join(env.DIR_NAME, "uploads", "licenses", "basics");
       break;
     case "premiumLicense":
-      desc = path.join(_dirName, "uploads", "licenses", "premiums");
+      desc = path.join(env.DIR_NAME, "uploads", "licenses", "premiums");
       break;
     case "untaggedBeat":
-      desc = path.join(_dirName, "uploads", "beats", "tagged");
+      desc = path.join(env.DIR_NAME, "uploads", "beats", "tagged");
       break;
     case "taggedBeat":
-      desc = path.join(_dirName, "uploads", "beats", "untagged");
+      desc = path.join(env.DIR_NAME, "uploads", "beats", "untagged");
       break;
     default:
       throw new AppError(`${fieldName} is not allowed.`, 400, true);
