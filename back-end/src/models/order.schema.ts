@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 
 enum Status {
   paid = "paid",
-  unpaid = "unpaid",
   failed = "failed",
   pending = "pending",
 }
@@ -11,10 +10,13 @@ enum Status {
 export interface Order extends Document {
   transactionId: string;
   amount: number;
+  currency: string;
   status: Status;
   products: string[];
-  date: Date;
   userId: ObjectId;
+  paymentMethod: string;
+  paymentProvider: string;
+  notes: string;
 }
 
 const order = new mongoose.Schema<Order>(
@@ -26,20 +28,29 @@ const order = new mongoose.Schema<Order>(
       type: Number,
       required: true,
     },
+    currency: {
+      type: String,
+      required: true,
+    },
     status: {
       type: String,
-      enum: ["paid", "unpaid", "failed", "pending"],
+      enum: ["paid", "failed", "pending"],
     },
     products: [mongoose.Schema.ObjectId],
-    date: {
-      type: Date,
-      default: Date.now,
+    paymentMethod: {
+      type: String,
+      default: "card",
+    },
+    paymentProvider: {
+      type: String,
+      default: "stripe",
     },
     userId: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
       required: true,
     },
+    notes: String,
   },
   { timestamps: true }
 );
