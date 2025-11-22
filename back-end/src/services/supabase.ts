@@ -70,7 +70,7 @@ class Supabase {
     const { data, error } = await this.client.from(bucket).download(fileName);
 
     if (error) {
-      logger.error("An error occur while downloading file to supabase.", error);
+      logger.error("An error occur while downloading file from supabase.", error);
       throw new AppError(
         "An error occur while downloading file to supabase.",
         500,

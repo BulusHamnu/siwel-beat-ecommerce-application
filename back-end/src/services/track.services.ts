@@ -278,10 +278,11 @@ export const getAllComments = async (
 };
 
 // GET TRACK LICENSE FOR DOWNLOAD
-export const getLicense = async (
+export const downloadTrackFile = async (
   user: userPayload,
   trackId: string,
-  licenseType: string
+  licenseType: string,
+  requestFile: string
 ): Promise<{ fileName: string; filePath: string }> => {
   const track: TrackInterface | null = await Track.findOne({ _id: trackId });
   if (!track) throw new AppError("Track not found.", 404, true);
@@ -306,15 +307,23 @@ export const getLicense = async (
     );
 
   let filePath: string = "";
-  // check for license type
-  if (licenseType === "premium") {
-    filePath = track.license.premium;
-  } else {
-    filePath = track.license.basic;
-  }
-
   let fileName = track.title.replace(" ", "_");
-  fileName = fileName + "_" + `${licenseType}_license` + path.extname(filePath);
+
+  // check for license type
+  if (requestFile === "document") {
+    if (licenseType === "premium") {
+      filePath = track.license.premium;
+    } else {
+      filePath = track.license.basic;
+    }
+    fileName =
+      fileName + "_" + `${licenseType}_license` + path.extname(filePath);
+  } else if (requestFile === "audio") {
+    filePath = track.fileUrl.untagged;
+    fileName = fileName + "_" + `untagged_audio` + path.extname(filePath);
+  } else {
+    throw new AppError("Unsupported file type", 400, true);
+  }
 
   return { fileName, filePath };
 };

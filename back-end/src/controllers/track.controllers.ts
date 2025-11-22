@@ -10,7 +10,7 @@ import {
   updateTrack,
   getCommentAndReplies,
   getAllComments,
-  getLicense,
+  downloadTrackFile,
   type TrackUpdates,
   type populatedComment,
   type Queries,
@@ -20,11 +20,9 @@ import {
 import logger from "../utils/logger.js";
 import AppError from "../errors/appError.js";
 import Comment, { type CommentInterface } from "../models/comment.schema.js";
-import fs from "fs";
-import mime, { type Mime } from "mime";
-import axios from "axios";
-import crypto from "crypto";
 import supabase from "../services/supabase.js";
+import { Readable } from "stream";
+import { fileTypeFromBlob } from "file-type";
 
 // POST NEW TRACK CONTROLLER
 export const postTrackController = async (
@@ -404,27 +402,46 @@ export const deleteCommentController = async (
 };
 
 // GET A TRACK LICENSE
-export const downloadTrackLicense = async (
-  req: Request<{ id: string }, {}, {}, { type: string }>,
+export const downloadTrackFileController = async (
+  req: Request<{ id: string }, {}, {}, { type: string; license: string }>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
     const id = req.params.id;
     const user = req.user!;
-    const licenseType: string = req.query.type;
+    const { type, license } = req.query;
 
-    const { fileName, filePath } = await getLicense(user, id, licenseType);
+    const { fileName, filePath } = await downloadTrackFile(
+      user,
+      id,
+      license,
+      type
+    );
+
+    const bucket = type === "audio" ? "audios" : "documents";
+    const { data, error } = await supabase.client
+      .from(bucket)
+      .download(filePath);
+    // throw error if any
+    if (error) {
+      logger.error(
+        "An error occur while downloading file from supabase",
+        error
+      );
+      throw new AppError("Download error.", 500, true);
+    }
+
+    // create node stream type from blob
+    const readable = Readable.fromWeb(data.stream());
 
     // set headers
-    const contentType = mime.getType(filePath);
+    const fileTYpe = await fileTypeFromBlob(data);
+    const contentType: string = fileTYpe?.mime || "application/octet-stream";
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}";`);
     res.setHeader("Content-Type", contentType!);
 
-    // will work on streaming from cloud later
-    const fileStream = fs.createReadStream(filePath);
-
-    fileStream.pipe(res);
+    readable.pipe(res);
   } catch (error) {
     next(error);
   }

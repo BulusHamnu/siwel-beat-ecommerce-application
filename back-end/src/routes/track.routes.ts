@@ -11,7 +11,7 @@ import {
   getAllCommentController,
   updateCommentController,
   deleteCommentController,
-  downloadTrackLicense,
+  downloadTrackFileController,
 } from "../controllers/track.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -93,12 +93,12 @@ router.delete(
   deleteCommentController
 );
 
-// download routes
+// download routes: download track audio or license document
 router.get(
-  "/tracks/:id/licenses",
+  "/tracks/:id/download-file",
   withAuth,
   allowRole("user", "admin"),
-  downloadTrackLicense
+  downloadTrackFileController
 );
 
 export default router;
