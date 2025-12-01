@@ -149,7 +149,7 @@ export const forgetPasswordController = async (
     logger.info("Password reset code sent to:", { email: userEmail });
 
     const response: ApiResponse<void> = {
-      status: false,
+      status: true,
       message: "Reset password code sent successfully.",
     };
     res.status(200).json(response);

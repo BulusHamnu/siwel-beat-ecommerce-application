@@ -13,6 +13,7 @@ import authRoutes from "./routes/auth.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import trackRoutes from "./routes/track.routes.js";
+import publicApis from "./routes/public.apis.routes.js";
 
 // initiate server
 const app: Express = express();
@@ -44,6 +45,7 @@ app.get(
     }
   }
 );
+app.use("/api", publicApis);
 app.use("/api", authRoutes);
 app.use("/api", profileRoutes);
 app.use("/api", adminRoutes);
