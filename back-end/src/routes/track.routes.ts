@@ -12,6 +12,7 @@ import {
   updateCommentController,
   deleteCommentController,
   downloadTrackFileController,
+  playTrackController,
 } from "../controllers/track.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -99,6 +100,14 @@ router.get(
   withAuth,
   allowRole("user", "admin"),
   downloadTrackFileController
+);
+
+// play track route
+router.get(
+  "/tracks/:id/play",
+  // withAuth,
+  // allowRole("user", "admin"),
+  playTrackController
 );
 
 export default router;

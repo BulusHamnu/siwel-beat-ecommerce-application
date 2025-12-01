@@ -21,7 +21,7 @@ import logger from "../utils/logger.js";
 import AppError from "../errors/appError.js";
 import Comment, { type CommentInterface } from "../models/comment.schema.js";
 import supabase from "../services/supabase.js";
-import { Readable } from "stream";
+import Stream, { Readable } from "stream";
 import { fileTypeFromBlob } from "file-type";
 
 // POST NEW TRACK CONTROLLER
@@ -442,6 +442,57 @@ export const downloadTrackFileController = async (
     res.setHeader("Content-Type", contentType!);
 
     readable.pipe(res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PLAY TRACK CONTROLLER
+export const playTrackController = async (
+  req: Request<{ id: string }, {}, {}, {}>,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const range = req.headers["range"]; //?.split("=")[1];
+
+    const track = await Track.findOne({ _id: id });
+    if (!track) return res.status(404);
+
+    const filePath = track?.fileUrl.untagged;
+
+    const { data, error } = await supabase.client
+      .from("audios")
+      .createSignedUrl(filePath, 60);
+
+    // send 500
+    if (error) {
+      logger.error("An error occur while while streaming audio file.", error);
+      return res.status(500);
+    }
+
+    const url = data.signedUrl;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Range: range!,
+      },
+    });
+
+    // extract major headers from the response
+    const contentType = response.headers.get("content-type");
+    const contentLength = response.headers.get("content-length");
+    const contentRange = response.headers.get("content-range");
+
+    res.setHeader("Content-Type", contentType!);
+    res.setHeader("Content-Length", contentLength!);
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Content-Range", contentRange!);
+
+    const stream = Readable.fromWeb(response.body as any); // change res web buffer to node streamable
+    res.status(response.status);
+    stream.pipe(res);
   } catch (error) {
     next(error);
   }
