@@ -30,14 +30,14 @@ router.post(
 );
 router.get(
   "/tracks",
-  withAuth,
-  allowRole("admin", "user"),
+  // withAuth,
+  // allowRole("admin", "user"),
   getTracksController
 );
 router.get(
   "/tracks/:id",
-  withAuth,
-  allowRole("admin", "user"),
+  // withAuth,
+  // allowRole("admin", "user"),
   getTrackController
 );
 router.patch(
