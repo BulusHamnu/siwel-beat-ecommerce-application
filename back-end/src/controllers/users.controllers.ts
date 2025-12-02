@@ -6,6 +6,8 @@ import {
   updateProfile,
   updateProfilePicture,
   addFavouriteTrack,
+  addToCart,
+  removeFromCart,
 } from "../services/users.services.js";
 import type { updates } from "../services/users.services.js";
 import AppError from "../errors/appError.js";
@@ -169,6 +171,50 @@ export const removeFromUsersFavourites = async (
       message: "Track was removed from favourites list.",
     };
     res.status(201).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ADD TO USER'S CART
+export const addToCartController = async (
+  req: Request<{}, ApiResponse<void>, { trackId: string; license: string }, {}>,
+  res: Response<ApiResponse<void>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+    const { trackId, license } = req.body;
+
+    await addToCart(trackId, license, user.id);
+
+    const response: ApiResponse<void> = {
+      status: true,
+      message: "Product added to cart sucessfully.",
+    };
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// REMOVE PRODUCT FROM USER'S CART
+export const removeItemFromCartController = async (
+  req: Request<{}, ApiResponse<void>, { trackId: string; license: string }, {}>,
+  res: Response<ApiResponse<void>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+    const { trackId, license } = req.body;
+
+    await removeFromCart(trackId, license, user.id);
+
+    const response: ApiResponse<void> = {
+      status: true,
+      message: "Product was removed from cart sucessfully.",
+    };
+    res.status(200).json(response);
   } catch (error) {
     next(error);
   }

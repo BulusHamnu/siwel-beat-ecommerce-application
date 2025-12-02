@@ -6,6 +6,8 @@ import {
   getUsersFavourites,
   addUsersFavourites,
   removeFromUsersFavourites,
+  addToCartController,
+  removeItemFromCartController,
 } from "../controllers/users.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -23,6 +25,7 @@ router.patch(
   allowRole("user"),
   updateProfilePictureController
 );
+// favourites
 router.post(
   "/users/me/favourites",
   withAuth,
@@ -40,6 +43,14 @@ router.delete(
   withAuth,
   allowRole("user"),
   removeFromUsersFavourites
+);
+// cart
+router.post("/users/me/cart", withAuth, allowRole("user"), addToCartController);
+router.patch(
+  "/users/me/cart",
+  withAuth,
+  allowRole("user"),
+  removeItemFromCartController
 );
 
 export default router;

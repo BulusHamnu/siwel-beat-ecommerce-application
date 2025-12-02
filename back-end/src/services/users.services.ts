@@ -1,10 +1,14 @@
 import User, { type UserDocument } from "../models/user.schema.js";
-import Profile, { type ProfileDocument } from "../models/profile.schema.js";
+import Profile, {
+  type cartInterface,
+  type ProfileDocument,
+} from "../models/profile.schema.js";
 import type { userProfile } from "../controllers/userTypes.js";
 import AppError from "../errors/appError.js";
 import supabase from "./supabase.js";
 import Favourite from "../models/favourite.schema.js";
-import e from "express";
+import Track, { type TrackInterface } from "../models/track.schema.js";
+import mongoose, { type ObjectId } from "mongoose";
 
 // GET USER PROFILE SERVICE
 export const getProfile = async (id: string): Promise<userProfile> => {
@@ -116,7 +120,7 @@ export const updateProfilePicture = async (
   return publicUrl;
 };
 
-// ADD FAVOURITES
+// ADD FAVOURITES SERVICE
 export const addFavouriteTrack = async (
   userId: string,
   trackId: string
@@ -127,4 +131,55 @@ export const addFavouriteTrack = async (
     throw new AppError("Track is already in the favourites list.", 400, true);
 
   await Favourite.create({ userId, trackId });
+};
+
+// ADD TRACK TO CART SERVICE
+export const addToCart = async (
+  trackId: string,
+  license: string,
+  userId: string
+): Promise<void> => {
+  const track: TrackInterface | null = await Track.findOne({ _id: trackId });
+
+  if (!track) throw new AppError("Track not found", 404, true);
+
+  const userProfile: ProfileDocument | null = await Profile.findOne({ userId });
+
+  // check if product is already in cart
+  const productExist = userProfile?.cart.find(
+    (track) =>
+      String(track.productId) === String(trackId) && license === track.license
+  );
+
+  if (productExist)
+    throw new AppError("Product already exist in cart.", 400, true);
+
+  const product: cartInterface = {
+    name: track.title,
+    productId: track._id as any,
+    license,
+    amount: license === "basic" ? track.basicPrice : track.premiumPrice,
+    type: track.type,
+  };
+
+  userProfile?.cart.push(product);
+  await userProfile?.save();
+};
+
+// ADD FROM CART SERVICE
+export const removeFromCart = async (
+  trackId: string,
+  license: string,
+  userId: string
+): Promise<void> => {
+  const track: TrackInterface | null = await Track.findOne({ _id: trackId });
+
+  if (!track) throw new AppError("Track not found", 404, true);
+
+  const id = new mongoose.Types.ObjectId(trackId); // change track id to object id
+  await Profile.findOneAndUpdate(
+    { userId },
+    { $pull: { cart: { productId: id, license } } },
+    { new: true }
+  );
 };
