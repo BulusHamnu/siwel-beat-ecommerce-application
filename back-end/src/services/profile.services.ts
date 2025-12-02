@@ -3,6 +3,8 @@ import Profile, { type ProfileDocument } from "../models/profile.schema.js";
 import type { userProfile } from "../controllers/userTypes.js";
 import AppError from "../errors/appError.js";
 import supabase from "./supabase.js";
+import Favourite from "../models/favourite.schema.js";
+import e from "express";
 
 // GET USER PROFILE SERVICE
 export const getProfile = async (id: string): Promise<userProfile> => {
@@ -112,4 +114,17 @@ export const updateProfilePicture = async (
   // delete old picture
   if (oldPicturePath) await supabase.deleteFiles("images", [oldPicturePath]);
   return publicUrl;
+};
+
+// ADD FAVOURITES
+export const addFavouriteTrack = async (
+  userId: string,
+  trackId: string
+): Promise<void> => {
+  const fav = await Favourite.findOne({ trackId, userId });
+  console.log(fav);
+  if (fav)
+    throw new AppError("Track is already in the favourites list.", 400, true);
+
+  await Favourite.create({ userId, trackId });
 };

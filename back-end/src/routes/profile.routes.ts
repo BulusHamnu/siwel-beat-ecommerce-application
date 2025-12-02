@@ -3,6 +3,9 @@ import {
   getProfileController,
   updateProfileController,
   updateProfilePictureController,
+  getUsersFavourites,
+  addUsersFavourites,
+  removeFromUsersFavourites,
 } from "../controllers/profile.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -19,6 +22,24 @@ router.patch(
   withAuth,
   allowRole("user"),
   updateProfilePictureController
+);
+router.post(
+  "/users/me/favourites",
+  withAuth,
+  allowRole("user"),
+  addUsersFavourites
+);
+router.get(
+  "/users/me/favourites",
+  withAuth,
+  allowRole("user"),
+  getUsersFavourites
+);
+router.delete(
+  "/users/me/favourites",
+  withAuth,
+  allowRole("user"),
+  removeFromUsersFavourites
 );
 
 export default router;

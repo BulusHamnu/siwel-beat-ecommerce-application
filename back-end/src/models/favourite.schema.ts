@@ -1,12 +1,12 @@
 import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 
-export interface Favourite extends Document {
+export interface FavouriteInterface extends Document {
   userId: ObjectId;
   trackId: ObjectId;
 }
 
-const favourite = new mongoose.Schema<Favourite>(
+const favourite = new mongoose.Schema<FavouriteInterface>(
   {
     userId: {
       type: mongoose.Schema.ObjectId,
@@ -22,4 +22,5 @@ const favourite = new mongoose.Schema<Favourite>(
   { timestamps: true }
 );
 
-const Favourite = mongoose.model<Favourite>("Favourite", favourite);
+const Favourite = mongoose.model<FavouriteInterface>("Favourite", favourite);
+export default Favourite;

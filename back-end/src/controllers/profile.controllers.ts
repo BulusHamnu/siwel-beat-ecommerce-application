@@ -5,10 +5,14 @@ import {
   getProfile,
   updateProfile,
   updateProfilePicture,
+  addFavouriteTrack,
 } from "../services/profile.services.js";
 import type { updates } from "../services/profile.services.js";
 import AppError from "../errors/appError.js";
 import supabase from "../services/supabase.js";
+import Favourite, {
+  type FavouriteInterface,
+} from "../models/favourite.schema.js";
 
 // GET USER PROFILE PROFILE CONTROLLER
 export const getProfileController = async (
@@ -97,6 +101,75 @@ export const updateProfilePictureController = async (
     res.status(200).json(response);
   } catch (error) {
     await supabase.deleteFiles("images", [pictureUrl]);
+    next(error);
+  }
+};
+
+// ADD USER'S FAVOURITES
+export const addUsersFavourites = async (
+  req: Request<{}, ApiResponse<void>, { trackId: string }, {}>,
+  res: Response<ApiResponse<void>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+    const { trackId } = req.body;
+
+    await addFavouriteTrack(user.id, trackId);
+
+    const response: ApiResponse<void> = {
+      status: true,
+      message: "Track was added to favourites list successfully.",
+    };
+    res.status(201).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET USER'S FAVOURITES
+export const getUsersFavourites = async (
+  req: Request<{}, ApiResponse<FavouriteInterface[]>, {}, {}>,
+  res: Response<ApiResponse<FavouriteInterface[]>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+
+    const favourites = await Favourite.find({ userId: user.id }).populate(
+      "trackId",
+      "relatedTrack genre tags bpm status key type description price title _id"
+    );
+
+    const response: ApiResponse<FavouriteInterface[]> = {
+      status: true,
+      message: "Favourite tracks retrived successfully.",
+      data: favourites,
+    };
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// REMOVE FROM FAVOURITE LIST
+export const removeFromUsersFavourites = async (
+  req: Request<{}, ApiResponse<void>, { trackId: string }, {}>,
+  res: Response<ApiResponse<void>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+    const { trackId } = req.body;
+
+    await Favourite.findOneAndDelete({ trackId, userId: user.id });
+
+    const response: ApiResponse<void> = {
+      status: true,
+      message: "Track was removed from favourites list.",
+    };
+    res.status(201).json(response);
+  } catch (error) {
     next(error);
   }
 };
