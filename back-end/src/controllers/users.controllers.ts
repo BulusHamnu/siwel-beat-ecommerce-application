@@ -6,8 +6,8 @@ import {
   updateProfile,
   updateProfilePicture,
   addFavouriteTrack,
-} from "../services/profile.services.js";
-import type { updates } from "../services/profile.services.js";
+} from "../services/users.services.js";
+import type { updates } from "../services/users.services.js";
 import AppError from "../errors/appError.js";
 import supabase from "../services/supabase.js";
 import Favourite, {

@@ -10,7 +10,7 @@ import AppError from "./errors/appError.js";
 // import type { customAppError } from "./errors/appError.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import authRoutes from "./routes/auth.routes.js";
-import profileRoutes from "./routes/profile.routes.js";
+import profileRoutes from "./routes/users.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import trackRoutes from "./routes/track.routes.js";
 import publicApis from "./routes/public.apis.routes.js";

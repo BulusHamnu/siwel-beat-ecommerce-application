@@ -6,7 +6,7 @@ import {
   getUsersFavourites,
   addUsersFavourites,
   removeFromUsersFavourites,
-} from "../controllers/profile.controllers.js";
+} from "../controllers/users.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
 import { uploadPicture } from "../middlewares/upload.js";
