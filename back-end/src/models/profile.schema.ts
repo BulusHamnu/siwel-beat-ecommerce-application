@@ -3,8 +3,10 @@ import { Document, Schema, Model, model } from "mongoose";
 
 export interface cartInterface {
   productId: ObjectId;
+  name: string;
+  license: string;
   amount: number;
-  quantity: number;
+  type: string;
 }
 
 // user schema types
@@ -14,7 +16,7 @@ export interface ProfileDocument extends Document {
   lastName: string;
   gender: string;
   bio: string;
-  carts: cartInterface[];
+  cart: cartInterface[];
   picture: string;
   createdAt: Date;
   updatedAt: Date;
@@ -58,15 +60,27 @@ const profileSchema = new Schema<ProfileDocument>(
       type: String,
       default: "",
     },
-    carts: [
+    cart: [
       {
         productId: {
           type: mongoose.Schema.ObjectId,
-          ref: "Product",
+          ref: "Track",
         },
-        quantity: {
+        amount: {
           type: Number,
-          default: 1,
+          required: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
+        license: {
+          type: String,
+          required: true,
+        },
+        type: {
+          type: String,
+          required: true,
         },
       },
     ],

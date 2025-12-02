@@ -31,7 +31,8 @@ export interface TrackInterface extends Document {
   bpm: number;
   license: LicenseInterface;
   tags: string[];
-  price: number;
+  basicPrice: number;
+  premiumPrice: number;
   genre: string;
   fileUrl: FileUrlInterface;
   relatedTrack: string[];
@@ -57,7 +58,11 @@ const trackSchema = new mongoose.Schema<TrackInterface>(
       type: String,
       required: true,
     },
-    price: {
+    basicPrice: {
+      type: Number,
+      required: true,
+    },
+    premiumPrice: {
       type: Number,
       required: true,
     },
