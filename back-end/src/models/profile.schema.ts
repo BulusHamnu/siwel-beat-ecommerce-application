@@ -1,11 +1,11 @@
 import mongoose, { type Date, type ObjectId } from "mongoose";
 import { Document, Schema, Model, model } from "mongoose";
 
-export interface cartInterface {
+export interface cartItem {
   productId: ObjectId;
   name: string;
   license: string;
-  amount: number;
+  price: number;
   type: string;
 }
 
@@ -16,7 +16,7 @@ export interface ProfileDocument extends Document {
   lastName: string;
   gender: string;
   bio: string;
-  cart: cartInterface[];
+  cart: cartItem[];
   picture: string;
   createdAt: Date;
   updatedAt: Date;
@@ -66,7 +66,7 @@ const profileSchema = new Schema<ProfileDocument>(
           type: mongoose.Schema.ObjectId,
           ref: "Track",
         },
-        amount: {
+        price: {
           type: Number,
           required: true,
         },

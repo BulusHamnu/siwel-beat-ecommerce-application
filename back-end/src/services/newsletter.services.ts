@@ -16,8 +16,9 @@ export const subscribeToNewsletter = async (email: string): Promise<void> => {
   if (subExist && subExist.subscribed) {
     throw new AppError("Email is already subscribed.", 409, true);
   } else if (subExist && !subExist.subscribed) {
+    token = crypto.randomBytes(24).toString("hex");
     subExist.subscribed = true;
-    subExist.token = "";
+    subExist.token = token;
     await subExist.save();
   } else {
     token = crypto.randomBytes(24).toString("hex");
@@ -36,13 +37,14 @@ export const unsubscribeFromNewsletter = async (
   email: string,
   token: string
 ): Promise<void> => {
-  const unsubcribed = await Newsletter.findOneAndUpdate(
+  const unsubscribed = await Newsletter.findOneAndUpdate(
     { email, token },
     { subscribed: false },
     { new: true }
   );
 
-  if (!unsubcribed) throw new AppError("Unable to unsubcribe user", 500, false);
+  if (!unsubscribed)
+    throw new AppError("Unable to unsubscribe user", 500, false);
 
   await sendEmail(
     email,
