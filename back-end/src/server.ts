@@ -15,7 +15,7 @@ import adminRoutes from "./routes/admin.routes.js";
 import trackRoutes from "./routes/track.routes.js";
 import publicApis from "./routes/public.apis.routes.js";
 import newsLetterRoutes from "./routes/newsletter.routes.js";
-import checkRoutes from "./routes/checkout.routes.js";
+import checkoutRoutes from "./routes/checkout.routes.js";
 
 // initiate server
 const app: Express = express();
@@ -53,7 +53,7 @@ app.use("/api", profileRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", trackRoutes);
 app.use("/api", newsLetterRoutes);
-app.use("/api", checkRoutes);
+app.use("/api", checkoutRoutes);
 
 // error handler
 app.use(errorHandler);
