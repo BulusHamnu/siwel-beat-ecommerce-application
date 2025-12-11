@@ -8,6 +8,7 @@ import {
   addFavouriteTrack,
   addToCart,
   removeFromCart,
+  getUserCart,
 } from "../services/users.services.js";
 import type { updates } from "../services/users.services.js";
 import AppError from "../errors/appError.js";
@@ -15,6 +16,7 @@ import supabase from "../services/supabase.js";
 import Favourite, {
   type FavouriteInterface,
 } from "../models/favourite.schema.js";
+import type { cartItem } from "../models/profile.schema.js";
 
 // GET USER PROFILE PROFILE CONTROLLER
 export const getProfileController = async (
@@ -214,6 +216,28 @@ export const removeItemFromCartController = async (
       status: true,
       message: "Product was removed from cart sucessfully.",
     };
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET CART CONTROLLER
+export const getCartController = async (
+  req: Request<{}, ApiResponse<cartItem[]>, {}, {}>,
+  res: Response<ApiResponse<cartItem[]>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+
+    const cart = await getUserCart(user.id);
+    const response: ApiResponse<cartItem[]> = {
+      status: true,
+      message: "Cart retrived successfully.",
+      data: cart,
+    };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);

@@ -1,6 +1,6 @@
 import User, { type UserDocument } from "../models/user.schema.js";
 import Profile, {
-  type cartInterface,
+  type cartItem,
   type ProfileDocument,
 } from "../models/profile.schema.js";
 import type { userProfile } from "../controllers/userTypes.js";
@@ -154,11 +154,11 @@ export const addToCart = async (
   if (productExist)
     throw new AppError("Product already exist in cart.", 400, true);
 
-  const product: cartInterface = {
+  const product: cartItem = {
     name: track.title,
     productId: track._id as any,
     license,
-    amount: license === "basic" ? track.basicPrice : track.premiumPrice,
+    price: license === "basic" ? track.basicPrice : track.premiumPrice,
     type: track.type,
   };
 
@@ -182,4 +182,40 @@ export const removeFromCart = async (
     { $pull: { cart: { productId: id, license } } },
     { new: true }
   );
+};
+
+/* Get users cart */
+async function verifyProductsStatus(cart: cartItem[]): Promise<cartItem[]> {
+  const itemPromiseRequests: any = cart.map(async (product: any) => {
+    const track = await Track.findOne({ _id: product.productId });
+
+    if (!track) {
+      product.status = "deleted";
+    } else if (track.status === "in-active") {
+      product.status = "in-active";
+    } else if (
+      (product.license === "basic" && track.basicPrice !== product.price) ||
+      (product.license === "premium" && track.premiumPrice !== product.price)
+    ) {
+      product.status = "price_changed";
+      product.newPrice =
+        product.license === "basic" ? track.basicPrice : track.premiumPrice;
+    } else {
+      product.status = "active";
+    }
+
+    return product;
+  });
+
+  const refinedCart: cartItem[] = await Promise.all(itemPromiseRequests);
+  return refinedCart;
+}
+
+export const getUserCart = async (userId: string): Promise<cartItem[]> => {
+  const userProfile: ProfileDocument | null = await Profile.findOne({ userId });
+  const profileObj = userProfile!.toObject();
+
+  // User should know if product changed the last time
+  const cart = await verifyProductsStatus(profileObj.cart);
+  return cart;
 };

@@ -8,6 +8,7 @@ import {
   removeFromUsersFavourites,
   addToCartController,
   removeItemFromCartController,
+  getCartController,
 } from "../controllers/users.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -52,5 +53,6 @@ router.patch(
   allowRole("user"),
   removeItemFromCartController
 );
+router.get("/users/me/cart", withAuth, allowRole("user"), getCartController);
 
 export default router;
