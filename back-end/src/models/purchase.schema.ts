@@ -5,7 +5,7 @@ export interface purchase extends Document {
   userId: ObjectId;
   trackId: ObjectId;
   type: string;
-  transactionId: ObjectId;
+  orderId: ObjectId;
   amount: number;
 }
 
@@ -26,10 +26,10 @@ const purchase = new mongoose.Schema<purchase>(
       required: true,
       enum: ["basic", "premium"],
     },
-    transactionId: {
+    orderId: {
       type: mongoose.Schema.ObjectId,
       required: true,
-      ref: "Transaction",
+      ref: "Order",
     },
     amount: {
       type: Number,
