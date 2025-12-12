@@ -1,13 +1,17 @@
 import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 
-enum Status {
+export enum Status {
   paid = "paid",
   failed = "failed",
   pending = "pending",
+  disputed = "disputed",
+  refunded = "refunded",
+  cancelled = "cancelled",
+  chargeback = "chargeback",
 }
 
-export interface Order extends Document {
+export interface OrderInterface extends Document {
   transactionId: string;
   amount: number;
   currency: string;
@@ -19,7 +23,7 @@ export interface Order extends Document {
   notes: string;
 }
 
-const order = new mongoose.Schema<Order>(
+const order = new mongoose.Schema<OrderInterface>(
   {
     transactionId: {
       type: String,
@@ -34,7 +38,15 @@ const order = new mongoose.Schema<Order>(
     },
     status: {
       type: String,
-      enum: ["paid", "failed", "pending"],
+      enum: [
+        "paid",
+        "failed",
+        "pending",
+        "disputed",
+        "refunded",
+        "cancelled",
+        "chargeback",
+      ],
     },
     products: [mongoose.Schema.ObjectId],
     paymentMethod: {
@@ -55,5 +67,5 @@ const order = new mongoose.Schema<Order>(
   { timestamps: true }
 );
 
-const Order = mongoose.model<Order>("Order", order);
+const Order = mongoose.model<OrderInterface>("Order", order);
 export default Order;
