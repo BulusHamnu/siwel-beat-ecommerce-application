@@ -9,6 +9,8 @@ import {
   addToCart,
   removeFromCart,
   getUserCart,
+  getAllPurchases,
+  type purchasesResult,
 } from "../services/users.services.js";
 import type { updates } from "../services/users.services.js";
 import AppError from "../errors/appError.js";
@@ -17,6 +19,8 @@ import Favourite, {
   type FavouriteInterface,
 } from "../models/favourite.schema.js";
 import type { cartItem } from "../models/profile.schema.js";
+import type { purchase } from "../models/purchase.schema.js";
+import Purchase from "../models/purchase.schema.js";
 
 // GET USER PROFILE PROFILE CONTROLLER
 export const getProfileController = async (
@@ -236,6 +240,59 @@ export const getCartController = async (
       status: true,
       message: "Cart retrived successfully.",
       data: cart,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* Get user's purchases controller */
+export const getAllPurchaseController = async (
+  req: Request<{}, {}, {}, { type: string; limit: string; page: string }>,
+  res: Response<ApiResponse<purchasesResult>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+    const { page, limit, type } = req.query;
+
+    const purchases = await getAllPurchases(
+      user.id,
+      type,
+      Number(page || 1),
+      Number(limit || 10)
+    );
+    const response: ApiResponse<purchasesResult> = {
+      status: true,
+      message: "Purchases retrived successfully",
+      data: purchases,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* Get user's purchase controller */
+export const getPurchaseController = async (
+  req: Request<{ id: string }, {}, {}, {}>,
+  res: Response<ApiResponse<purchase>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+    const { id } = req.params;
+
+    const purchase = await Purchase.findOne({ userId: user.id, _id: id });
+    if (!purchase) throw new AppError("Purchase not found", 404, true);
+
+    const response: ApiResponse<purchase> = {
+      status: true,
+      message: "Purchase retrived successfully",
+      data: purchase,
     };
 
     res.status(200).json(response);

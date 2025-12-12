@@ -9,6 +9,9 @@ import supabase from "./supabase.js";
 import Favourite from "../models/favourite.schema.js";
 import Track, { type TrackInterface } from "../models/track.schema.js";
 import mongoose from "mongoose";
+import type { purchase } from "../models/purchase.schema.js";
+import Purchase from "../models/purchase.schema.js";
+import type { Pagination } from "../controllers/responseInterface.js";
 
 // GET USER PROFILE SERVICE
 export const getProfile = async (id: string): Promise<userProfile> => {
@@ -218,4 +221,74 @@ export const getUserCart = async (userId: string): Promise<cartItem[]> => {
   // User should know if product changed the last time
   const cart = await verifyProductsStatus(profileObj.cart);
   return cart;
+};
+
+/* Get purchases */
+interface queries {
+  type?: string;
+  userId: string;
+}
+function constructQueries(userId: string, type: string): queries {
+  // User only get their purchases
+  const queries: queries = {
+    userId,
+  };
+  if (type) queries["type"] = type;
+
+  return queries;
+}
+
+// Get purchases and purchases document counts
+async function getPurchasesAndCounts(
+  queries: queries,
+  skip: number,
+  limit: number
+) {
+  const countsQuery = Purchase.find(queries).countDocuments();
+  const purchasesQuery = Purchase.find(queries)
+    .skip(skip)
+    .limit(limit + 1);
+
+  const [purchaseCount, purchasesWithOverhead] = await Promise.all([
+    countsQuery,
+    purchasesQuery,
+  ]);
+
+  return { purchaseCount, purchasesWithOverhead };
+}
+
+export interface purchasesResult {
+  purchases: purchase[];
+  pagination: Pagination;
+}
+
+export const getAllPurchases = async (
+  userId: string,
+  type: string,
+  page: number,
+  limit: number
+): Promise<purchasesResult> => {
+  const skip = (page - 1) * limit;
+
+  const queries = constructQueries(userId, type);
+  const { purchaseCount, purchasesWithOverhead } = await getPurchasesAndCounts(
+    queries,
+    skip,
+    limit
+  );
+
+  // For easy navigation through purchases
+  const hasNext = purchasesWithOverhead.length > limit;
+  const totalPage = Math.ceil(purchaseCount / limit);
+  const purchases = purchasesWithOverhead.slice(0, limit);
+
+  return {
+    purchases,
+    pagination: {
+      page,
+      limit,
+      hasNext,
+      totalPage,
+    },
+  };
 };

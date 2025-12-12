@@ -9,6 +9,8 @@ import {
   addToCartController,
   removeItemFromCartController,
   getCartController,
+  getAllPurchaseController,
+  getPurchaseController,
 } from "../controllers/users.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
@@ -49,7 +51,7 @@ router.delete(
   allowRole("user"),
   removeFromUsersFavourites
 );
-// cart
+// Cart routes
 router.post("/users/me/cart", withAuth, allowRole("user"), addToCartController);
 router.patch(
   "/users/me/cart",
@@ -60,7 +62,7 @@ router.patch(
 
 router.get("/users/me/cart", withAuth, allowRole("user"), getCartController);
 
-/* Orders */
+/* Orders routes */
 router.get(
   "/users/me/orders",
   withAuth,
@@ -72,6 +74,20 @@ router.get(
   withAuth,
   allowRole("user"),
   getOrderController
+);
+
+/* Purchases routes */
+router.get(
+  "/users/me/purchases",
+  withAuth,
+  allowRole("user"),
+  getAllPurchaseController
+);
+router.get(
+  "/users/me/purchases/:id",
+  withAuth,
+  allowRole("user"),
+  getPurchaseController
 );
 
 export default router;
