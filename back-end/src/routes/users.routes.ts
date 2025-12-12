@@ -13,6 +13,10 @@ import {
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
 import { uploadPicture } from "../middlewares/upload.js";
+import {
+  getAllOrdersController,
+  getOrderController,
+} from "../controllers/shared/orders.shared.controllers.js";
 
 const router = Router();
 
@@ -53,6 +57,21 @@ router.patch(
   allowRole("user"),
   removeItemFromCartController
 );
+
 router.get("/users/me/cart", withAuth, allowRole("user"), getCartController);
+
+/* Orders */
+router.get(
+  "/users/me/orders",
+  withAuth,
+  allowRole("user"),
+  getAllOrdersController
+);
+router.get(
+  "/users/me/orders/:id",
+  withAuth,
+  allowRole("user"),
+  getOrderController
+);
 
 export default router;

@@ -4,3 +4,10 @@ export interface ApiResponse<T> {
   data?: T;
   error?: T;
 }
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  hasNext: boolean;
+  totalPage: number;
+}

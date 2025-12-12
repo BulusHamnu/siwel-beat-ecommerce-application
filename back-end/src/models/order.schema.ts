@@ -48,7 +48,7 @@ const order = new mongoose.Schema<OrderInterface>(
         "chargeback",
       ],
     },
-    products: [mongoose.Schema.ObjectId],
+    products: [{ type: mongoose.Schema.ObjectId, ref: "Track" }],
     paymentMethod: {
       type: String,
       default: "card",

@@ -12,6 +12,7 @@ import Purchase, { type purchase } from "../models/purchase.schema.js";
 import path from "path";
 import { type createTrackBody } from "../models/track.schema.js";
 import supabase from "./supabase.js";
+import { type Pagination } from "../controllers/responseInterface.js";
 
 interface trackData extends createTrackBody {
   license: LicenseInterface;
@@ -69,13 +70,6 @@ export interface Queries {
   search: string;
   type: string;
   tags: string[] | string;
-}
-
-export interface Pagination {
-  page: number;
-  limit: number;
-  hasNext: boolean;
-  totalPage: number;
 }
 
 export interface tracksResults {

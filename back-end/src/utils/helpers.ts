@@ -58,3 +58,17 @@ export const createHashpasswordAndEmailVerification = async (
 
   return { hashPassword, emailVerification };
 };
+
+/* Get date range function */
+export function getDateRange(date: string) {
+  const [year, month, day] = date.split("-");
+
+  const start = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day), 0, 0, 0)
+  );
+  const end = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999)
+  );
+
+  return { start, end };
+}

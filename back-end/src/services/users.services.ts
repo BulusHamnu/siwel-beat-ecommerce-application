@@ -8,7 +8,7 @@ import AppError from "../errors/appError.js";
 import supabase from "./supabase.js";
 import Favourite from "../models/favourite.schema.js";
 import Track, { type TrackInterface } from "../models/track.schema.js";
-import mongoose, { type ObjectId } from "mongoose";
+import mongoose from "mongoose";
 
 // GET USER PROFILE SERVICE
 export const getProfile = async (id: string): Promise<userProfile> => {

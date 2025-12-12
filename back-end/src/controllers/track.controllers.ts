@@ -15,8 +15,8 @@ import {
   type populatedComment,
   type Queries,
   type tracksResults,
-  type Pagination,
 } from "../services/track.services.js";
+import { type Pagination } from "./responseInterface.js";
 import logger from "../utils/logger.js";
 import AppError from "../errors/appError.js";
 import Comment, { type CommentInterface } from "../models/comment.schema.js";
