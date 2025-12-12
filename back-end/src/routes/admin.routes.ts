@@ -1,6 +1,7 @@
 import express, { Router } from "express";
 import {
   getAdminProfileController,
+  getDashboardController,
   updateAdminProfileController,
 } from "../controllers/admin.controllers.js";
 import withAuth from "../middlewares/withAuth.js";
@@ -38,6 +39,14 @@ router.get(
   withAuth,
   allowRole("admin"),
   getOrderController
+);
+
+/* Dashboard routes */
+router.get(
+  "/admins/dashboard",
+  withAuth,
+  allowRole("admin"),
+  getDashboardController
 );
 
 export default router;

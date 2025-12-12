@@ -2,6 +2,10 @@ import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
 import User, { type UserDocument } from "../models/user.schema.js";
 import AppError from "../errors/appError.js";
+import {
+  getDashboard,
+  type dashboardStatistics,
+} from "../services/admin.services.js";
 
 // GET ADMIN PROFILE ROUTE
 export const getAdminProfileController = async (
@@ -58,6 +62,28 @@ export const updateAdminProfileController = async (
       status: true,
       message: "Admin profile updated succefully.",
       data: user.removeUnwantedField(),
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* Get admin dashboard controller */
+export const getDashboardController = async (
+  req: Request,
+  res: Response<ApiResponse<dashboardStatistics>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+
+    const dashboard = await getDashboard();
+    const response: ApiResponse<dashboardStatistics> = {
+      status: true,
+      message: "Dashboard retrived successfully.",
+      data: dashboard,
     };
 
     res.status(200).json(response);
