@@ -4,6 +4,7 @@ import sendEmail from "../services/sendEmail.js";
 import env from "../configs/env.js";
 import Template from "../utils/emailTemplate.js";
 import AppError from "../errors/appError.js";
+import logger from "../utils/logger.js";
 
 export const contactmeController = async (
   req: Request<
@@ -31,6 +32,7 @@ export const contactmeController = async (
       Template.contactMeTemplate(data)
     );
 
+    logger.info(`${data.name} just sent a message.`);
     const response: ApiResponse<void> = {
       status: true,
       message: "Message was sent successfully.",

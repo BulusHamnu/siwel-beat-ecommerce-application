@@ -20,6 +20,7 @@ export const subscribeToNewletterController = async (
 
     await subscribeToNewsletter(email);
 
+    logger.info(`${email} just subcribed to the newletter.`);
     const response: ApiResponse<void> = {
       status: true,
       message: "You have successfully subcribed to the news-letter.",
@@ -49,7 +50,7 @@ export const unsubscribeToNewletterController = async (
     res.status(302).redirect(redirect);
   } catch (error) {
     logger.error(
-      `An error occur while trying to unsubscibe user from news-letter.`
+      `An error occur while trying to unsubscribe user from news-letter.`
     );
     res
       .status(302)
