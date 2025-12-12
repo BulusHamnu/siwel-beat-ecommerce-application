@@ -77,19 +77,17 @@ export interface tracksResults {
   pagination: Pagination;
 }
 
-export const getTracks = async ({
-  limit = 10,
-  page = 1,
-  genre,
-  search,
-  type,
-  tags,
-}: Queries): Promise<tracksResults> => {
-  // contrust queries
+function construtQueries(
+  genre: string,
+  search: string,
+  type: string,
+  tags: string[] | string
+): any {
+  // Filter should matche request
   const matches: any = {};
   if (genre) matches.genre = genre.toLowerCase();
   if (type) matches.type = type.toLowerCase();
-  // matches.status = "active"; // only show active tracks
+  matches.status = "active"; // users should not have access to in-active track
 
   if (tags) {
     tags?.length > 0 && Array.isArray(tags)
@@ -110,27 +108,52 @@ export const getTracks = async ({
   };
 
   if (!search) queries = matches;
-  const totalTracksCount: number = await Track.find(queries).countDocuments();
 
-  limit = Number(limit);
-  page = Number(page);
+  return queries;
+}
 
-  const totalPage = Math.ceil(totalTracksCount / limit); // calculate total page
-  const skip = (page - 1) * limit; // calculate skip
-
-  // get tracks
-  let tracks: TrackInterface[] = await Track.find(queries)
+//
+async function getTracksAndCounts(queries: any, skip: number, limit: number) {
+  const countsQuery = Track.find(queries).countDocuments();
+  let tracksQuery = Track.find(queries)
     .skip(skip)
     .limit(limit + 1)
     .sort({ createdAt: -1 });
 
-  const hasNext = tracks.length > limit;
+  const [totalTracksCount, tracksWithOverhead] = await Promise.all([
+    countsQuery,
+    tracksQuery,
+  ]);
 
-  // slice tracks to limit and remove fileurl and license
-  tracks = tracks.slice(0, limit);
+  return { totalTracksCount, tracksWithOverhead };
+}
+
+export const getTracks = async ({
+  limit = 10,
+  page = 1,
+  genre,
+  search,
+  type,
+  tags,
+}: Queries): Promise<tracksResults> => {
+  limit = Number(limit);
+  page = Number(page);
+  const skip = (page - 1) * limit; // calculate skip
+
+  const queries = construtQueries(genre, search, type, tags);
+  const { totalTracksCount, tracksWithOverhead } = await getTracksAndCounts(
+    queries,
+    skip,
+    limit
+  );
+
+  const totalPage = Math.ceil(totalTracksCount / limit);
+  const hasNext = tracksWithOverhead.length > limit;
+
+  // Prevent exposing files urls
+  let tracks: TrackInterface[] = tracksWithOverhead.slice(0, limit);
   tracks = tracks.map((track) => track.removeUnwantedFields());
 
-  // return pagination
   const pagination: Pagination = {
     totalPage,
     page,
@@ -228,7 +251,7 @@ export const getCommentAndReplies = async (
   const profile = await Profile.findOne({ userId: comment.userId._id });
 
   comment.userId["picture"] = profile?.picture || "";
-  const trackReplies: populatedComment[] = await Comment.find({
+  const trackReplies: any[] = await Comment.find({
     parentId: commentId,
   })
     .populate("userId", "_id username isVerified")
