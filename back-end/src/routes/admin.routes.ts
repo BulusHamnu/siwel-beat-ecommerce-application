@@ -10,6 +10,12 @@ import {
   getOrderController,
   getAllOrdersController,
 } from "../controllers/shared/orders.shared.controllers.js";
+import {
+  deleteNotificationController,
+  getAllNotificationsController,
+  getNotificationController,
+  updateNoticationAsReadController,
+} from "../controllers/shared/notification.controllers.js";
 
 const router = Router();
 
@@ -47,6 +53,35 @@ router.get(
   withAuth,
   allowRole("admin"),
   getDashboardController
+);
+
+/* Notifications routes */
+router.get(
+  "/admins/notifications",
+  withAuth,
+  allowRole("admin"),
+  getAllNotificationsController
+);
+
+router.get(
+  "/admins/notifications/:id",
+  withAuth,
+  allowRole("admin"),
+  getNotificationController
+);
+
+router.patch(
+  "/admins/notifications/:id",
+  withAuth,
+  allowRole("admin"),
+  updateNoticationAsReadController
+);
+
+router.delete(
+  "/admins/notifications/:id",
+  withAuth,
+  allowRole("admin"),
+  deleteNotificationController
 );
 
 export default router;

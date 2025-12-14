@@ -19,6 +19,12 @@ import {
   getAllOrdersController,
   getOrderController,
 } from "../controllers/shared/orders.shared.controllers.js";
+import {
+  deleteNotificationController,
+  getAllNotificationsController,
+  getNotificationController,
+  updateNoticationAsReadController,
+} from "../controllers/shared/notification.controllers.js";
 
 const router = Router();
 
@@ -51,7 +57,9 @@ router.delete(
   allowRole("user"),
   removeFromUsersFavourites
 );
-// Cart routes
+
+
+/* Cart routes */
 router.post("/users/me/cart", withAuth, allowRole("user"), addToCartController);
 router.patch(
   "/users/me/cart",
@@ -88,6 +96,35 @@ router.get(
   withAuth,
   allowRole("user"),
   getPurchaseController
+);
+
+/* Notifications routes */
+router.get(
+  "/users/me/notifications",
+  withAuth,
+  allowRole("user"),
+  getAllNotificationsController
+);
+
+router.get(
+  "/users/me/notifications/:id",
+  withAuth,
+  allowRole("user"),
+  getNotificationController
+);
+
+router.patch(
+  "/users/me/notifications/:id",
+  withAuth,
+  allowRole("user"),
+  updateNoticationAsReadController
+);
+
+router.delete(
+  "/users/me/notifications/:id",
+  withAuth,
+  allowRole("user"),
+  deleteNotificationController
 );
 
 export default router;

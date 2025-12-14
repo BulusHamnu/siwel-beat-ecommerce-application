@@ -1,0 +1,83 @@
+import AppError from "../errors/appError.js";
+import Notification, {
+  type notification,
+} from "../models/notification.schema.js";
+
+/* Post new notification */
+export const postNewNotification = async (
+  userId: string,
+  message: string,
+  type: string
+) => {
+  const newNotification: notification = await Notification.create({
+    userId,
+    message,
+    type,
+  });
+
+  return newNotification;
+};
+
+/* Get all notifications */
+function constructQueries(
+  userId: string,
+  read: string = ""
+): { status?: string; userId: string } {
+  const queries: { read?: Boolean; userId: string } = { userId };
+  if (read) queries["read"] = read === "true" ? true : false;
+  return queries;
+}
+
+export const getAllNotifications = async (
+  userId: string,
+  read: string
+): Promise<notification[]> => {
+  const queries = constructQueries(userId, read);
+  const notifications = Notification.find(queries);
+  return notifications;
+};
+
+/* Get a notification */
+export const getNotification = async (
+  userId: string,
+  notificationId: string
+): Promise<notification> => {
+  // Users can only retrive their notification
+  const notification = await Notification.findOne({
+    _id: notificationId,
+    userId,
+  });
+  if (!notification) throw new AppError("Notification not found", 404, true);
+  return notification;
+};
+
+/* Update notification as read */
+export const updateNotificationAsRead = async (
+  userId: string,
+  notificationId: string,
+  read: Boolean
+): Promise<notification> => {
+  const updatedNotification: notification | null =
+    await Notification.findOneAndUpdate(
+      { _id: notificationId, userId },
+      { $set: { read } },
+      { new: true }
+    );
+
+  if (!updatedNotification)
+    throw new AppError("Notification not found", 404, true);
+
+  return updatedNotification;
+};
+
+/* Delete notification */
+export const deleteNotification = async (
+  userId: string,
+  notificationId: string
+): Promise<void> => {
+  // Allowed only logged user to delete their notification
+  await Notification.findOneAndDelete({
+    _id: notificationId,
+    userId,
+  });
+};
