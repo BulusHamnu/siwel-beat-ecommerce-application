@@ -2,6 +2,7 @@ import AppError from "../errors/appError.js";
 import Notification, {
   type notification,
 } from "../models/notification.schema.js";
+import User, { type UserDocument } from "../models/user.schema.js";
 
 /* Post new notification */
 export const postNewNotification = async (
@@ -83,3 +84,23 @@ export const deleteNotification = async (
     userId,
   });
 };
+
+/* Notify admins for event */
+export async function notifyAdmins(
+  message: string,
+  type: string,
+  entityId: string | null = null
+) {
+  // There is not specify admin, all active admins will be notify
+  const admins: UserDocument[] = await User.find({
+    role: "admin",
+    isActive: true,
+  });
+
+  if (admins.length <= 0) return;
+  const notificationQueries = admins.map((admin) => {
+    return postNewNotification(admin._id as string, message, type, entityId);
+  });
+
+  await Promise.all(notificationQueries);
+}

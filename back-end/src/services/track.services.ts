@@ -13,6 +13,7 @@ import path from "path";
 import { type createTrackBody } from "../models/track.schema.js";
 import supabase from "./supabase.js";
 import { type Pagination } from "../controllers/responseInterface.js";
+import { notifyAdmins, postNewNotification } from "./notification.services.js";
 
 interface trackData extends createTrackBody {
   license: LicenseInterface;
@@ -224,6 +225,57 @@ export const updateTrack = async (
   return track.removeUnwantedFields();
 };
 
+/* Post a comment */
+export interface parentComment extends Omit<CommentInterface, "userId"> {
+  userId: {
+    _id: string;
+    username: string;
+    email: string;
+  };
+}
+
+async function sendCommentReplyNotification(
+  parentId: ObjectId,
+  entityId: string
+): Promise<void> {
+  const parentComment = (await Comment.findOne({ _id: parentId }).populate(
+    "userId",
+    "username email _id"
+  )) as parentComment | null;
+
+  if (!parentComment) return;
+
+  await postNewNotification(
+    parentComment?.userId._id!,
+    `${parentComment?.userId.username} replied to your comment.`,
+    "COMMENT_REPLIED",
+    entityId
+  );
+}
+
+export const postNewComment = async (
+  trackId: string,
+  userId: string,
+  { parentId, content }: CommentInterface
+): Promise<CommentInterface> => {
+  const track = await Track.findOne({ _id: trackId });
+  if (!track) throw new AppError("Track not found.", 404, true);
+
+  const comment = await Comment.create({ content, parentId, trackId, userId });
+  if (parentId) {
+    // Notify commenter for replies
+    await sendCommentReplyNotification(parentId, comment._id as string);
+  } else {
+    await notifyAdmins(
+      "You have a new comment on your track.",
+      "TRACK_COMMENTED",
+      comment._id as string
+    );
+  }
+
+  return comment;
+};
+
 // GET A COMMENT SERVICE
 export interface populatedComment extends Omit<CommentInterface, "userId"> {
   userId: {
@@ -294,39 +346,39 @@ export const getAllComments = async (
   return allComments;
 };
 
-// GET TRACK LICENSE FOR DOWNLOAD
-export const downloadTrackFile = async (
-  user: userPayload,
-  trackId: string,
+/* Get track file for download */
+async function checkForPurchase(
+  role: string,
+  userId: string,
   licenseType: string,
-  requestFile: string
-): Promise<{ fileName: string; filePath: string }> => {
-  const track: TrackInterface | null = await Track.findOne({ _id: trackId });
-  if (!track) throw new AppError("Track not found.", 404, true);
+  trackId: string
+): Promise<boolean> {
+  if (role === "admin") return true;
 
-  // add logic later to check if user purchase this track in other to buy it
-  let purchasedTrack: purchase | null | boolean = true;
-  if (user.role !== "admin") {
-    purchasedTrack = await Purchase.findOne({
-      trackId,
-      userId: user.id,
-      type: licenseType,
-    });
-  } else {
-    purchasedTrack = true;
-  }
+  let purchasedTrack: purchase | null = await Purchase.findOne({
+    trackId,
+    userId,
+    type: licenseType,
+  });
 
   if (!purchasedTrack)
     throw new AppError(
-      "Unable to download license, no purchase found for this track.",
+      "Unable to download license, no purchase found.",
       404,
       true
     );
 
+  return true;
+}
+
+async function transformNameAndPath(
+  requestFile: string,
+  licenseType: string,
+  track: TrackInterface
+) {
   let filePath: string = "";
   let fileName = track.title.replace(" ", "_");
 
-  // check for license type
   if (requestFile === "document") {
     if (licenseType === "premium") {
       filePath = track.license.premium;
@@ -341,6 +393,25 @@ export const downloadTrackFile = async (
   } else {
     throw new AppError("Unsupported file type", 400, true);
   }
+
+  return { filePath, fileName };
+}
+
+export const retriveTrackFilePaths = async (
+  user: userPayload,
+  trackId: string,
+  licenseType: string,
+  requestFile: string
+): Promise<{ fileName: string; filePath: string }> => {
+  const track: TrackInterface | null = await Track.findOne({ _id: trackId });
+  if (!track) throw new AppError("Track not found.", 404, true);
+
+  await checkForPurchase(user.role, user.id, licenseType, trackId);
+  const { fileName, filePath } = await transformNameAndPath(
+    requestFile,
+    licenseType,
+    track
+  );
 
   return { fileName, filePath };
 };

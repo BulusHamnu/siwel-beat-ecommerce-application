@@ -8,7 +8,7 @@ import {
 import env from "../configs/env.js";
 import logger from "../utils/logger.js";
 
-// SUBSCRIBE TO NEWSLETTER CONTROLLER
+/* Subscribe to newsletter controller */
 export const subscribeToNewletterController = async (
   req: Request<{}, ApiResponse<void>, { email: string }, {}>,
   res: Response<ApiResponse<void>>,
@@ -23,7 +23,7 @@ export const subscribeToNewletterController = async (
     logger.info(`${email} just subcribed to the newletter.`);
     const response: ApiResponse<void> = {
       status: true,
-      message: "You have successfully subcribed to the news-letter.",
+      message: "You have successfully subscribed to the news-letter.",
     };
 
     res.status(200).json(response);
@@ -32,7 +32,7 @@ export const subscribeToNewletterController = async (
   }
 };
 
-// UNSUBSCRIBE FROM NEWSLETTER CONTROLLER
+/* Unsubscribe to newsletter controller */
 export const unsubscribeToNewletterController = async (
   req: Request<{}, ApiResponse<void>, {}, { email: string; token: string }>,
   res: Response<ApiResponse<void>>,
@@ -50,7 +50,7 @@ export const unsubscribeToNewletterController = async (
     res.status(302).redirect(redirect);
   } catch (error) {
     logger.error(
-      `An error occur while trying to unsubscribe user from news-letter.`
+      `An error occur while trying to remove user from news-letter.`
     );
     res
       .status(302)

@@ -1,11 +1,10 @@
 import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
-import sendEmail from "../services/sendEmail.js";
-import env from "../configs/env.js";
-import Template from "../utils/emailTemplate.js";
 import AppError from "../errors/appError.js";
 import logger from "../utils/logger.js";
+import { sendMessage } from "../services/public.apis.services.js";
 
+/* Contact me controller */
 export const contactmeController = async (
   req: Request<
     {},
@@ -25,14 +24,9 @@ export const contactmeController = async (
         true
       );
 
-    // send email
-    await sendEmail(
-      env.ADMIN_EMAIL,
-      "New Message From Siwel Beatz App",
-      Template.contactMeTemplate(data)
-    );
+    await sendMessage(data);
 
-    logger.info(`${data.name} just sent a message.`);
+    logger.info(`New message from contact form.`);
     const response: ApiResponse<void> = {
       status: true,
       message: "Message was sent successfully.",

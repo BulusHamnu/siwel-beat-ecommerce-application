@@ -10,11 +10,12 @@ import {
   updateTrack,
   getCommentAndReplies,
   getAllComments,
-  downloadTrackFile,
+  retriveTrackFilePaths,
   type TrackUpdates,
   type populatedComment,
   type Queries,
   type tracksResults,
+  postNewComment,
 } from "../services/track.services.js";
 import { type Pagination } from "./responseInterface.js";
 import logger from "../utils/logger.js";
@@ -23,6 +24,7 @@ import Comment, { type CommentInterface } from "../models/comment.schema.js";
 import supabase from "../services/supabase.js";
 import Stream, { Readable } from "stream";
 import { fileTypeFromBlob } from "file-type";
+import { postNewNotification } from "../services/notification.services.js";
 
 // POST NEW TRACK CONTROLLER
 export const postTrackController = async (
@@ -239,16 +241,11 @@ export const postCommentController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId: string | undefined = req.user?.id;
+    const userId = req.user!.id;
     const data = req.body;
     const trackId = req.params.id;
 
-    // check if track exist
-    const track = await Track.findOne({ _id: trackId });
-    if (!track) throw new AppError("Track does not exist.", 404, true);
-
-    const comment = await Comment.create({ ...data, trackId, userId });
-
+    const comment = await postNewComment(trackId, userId, data);
     const response: ApiResponse<CommentInterface> = {
       status: true,
       message: "Comment posted sucessfully.",
@@ -401,7 +398,28 @@ export const deleteCommentController = async (
   }
 };
 
-// GET A TRACK LICENSE
+/* Download track files */
+async function retriveTrackFile(type: string, filePath: string): Promise<any> {
+  // Get bucket name: so item can be retrive from the right bucket
+  let bucket = "";
+  switch (type) {
+    case "audio":
+      bucket = "audios";
+      break;
+    case "document":
+      bucket = "documents";
+      break;
+  }
+
+  const { data, error } = await supabase.client.from(bucket).download(filePath);
+  if (error) {
+    logger.error("An error occur while downloading file from supabase", error);
+    throw new AppError("Download error.", 500, true);
+  }
+
+  return data;
+}
+
 export const downloadTrackFileController = async (
   req: Request<{ id: string }, {}, {}, { type: string; license: string }>,
   res: Response,
@@ -412,28 +430,15 @@ export const downloadTrackFileController = async (
     const user = req.user!;
     const { type, license } = req.query;
 
-    const { fileName, filePath } = await downloadTrackFile(
+    const { fileName, filePath } = await retriveTrackFilePaths(
       user,
       id,
       license,
       type
     );
 
-    const bucket = type === "audio" ? "audios" : "documents";
-    const { data, error } = await supabase.client
-      .from(bucket)
-      .download(filePath);
-    // throw error if any
-    if (error) {
-      logger.error(
-        "An error occur while downloading file from supabase",
-        error
-      );
-      throw new AppError("Download error.", 500, true);
-    }
-
-    // create node stream type from blob
-    const readable = Readable.fromWeb(data.stream());
+    const data = await retriveTrackFile(type, filePath);
+    const readable = Readable.fromWeb(data.stream()); // Stream for fast and reliable download
 
     // set headers
     const fileTYpe = await fileTypeFromBlob(data);
@@ -442,6 +447,16 @@ export const downloadTrackFileController = async (
     res.setHeader("Content-Type", contentType!);
 
     readable.pipe(res);
+    res.on("close", async () => {
+      if (!res.writableEnded) return;
+      // Notify user: so user will know the file was download
+      await postNewNotification(
+        user.id,
+        "File downloaded sucessfully.",
+        "DOWNLOAD_COMPLETED",
+        id
+      );
+    });
   } catch (error) {
     next(error);
   }

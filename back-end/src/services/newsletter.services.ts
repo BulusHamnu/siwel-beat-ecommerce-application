@@ -5,9 +5,13 @@ import AppError from "../errors/appError.js";
 import sendEmail from "./sendEmail.js";
 import Template from "../utils/emailTemplate.js";
 import crypto from "crypto";
+import { notifyAdmins, postNewNotification } from "./notification.services.js";
 
-// SUBCRIBTION SERVICE
-export const subscribeToNewsletter = async (email: string): Promise<void> => {
+/* Subcribe to news letter */
+async function addToList(
+  email: string
+): Promise<{ token: string; sub: newsletterInterface }> {
+  let sub: newsletterInterface | null = null;
   const subExist: newsletterInterface | null = await Newsletter.findOne({
     email,
   });
@@ -19,20 +23,31 @@ export const subscribeToNewsletter = async (email: string): Promise<void> => {
     token = crypto.randomBytes(24).toString("hex");
     subExist.subscribed = true;
     subExist.token = token;
-    await subExist.save();
+    sub = await subExist.save();
   } else {
     token = crypto.randomBytes(24).toString("hex");
-    await Newsletter.create({ email, subscribed: true, token });
+    sub = await Newsletter.create({ email, subscribed: true, token });
   }
 
+  return { token, sub };
+}
+
+export const subscribeToNewsletter = async (email: string): Promise<void> => {
+  const { token, sub } = await addToList(email);
   await sendEmail(
     email,
     "You're Now on the List 🎉",
     Template.newsletterSubscriptionNotification(email, token)
   );
+
+  await notifyAdmins(
+    "Hurray! Someone just join the newsletter.",
+    "NEWSLETTER_SUBSCRIBED",
+    sub._id as string
+  );
 };
 
-// UNSUBSCRIPE SERVICE
+/*  Unsubscribe from news letter */
 export const unsubscribeFromNewsletter = async (
   email: string,
   token: string
