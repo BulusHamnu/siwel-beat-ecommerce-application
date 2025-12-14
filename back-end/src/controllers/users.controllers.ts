@@ -34,8 +34,8 @@ export const getProfileController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId: string | undefined = req.user?.id;
-    const profile: userProfile = await getProfile(userId || "");
+    const userId: string = req.user!.id;
+    const profile: userProfile = await getProfile(userId);
 
     const response: ApiResponse<userProfile> = {
       status: true,

@@ -7,12 +7,14 @@ import Notification, {
 export const postNewNotification = async (
   userId: string,
   message: string,
-  type: string
+  type: string,
+  entityId: string | null
 ) => {
   const newNotification: notification = await Notification.create({
     userId,
     message,
     type,
+    entityId,
   });
 
   return newNotification;

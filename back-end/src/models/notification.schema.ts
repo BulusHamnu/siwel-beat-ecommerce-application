@@ -7,6 +7,7 @@ export interface notification extends Document {
   message: string;
   read: boolean;
   type: string;
+  entityId: ObjectId;
 }
 
 const notification = new mongoose.Schema<notification>(
@@ -28,6 +29,10 @@ const notification = new mongoose.Schema<notification>(
     read: {
       type: Boolean,
       default: false,
+    },
+    entityId: {
+      type: mongoose.Schema.ObjectId,
+      default: null,
     },
   },
   { timestamps: true }

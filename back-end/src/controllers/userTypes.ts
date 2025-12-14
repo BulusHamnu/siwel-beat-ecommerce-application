@@ -1,4 +1,4 @@
-import type { cartInterface } from "../models/profile.schema.js";
+import type { cartItem } from "../models/profile.schema.js";
 
 // userbody types
 export interface createUserBody {
@@ -24,7 +24,10 @@ export interface userProfile {
   lastName: string;
   gender: string;
   bio: string;
-  carts: cartInterface[];
+  username: string;
+  role: string;
+  isActive: string;
+  cart?: cartItem[];
   profilePic: string;
   createdAt: Date;
   updatedAt: Date;

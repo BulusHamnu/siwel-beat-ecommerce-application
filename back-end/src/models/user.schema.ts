@@ -22,6 +22,7 @@ export interface UserDocument extends Document {
   };
   createdAt: Date;
   updatedAt: Date;
+  isActive: boolean;
 
   // methods
   comparePassword(password: string): Promise<boolean>;
@@ -72,6 +73,10 @@ const userSchema = new Schema<UserDocument>(
       googleId: String,
       idToken: String,
       accessToken: String,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }

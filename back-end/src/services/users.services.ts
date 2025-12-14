@@ -16,18 +16,21 @@ import type { Pagination } from "../controllers/responseInterface.js";
 // GET USER PROFILE SERVICE
 export const getProfile = async (id: string): Promise<userProfile> => {
   const user: UserDocument | null = await User.findOne({ _id: id });
-  if (!user) throw new AppError("User does not exist.", 404, true);
+  if (!user) throw new AppError("User not found.", 404, true);
 
   const profile: ProfileDocument | null = await Profile.findOne({
-    userId: user?._id,
+    userId: user._id,
   });
+  const profileObj = profile?.toObject();
+  delete profileObj.cart;
 
   return {
     username: user.username,
     isVerified: user.isVerified,
     email: user.email,
     role: user.role,
-    ...profile?.toObject(),
+    isActive: user.isActive,
+    ...profileObj,
   };
 };
 
