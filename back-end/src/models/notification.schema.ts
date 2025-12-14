@@ -1,13 +1,15 @@
 import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 
-export interface Notification extends Document {
+export interface notification extends Document {
   userId: ObjectId;
   date: Date;
-  description: string;
+  message: string;
+  read: boolean;
+  type: string;
 }
 
-const notification = new mongoose.Schema<Notification>(
+const notification = new mongoose.Schema<notification>(
   {
     userId: {
       type: mongoose.Schema.ObjectId,
@@ -18,13 +20,18 @@ const notification = new mongoose.Schema<Notification>(
       type: Date,
       default: Date.now,
     },
-    description: {
+    type: String,
+    message: {
       type: String,
       required: true,
+    },
+    read: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
 );
 
-const Notification = mongoose.model<Notification>("Notification", notification);
+const Notification = mongoose.model<notification>("Notification", notification);
 export default Notification;
