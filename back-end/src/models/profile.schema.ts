@@ -1,7 +1,7 @@
 import mongoose, { type Date, type ObjectId } from "mongoose";
 import { Document, Schema, Model, model } from "mongoose";
 
-export interface cartItem {
+export interface CartItem {
   productId: ObjectId;
   name: string;
   license: string;
@@ -16,7 +16,7 @@ export interface ProfileDocument extends Document {
   lastName: string;
   gender: string;
   bio: string;
-  cart: cartItem[];
+  cart: CartItem[];
   picture: string;
   createdAt: Date;
   updatedAt: Date;

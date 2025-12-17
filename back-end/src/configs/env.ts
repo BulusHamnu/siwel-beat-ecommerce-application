@@ -38,6 +38,7 @@ interface Env {
   DIR_NAME: string;
   AUDIO_FILES_BUCKET: string;
   LICENSE_FILES_BUCKET: string;
+  IMAGE_FILES_BUCKET: string;
 }
 
 const env: Env = {
@@ -70,6 +71,7 @@ const env: Env = {
   DIR_NAME: _dirName,
   AUDIO_FILES_BUCKET: process.env.AUDIO_FILES_BUCKET || "audios",
   LICENSE_FILES_BUCKET: process.env.LICENSE_FILES_BUCKET || "documents",
+  IMAGE_FILES_BUCKET: process.env.IMAGE_FILES_BUCKET || "images",
 };
 
 export default env;

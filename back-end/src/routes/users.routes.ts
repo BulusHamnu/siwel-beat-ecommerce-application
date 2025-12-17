@@ -5,7 +5,7 @@ import {
   updateProfilePictureController,
   getUsersFavourites,
   addUsersFavourites,
-  removeFromUsersFavourites,
+  removeFromFavouritesController,
   addToCartController,
   removeItemFromCartController,
   getCartController,
@@ -55,9 +55,8 @@ router.delete(
   "/users/me/favourites",
   withAuth,
   allowRole("user"),
-  removeFromUsersFavourites
+  removeFromFavouritesController
 );
-
 
 /* Cart routes */
 router.post("/users/me/cart", withAuth, allowRole("user"), addToCartController);

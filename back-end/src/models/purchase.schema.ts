@@ -1,7 +1,7 @@
 import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 
-export interface purchase extends Document {
+export interface PurchaseInterface extends Document {
   userId: ObjectId;
   trackId: ObjectId;
   type: string;
@@ -9,7 +9,7 @@ export interface purchase extends Document {
   amount: number;
 }
 
-const purchase = new mongoose.Schema<purchase>(
+const purchase = new mongoose.Schema<PurchaseInterface>(
   {
     userId: {
       type: mongoose.Schema.ObjectId,
@@ -39,5 +39,5 @@ const purchase = new mongoose.Schema<purchase>(
   { timestamps: true }
 );
 
-const Purchase = mongoose.model<purchase>("Purchase", purchase);
+const Purchase = mongoose.model<PurchaseInterface>("Purchase", purchase);
 export default Purchase;

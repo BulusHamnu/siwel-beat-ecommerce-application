@@ -5,22 +5,28 @@ import {
   getProfile,
   updateProfile,
   updateProfilePicture,
-  addFavouriteTrack,
+  type ProfileUpdatesInput,
+} from "../services/users/users.services.js";
+import {
   addToCart,
   removeFromCart,
   getUserCart,
+} from "../services/users/cart.services.js";
+import {
+  addFavouriteTrack,
+  getFavourites,
+  removeFromFavourites,
+} from "../services/users/favourites.service.js";
+import {
   getAllPurchases,
-  type purchasesResult,
-} from "../services/users.services.js";
-import type { updates } from "../services/users.services.js";
+  type PurchasesResult,
+} from "../services/users/purchases.services.js";
+
 import AppError from "../errors/appError.js";
 import supabase from "../services/supabase.js";
-import Favourite, {
-  type FavouriteInterface,
-} from "../models/favourite.schema.js";
-import type { cartItem } from "../models/profile.schema.js";
-import type { purchase } from "../models/purchase.schema.js";
-import Purchase from "../models/purchase.schema.js";
+import { type FavouriteInterface } from "../models/favourite.schema.js";
+import type { CartItem } from "../models/profile.schema.js";
+import Purchase, { type PurchaseInterface } from "../models/purchase.schema.js";
 
 // GET USER PROFILE PROFILE CONTROLLER
 export const getProfileController = async (
@@ -53,7 +59,7 @@ export const updateProfileController = async (
   req: Request<
     {},
     { status: boolean; message: string; data?: userProfile },
-    updates,
+    ProfileUpdatesInput,
     {}
   >,
   res: Response<{ status: boolean; message: string; data?: userProfile }>,
@@ -61,7 +67,7 @@ export const updateProfileController = async (
 ): Promise<void> => {
   try {
     const userId: string | undefined = req.user?.id;
-    const updates: updates = req.body;
+    const updates: ProfileUpdatesInput = req.body;
 
     const profile: userProfile = await updateProfile(userId, updates);
 
@@ -135,7 +141,7 @@ export const addUsersFavourites = async (
   }
 };
 
-// GET USER'S FAVOURITES
+/* Get favourites controller */
 export const getUsersFavourites = async (
   req: Request<{}, ApiResponse<FavouriteInterface[]>, {}, {}>,
   res: Response<ApiResponse<FavouriteInterface[]>>,
@@ -144,11 +150,7 @@ export const getUsersFavourites = async (
   try {
     const user = req.user!;
 
-    const favourites = await Favourite.find({ userId: user.id }).populate(
-      "trackId",
-      "relatedTrack genre tags bpm status key type description price title _id"
-    );
-
+    const favourites = await getFavourites(user.id);
     const response: ApiResponse<FavouriteInterface[]> = {
       status: true,
       message: "Favourite tracks retrived successfully.",
@@ -161,7 +163,7 @@ export const getUsersFavourites = async (
 };
 
 // REMOVE FROM FAVOURITE LIST
-export const removeFromUsersFavourites = async (
+export const removeFromFavouritesController = async (
   req: Request<{}, ApiResponse<void>, { trackId: string }, {}>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
@@ -170,11 +172,10 @@ export const removeFromUsersFavourites = async (
     const user = req.user!;
     const { trackId } = req.body;
 
-    await Favourite.findOneAndDelete({ trackId, userId: user.id });
-
+    await removeFromFavourites(trackId, user.id);
     const response: ApiResponse<void> = {
       status: true,
-      message: "Track was removed from favourites list.",
+      message: "Track was removed succefully.",
     };
     res.status(201).json(response);
   } catch (error) {
@@ -228,15 +229,15 @@ export const removeItemFromCartController = async (
 
 // GET CART CONTROLLER
 export const getCartController = async (
-  req: Request<{}, ApiResponse<cartItem[]>, {}, {}>,
-  res: Response<ApiResponse<cartItem[]>>,
+  req: Request<{}, ApiResponse<CartItem[]>, {}, {}>,
+  res: Response<ApiResponse<CartItem[]>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const user = req.user!;
 
     const cart = await getUserCart(user.id);
-    const response: ApiResponse<cartItem[]> = {
+    const response: ApiResponse<CartItem[]> = {
       status: true,
       message: "Cart retrived successfully.",
       data: cart,
@@ -251,7 +252,7 @@ export const getCartController = async (
 /* Get user's purchases controller */
 export const getAllPurchaseController = async (
   req: Request<{}, {}, {}, { type: string; limit: string; page: string }>,
-  res: Response<ApiResponse<purchasesResult>>,
+  res: Response<ApiResponse<PurchasesResult>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -264,7 +265,7 @@ export const getAllPurchaseController = async (
       Number(page || 1),
       Number(limit || 10)
     );
-    const response: ApiResponse<purchasesResult> = {
+    const response: ApiResponse<PurchasesResult> = {
       status: true,
       message: "Purchases retrived successfully",
       data: purchases,
@@ -279,7 +280,7 @@ export const getAllPurchaseController = async (
 /* Get user's purchase controller */
 export const getPurchaseController = async (
   req: Request<{ id: string }, {}, {}, {}>,
-  res: Response<ApiResponse<purchase>>,
+  res: Response<ApiResponse<PurchaseInterface>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -289,7 +290,7 @@ export const getPurchaseController = async (
     const purchase = await Purchase.findOne({ userId: user.id, _id: id });
     if (!purchase) throw new AppError("Purchase not found", 404, true);
 
-    const response: ApiResponse<purchase> = {
+    const response: ApiResponse<PurchaseInterface> = {
       status: true,
       message: "Purchase retrived successfully",
       data: purchase,
