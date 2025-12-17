@@ -8,25 +8,30 @@ import {
   createNewTrack,
   getTracks,
   updateTrack,
-  getCommentAndReplies,
-  getAllComments,
-  retriveTrackFilePaths,
   type TrackUpdates,
-  type populatedComment,
   type Queries,
   type tracksResults,
+} from "../services/tracks/track.services.js";
+import {
   postNewComment,
-} from "../services/track.services.js";
+  getAllComments,
+  getCommentAndReplies,
+  type populatedComment,
+  updateComment,
+  deleteComment,
+} from "../services/tracks/comment.services.js";
+import { retriveTrackFilePaths } from "../services/tracks/download-track-file.services.js";
 import { type Pagination } from "./responseInterface.js";
 import logger from "../utils/logger.js";
 import AppError from "../errors/appError.js";
-import Comment, { type CommentInterface } from "../models/comment.schema.js";
+import { type CommentInterface } from "../models/comment.schema.js";
 import supabase from "../services/supabase.js";
 import Stream, { Readable } from "stream";
 import { fileTypeFromBlob } from "file-type";
 import { postNewNotification } from "../services/notification.services.js";
+import env from "../configs/env.js";
 
-// POST NEW TRACK CONTROLLER
+/* Post new track controller */
 export const postTrackController = async (
   req: Request<{}, ApiResponse<TrackInterface>, createTrackBody, {}>,
   res: Response<ApiResponse<TrackInterface>>,
@@ -39,7 +44,7 @@ export const postTrackController = async (
     const data: createTrackBody = req.body;
     // check for files
     if (Object.keys(files).length <= 3)
-      throw new AppError("Missing some track files.", 404, true);
+      throw new AppError("Missing track files.", 404, true);
 
     // upload files
     const uploaded = await supabase.uploadTrackFiles(files);
@@ -186,7 +191,7 @@ export const activateTrack = async (
   }
 };
 
-// UPDATE TRACK CONTROLLER
+/* Update track controler */
 export const updateTrackController = async (
   req: Request<{ id: string }, ApiResponse<TrackInterface>, TrackUpdates, {}>,
   res: Response<ApiResponse<TrackInterface>>,
@@ -209,14 +214,14 @@ export const updateTrackController = async (
       uploaded.license.premium,
     ];
 
-    const track = await updateTrack(trackId, updates, uploaded);
+    const updatedTrack = await updateTrack(trackId, updates, uploaded);
     const response: ApiResponse<TrackInterface> = {
       status: true,
       message: "Track was updated sucessfully.",
-      data: track,
+      data: updatedTrack,
     };
     logger.info("Track was updated succesfully.", {
-      id: track._id,
+      id: updatedTrack._id,
     });
 
     res.status(200).json(response);
@@ -299,7 +304,7 @@ export const getAllCommentController = async (
     const comments: populatedComment[] = await getAllComments(id);
     const response: ApiResponse<populatedComment[]> = {
       status: true,
-      message: "Comments retrive successfully.",
+      message: "Comments retrived successfully.",
       data: comments,
     };
 
@@ -320,35 +325,17 @@ export const updateCommentController = async (
   res: Response<ApiResponse<populatedComment>>,
   next: NextFunction
 ): Promise<void> => {
-  const { id, commentId } = req.params;
-  const userId = req.user?.id;
-  const content = req.body.content;
-
-  // find and update comment
-  const updatedComment = await Comment.findByIdAndUpdate(
-    {
-      _id: commentId,
-      trackId: id,
-      userId,
-    },
-    { $set: { content } },
-    { new: true }
-  )
-    .populate("userId", "_id username isVerified")
-    .lean();
-
-  if (!updatedComment) throw new AppError("Comment not found.", 404, true);
-
-  const comment = await getCommentAndReplies(
-    updatedComment._id as string,
-    updatedComment.trackId as string
-  );
-
   try {
+    const { id, commentId } = req.params;
+    const userId = req.user!.id;
+    const content = req.body.content;
+
+    const updatedComment = await updateComment(commentId, id, userId, content);
+
     const response: ApiResponse<populatedComment> = {
       status: true,
       message: "Comment was updated sucessfully.",
-      data: comment,
+      data: updatedComment,
     };
 
     res.status(200).json(response);
@@ -368,25 +355,11 @@ export const deleteCommentController = async (
   res: Response<ApiResponse<void>>,
   next: NextFunction
 ): Promise<void> => {
-  const { id, commentId } = req.params;
-  const userId = req.user?.id;
-
-  // delete comment and replies
-  const comment = await Comment.deleteOne({
-    _id: commentId,
-    trackId: id,
-    userId,
-  });
-
-  await Comment.deleteMany({
-    parentId: commentId,
-    trackId: id,
-    userId,
-  });
-
-  if (!comment) throw new AppError("Comment not found.", 404, true);
-
   try {
+    const { id, commentId } = req.params;
+    const userId = req.user!.id;
+
+    await deleteComment(commentId, id, userId);
     const response: ApiResponse<void> = {
       status: true,
       message: "Comment was deleted sucessfully.",
@@ -398,16 +371,16 @@ export const deleteCommentController = async (
   }
 };
 
-/* Download track files */
+/* Download track files controllers */
 async function retriveTrackFile(type: string, filePath: string): Promise<any> {
   // Get bucket name: so item can be retrive from the right bucket
   let bucket = "";
   switch (type) {
     case "audio":
-      bucket = "audios";
+      bucket = env.AUDIO_FILES_BUCKET;
       break;
-    case "document":
-      bucket = "documents";
+    case "license":
+      bucket = env.LICENSE_FILES_BUCKET;
       break;
   }
 

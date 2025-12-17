@@ -48,7 +48,8 @@ export interface createTrackBody {
   key: string;
   bpm: number;
   tags: string[];
-  price: number;
+  basicPrice: number;
+  premiumPrice: number;
   genre: string;
 }
 

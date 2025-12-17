@@ -30,16 +30,10 @@ router.post(
 );
 router.get(
   "/tracks",
-  // withAuth,
-  // allowRole("admin", "user"),
+
   getTracksController
 );
-router.get(
-  "/tracks/:id",
-  // withAuth,
-  // allowRole("admin", "user"),
-  getTrackController
-);
+router.get("/tracks/:id", getTrackController);
 router.patch(
   "/tracks/:id",
   withAuth,
@@ -103,11 +97,6 @@ router.get(
 );
 
 // play track route
-router.get(
-  "/tracks/:id/play",
-  // withAuth,
-  // allowRole("user", "admin"),
-  playTrackController
-);
+router.get("/tracks/:id/play", playTrackController);
 
 export default router;
