@@ -70,7 +70,10 @@ class Supabase {
     const { data, error } = await this.client.from(bucket).download(fileName);
 
     if (error) {
-      logger.error("An error occur while downloading file from supabase.", error);
+      logger.error(
+        "An error occur while downloading file from supabase.",
+        error
+      );
       throw new AppError(
         "An error occur while downloading file to supabase.",
         500,
@@ -110,7 +113,7 @@ class Supabase {
     try {
       if (files.taggedBeat?.length > 0) {
         tagged = await supabase.uploadFile(
-          "audios",
+          env.AUDIO_FILES_BUCKET,
           files.taggedBeat[0].originalname,
           `taggedBeat/`,
           files.taggedBeat[0].buffer
@@ -120,7 +123,7 @@ class Supabase {
 
       if (files.untaggedBeat?.length > 0) {
         untagged = await supabase.uploadFile(
-          "audios",
+          env.AUDIO_FILES_BUCKET,
           files.untaggedBeat[0].originalname,
           `untaggedBeat/`,
           files.untaggedBeat[0].buffer
@@ -130,7 +133,7 @@ class Supabase {
 
       if (files.basicLicense?.length > 0) {
         basicLicense = await supabase.uploadFile(
-          "documents",
+          env.LICENSE_FILES_BUCKET,
           files.basicLicense[0].originalname,
           `basicLicense/`,
           files.basicLicense[0].buffer
@@ -140,7 +143,7 @@ class Supabase {
 
       if (files.premiumLicense?.length > 0) {
         premiumLicense = await supabase.uploadFile(
-          "documents",
+          env.LICENSE_FILES_BUCKET,
           files.premiumLicense[0].originalname,
           `premiumLicense/`,
           files.premiumLicense[0].buffer
@@ -176,10 +179,10 @@ class Supabase {
     );
 
     if (audioPaths?.length > 0) {
-      await this.deleteFiles("audios", audioPaths);
+      await this.deleteFiles(env.AUDIO_FILES_BUCKET, audioPaths);
     }
     if (licensePaths?.length > 0) {
-      await this.deleteFiles("documents", licensePaths);
+      await this.deleteFiles(env.LICENSE_FILES_BUCKET, licensePaths);
     }
     return true;
   };

@@ -5,7 +5,7 @@ import AppError from "../errors/appError.js";
 import sendEmail from "./sendEmail.js";
 import Template from "../utils/emailTemplate.js";
 import crypto from "crypto";
-import { notifyAdmins, postNewNotification } from "./notification.services.js";
+import { notifyAdmins } from "./notification.services.js";
 
 /* Subcribe to news letter */
 async function addToList(
@@ -53,8 +53,8 @@ export const unsubscribeFromNewsletter = async (
   token: string
 ): Promise<void> => {
   const unsubscribed = await Newsletter.findOneAndUpdate(
-    { email, token },
-    { subscribed: false },
+    { email, token, subscribed: true },
+    { $set: { subscribed: false, token: null } },
     { new: true }
   );
 

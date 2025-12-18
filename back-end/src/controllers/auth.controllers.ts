@@ -22,7 +22,7 @@ import { setRedirect } from "../utils/helpers.js";
 import AppError from "../errors/appError.js";
 import jwt from "jsonwebtoken";
 import retriveGoogleUserPayload, {
-  type userPayloadInterface,
+  type userGoooglePayload,
 } from "../services/retriveGoogleIdToken.js";
 import User, { type UserDocument } from "../models/user.schema.js";
 
@@ -305,7 +305,7 @@ export const googleSignupFallback = async (
         .redirect(`${env.FRONTEND_SIGNUP_URL}?error=cancelled`);
     }
 
-    const payload: userPayloadInterface = await retriveGoogleUserPayload(
+    const payload: userGoooglePayload = await retriveGoogleUserPayload(
       code,
       "register"
     );
@@ -365,7 +365,7 @@ export const googleLoginFallback = async (
         .redirect(`${env.FRONTEND_SIGNUP_URL}?error=cancelled`);
     }
 
-    const payload: userPayloadInterface = await retriveGoogleUserPayload(
+    const payload: userGoooglePayload = await retriveGoogleUserPayload(
       code,
       "login"
     );

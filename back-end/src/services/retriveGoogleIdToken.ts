@@ -8,7 +8,7 @@ const oauth = new OAuth2Client(env.CLIENT_ID);
 import { generateRandCode, setRedirect } from "../utils/helpers.js";
 import logger from "../utils/logger.js";
 
-export interface userPayloadInterface {
+export interface userGoooglePayload {
   username: string;
   firstName: string;
   lastName: string;
@@ -26,7 +26,7 @@ export interface userPayloadInterface {
 const retriveGoogleUserPayload = async (
   code: string,
   route: string
-): Promise<userPayloadInterface> => {
+): Promise<userGoooglePayload> => {
   const redirectUri = setRedirect(route);
 
   const response = await axios.post(
