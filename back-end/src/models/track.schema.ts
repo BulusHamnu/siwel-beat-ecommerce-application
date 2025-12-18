@@ -116,5 +116,17 @@ trackSchema.methods.removeUnwantedFields = function (): TrackInterface {
   return obj;
 };
 
+/* Indexes */
+trackSchema.index({
+  title: "text",
+  description: "text",
+  tags: "text",
+  genre: "text",
+});
+
+trackSchema.index({ status: 1, createdAt: -1 });
+trackSchema.index({ status: 1, genre: 1, createdAt: -1 });
+trackSchema.index({ status: 1, type: 1, createdAt: -1 });
+
 const Track = mongoose.model<TrackInterface>("Track", trackSchema);
 export default Track;

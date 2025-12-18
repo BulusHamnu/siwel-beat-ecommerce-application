@@ -39,5 +39,10 @@ const purchase = new mongoose.Schema<PurchaseInterface>(
   { timestamps: true }
 );
 
+/* Indexes */
+purchase.index({ userId: 1, createdAt: -1 });
+purchase.index({ userId: 1, orderId: 1 });
+purchase.index({ userId: 1, trackId: 1, type: 1 }, { unique: true });
+
 const Purchase = mongoose.model<PurchaseInterface>("Purchase", purchase);
 export default Purchase;

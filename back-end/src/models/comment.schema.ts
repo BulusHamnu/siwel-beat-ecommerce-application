@@ -30,6 +30,11 @@ const comment = new mongoose.Schema<CommentInterface>(
   { timestamps: true }
 );
 
+/* Indexes */
+comment.index({ trackId: 1 });
+comment.index({ trackId: 1, userId: 1 });
+comment.index({ trackId: 1, parentId: 1 });
+
 const Comment = mongoose.model<CommentInterface>("Comment", comment);
 
 export default Comment;

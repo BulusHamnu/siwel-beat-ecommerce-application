@@ -31,7 +31,8 @@ async function getPurchasesAndCounts(
   const countsQuery = Purchase.find(queries).countDocuments();
   const purchasesQuery = Purchase.find(queries)
     .skip(skip)
-    .limit(limit + 1);
+    .limit(limit + 1)
+    .sort({ createdAt: -1 });
 
   const [purchaseCount, purchasesWithExtra] = await Promise.all([
     countsQuery,

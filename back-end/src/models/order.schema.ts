@@ -67,5 +67,9 @@ const order = new mongoose.Schema<OrderInterface>(
   { timestamps: true }
 );
 
+/* Indexes */
+order.index({ userId: 1, createdAt: -1 });
+order.index({ userId: 1, createdAt: -1, status: 1 });
+
 const Order = mongoose.model<OrderInterface>("Order", order);
 export default Order;

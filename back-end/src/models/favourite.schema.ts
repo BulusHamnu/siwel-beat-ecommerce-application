@@ -22,5 +22,9 @@ const favourite = new mongoose.Schema<FavouriteInterface>(
   { timestamps: true }
 );
 
+/* Indexes */
+favourite.index({ userId: 1 });
+favourite.index({ userId: 1, trackId: 1 }, { unique: true });
+
 const Favourite = mongoose.model<FavouriteInterface>("Favourite", favourite);
 export default Favourite;

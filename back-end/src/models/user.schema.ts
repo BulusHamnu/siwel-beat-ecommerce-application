@@ -88,6 +88,9 @@ userSchema.methods.comparePassword = comparePassword;
 // method to remove secret fields
 userSchema.methods.removeUnwantedField = removeUnwantedField;
 
+/* Indexes */
+userSchema.index({ role: 1, isActive: 1 });
+
 // user model
 const User = model<UserDocument>("User", userSchema);
 export default User;

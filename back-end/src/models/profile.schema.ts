@@ -100,6 +100,9 @@ const profileSchema = new Schema<ProfileDocument>(
   { timestamps: true }
 );
 
+/* Index */
+profileSchema.index({ userId: 1 }, { unique: true });
+
 // user model
 const profileModel = model<ProfileDocument>("Profile", profileSchema);
 export default profileModel;

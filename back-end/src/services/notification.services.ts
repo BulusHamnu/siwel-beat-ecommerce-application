@@ -36,7 +36,7 @@ export const getAllNotifications = async (
   read: string
 ): Promise<notification[]> => {
   const queries = buildQueries(userId, read);
-  const notifications = Notification.find(queries);
+  const notifications = Notification.find(queries).sort({ date: -1 });
   return notifications;
 };
 

@@ -16,5 +16,8 @@ const newsletter = new Schema<newsletterInterface>(
   { timestamps: true }
 );
 
+/* indexes */
+newsletter.index({ subscribed: 1 });
+
 const Newsletter = model<newsletterInterface>("Newsletter", newsletter);
 export default Newsletter;
