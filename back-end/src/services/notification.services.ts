@@ -22,7 +22,7 @@ export const postNewNotification = async (
 };
 
 /* Get all notifications */
-function constructQueries(
+function buildQueries(
   userId: string,
   read: string = ""
 ): { status?: string; userId: string } {
@@ -35,7 +35,7 @@ export const getAllNotifications = async (
   userId: string,
   read: string
 ): Promise<notification[]> => {
-  const queries = constructQueries(userId, read);
+  const queries = buildQueries(userId, read);
   const notifications = Notification.find(queries);
   return notifications;
 };

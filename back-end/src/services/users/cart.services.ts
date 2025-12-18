@@ -5,6 +5,7 @@ import Profile, {
   type CartItem,
 } from "../../models/profile.schema.js";
 import mongoose from "mongoose";
+import getUserCartandTracks from "../shared/getUserCartAndTracks.js";
 
 /* Add to cart */
 export const addToCart = async (
@@ -56,13 +57,20 @@ export const removeFromCart = async (
 };
 
 /* Get user cart */
-async function verifyProductsStatus(cart: CartItem[]): Promise<CartItem[]> {
-  const itemPromiseRequests: any = cart.map(async (product: any) => {
-    const track = await Track.findOne({ _id: product.productId });
+interface CartItemUpdated extends CartItem {
+  status?: "deleted" | "in-active" | "price_changed" | "active";
+  newPrice?: number;
+}
 
+function validateProductsStatus(
+  cart: CartItem[],
+  trackMap: Map<string, any>
+): void {
+  cart.forEach((product: CartItemUpdated) => {
+    const track = trackMap.get(String(product.productId));
     if (!track) {
       product.status = "deleted";
-    } else if (track.status === "in-active") {
+    } else if (track.status !== "active") {
       product.status = "in-active";
     } else if (
       (product.license === "basic" && track.basicPrice !== product.price) ||
@@ -74,19 +82,17 @@ async function verifyProductsStatus(cart: CartItem[]): Promise<CartItem[]> {
     } else {
       product.status = "active";
     }
-
-    return product;
   });
-
-  const refinedCart: CartItem[] = await Promise.all(itemPromiseRequests);
-  return refinedCart;
 }
 
 export const getUserCart = async (userId: string): Promise<CartItem[]> => {
-  const userProfile: ProfileDocument | null = await Profile.findOne({ userId });
-  const profileObj = userProfile!.toObject();
+  const { cart, tracks } = await getUserCartandTracks(userId);
+  const trackMap = new Map<string, any>();
+  tracks.forEach((track) => {
+    trackMap.set(track._id.toString(), track);
+  });
 
-  // User should know if product changed the last time
-  const cart = await verifyProductsStatus(profileObj.cart);
+  // User should know if product status or price has changed
+  validateProductsStatus(cart, trackMap);
   return cart;
 };
