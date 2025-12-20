@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { type ApiResponse } from "../responseInterface.js";
-import { type orderResult } from "../../services/shared/orders.shared.service.js";
-import { getAllOrders } from "../../services/shared/orders.shared.service.js";
+import { type orderResult } from "../../services/shared/ordersShared.service.js";
+import { getAllOrders } from "../../services/shared/ordersShared.service.js";
 import Order, { type OrderInterface } from "../../models/order.schema.js";
 import AppError from "../../errors/appError.js";
 

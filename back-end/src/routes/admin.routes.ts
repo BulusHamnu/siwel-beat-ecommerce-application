@@ -3,23 +3,15 @@ import {
   getAdminProfileController,
   getDashboardController,
   updateAdminProfileController,
-} from "../controllers/admin.controllers.js";
+} from "../controllers/admin.controller.js";
 import withAuth from "../middlewares/withAuth.js";
 import allowRole from "../middlewares/allowRole.js";
-import {
-  getOrderController,
-  getAllOrdersController,
-} from "../controllers/shared/orders.shared.controllers.js";
-import {
-  deleteNotificationController,
-  getAllNotificationsController,
-  getNotificationController,
-  updateNoticationAsReadController,
-} from "../controllers/shared/notification.controllers.js";
+import * as ordersController from "../controllers/shared/orders.shared.controller.js";
+import * as notificationController from "../controllers/shared/notification.controller.js";
 
 const router = Router();
 
-// routes
+/* Admin profile */
 router.get(
   "/admins/me",
   withAuth,
@@ -38,13 +30,13 @@ router.get(
   "/admins/orders",
   withAuth,
   allowRole("admin"),
-  getAllOrdersController
+  ordersController.getAllOrdersController
 );
 router.get(
   "/admins/orders/:id",
   withAuth,
   allowRole("admin"),
-  getOrderController
+  ordersController.getOrderController
 );
 
 /* Dashboard routes */
@@ -60,28 +52,28 @@ router.get(
   "/admins/notifications",
   withAuth,
   allowRole("admin"),
-  getAllNotificationsController
+  notificationController.getAllNotificationsController
 );
 
 router.get(
   "/admins/notifications/:id",
   withAuth,
   allowRole("admin"),
-  getNotificationController
+  notificationController.getNotificationController
 );
 
 router.patch(
   "/admins/notifications/:id",
   withAuth,
   allowRole("admin"),
-  updateNoticationAsReadController
+  notificationController.updateNoticationAsReadController
 );
 
 router.delete(
   "/admins/notifications/:id",
   withAuth,
   allowRole("admin"),
-  deleteNotificationController
+  notificationController.deleteNotificationController
 );
 
 export default router;

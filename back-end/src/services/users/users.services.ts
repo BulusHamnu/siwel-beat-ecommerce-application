@@ -6,7 +6,7 @@ import supabase from "../supabase.js";
 import env from "../../configs/env.js";
 
 /* Get profile */
-export const getProfile = async (id: string): Promise<userProfile> => {
+const getProfile = async (id: string): Promise<userProfile> => {
   const user: UserInterface | null = await User.findOne({ _id: id });
   if (!user) throw new AppError("User not found.", 404, true);
 
@@ -69,7 +69,7 @@ function filterProfileUpdates(updates: ProfileUpdates) {
   }
 }
 
-export const updateProfile = async (
+const updateProfile = async (
   id: string | undefined,
   updates: ProfileUpdates
 ): Promise<userProfile> => {
@@ -101,7 +101,7 @@ export const updateProfile = async (
 };
 
 /* Update profile picture */
-export const updateProfilePicture = async (
+const updateProfilePicture = async (
   userId: string,
   pictureUrl: string
 ): Promise<string> => {
@@ -124,3 +124,5 @@ export const updateProfilePicture = async (
   if (oldPicturePath) await supabase.deleteFiles("images", [oldPicturePath]);
   return publicUrl;
 };
+
+export default { getProfile, updateProfile, updateProfilePicture };

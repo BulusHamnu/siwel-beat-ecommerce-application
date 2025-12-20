@@ -4,7 +4,7 @@ import Favourite, {
 import AppError from "../../errors/appError.js";
 
 /* Add to favourites */
-export const addFavouriteTrack = async (
+const addFavouriteTrack = async (
   userId: string,
   trackId: string
 ): Promise<void> => {
@@ -16,9 +16,7 @@ export const addFavouriteTrack = async (
 };
 
 /* Get favourites */
-export const getFavourites = async (
-  userId: string
-): Promise<FavouriteInterface[]> => {
+const getFavourites = async (userId: string): Promise<FavouriteInterface[]> => {
   const favourites = await Favourite.find({ userId }).populate(
     "trackId",
     "relatedTrack genre tags bpm status key type description price title _id"
@@ -28,9 +26,11 @@ export const getFavourites = async (
 };
 
 /* Remove from favourites */
-export const removeFromFavourites = async (
+const removeFromFavourites = async (
   trackId: string,
   userId: string
 ): Promise<void> => {
   await Favourite.findOneAndDelete({ trackId, userId });
 };
+
+export default { addFavouriteTrack, getFavourites, removeFromFavourites };

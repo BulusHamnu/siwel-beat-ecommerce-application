@@ -5,7 +5,7 @@ import AppError from "../errors/appError.js";
 import sendEmail from "./sendEmail.js";
 import Template from "../utils/emailTemplate.js";
 import crypto from "crypto";
-import { notifyAdmins } from "./notification.services.js";
+import * as NotificationService from "./notification.service.js";
 
 /* Subcribe to news letter */
 async function addToList(
@@ -40,7 +40,7 @@ export const subscribeToNewsletter = async (email: string): Promise<void> => {
     Template.newsletterSubscriptionNotification(email, token)
   );
 
-  await notifyAdmins(
+  await NotificationService.notifyAdmins(
     "Hurray! Someone just join the newsletter.",
     "NEWSLETTER_SUBSCRIBED",
     sub._id as string

@@ -2,7 +2,7 @@ import User from "../models/user.schema.js";
 import type { createUserBody } from "../controllers/userTypes.js";
 import type { UserInterface } from "../models/user.schema.js";
 import AppError from "../errors/appError.js";
-import { createHashpasswordAndEmailVerification } from "./shared/auth-shared.services.js";
+import { createHashpasswordAndEmailVerification } from "./shared/authShared.service.js";
 import Profile from "../models/profile.schema.js";
 import { generateRandCode } from "../utils/helpers.js";
 import sendEmail from "./sendEmail.js";
@@ -13,7 +13,7 @@ import { type ObjectId } from "mongoose";
 import bcrypt from "bcrypt";
 
 /* Create new user */
-const createNewUser = async ({
+export const createNewUser = async ({
   username,
   firstName,
   lastName,
@@ -102,7 +102,7 @@ async function getUserAndValidatePassword(
   return user;
 }
 
-const loginUser = async (
+export const loginUser = async (
   password: string,
   email: string
 ): Promise<LoginReturnType> => {
@@ -131,7 +131,7 @@ const loginUser = async (
 };
 
 /* Forget password */
-const forgetPassword = async (email: string): Promise<void> => {
+export const forgetPassword = async (email: string): Promise<void> => {
   const user: UserInterface | null = await User.findOne({ email });
   if (!user) throw new AppError("User not found.", 404, true);
 
@@ -151,7 +151,7 @@ const forgetPassword = async (email: string): Promise<void> => {
 };
 
 /* Reset Password */
-const resetPassword = async (
+export const resetPassword = async (
   email: string,
   password: string
 ): Promise<void> => {
@@ -187,7 +187,7 @@ function generateEmailVerificationToken(): {
   return { verificationCode, expiredAt };
 }
 
-const resendVerificationEmail = async (email: string): Promise<void> => {
+export const resendVerificationEmail = async (email: string): Promise<void> => {
   const user: UserInterface | null = await User.findOne({ email });
   if (!user) throw new AppError("User not found.", 404, true);
   if (user.isVerified)
@@ -209,7 +209,7 @@ const resendVerificationEmail = async (email: string): Promise<void> => {
 };
 
 /* Verify email */
-const verifyEmail = async (email: string, code: string): Promise<boolean> => {
+export const verifyEmail = async (email: string, code: string): Promise<boolean> => {
   const user: UserInterface | null = await User.findOne({ email: email });
   if (!user) throw new AppError("User not found.", 404, true);
 
@@ -234,7 +234,7 @@ const verifyEmail = async (email: string, code: string): Promise<boolean> => {
 };
 
 /* Verify reset password code */
-const verifyResetCode = async (email: string, code: string): Promise<void> => {
+export const verifyResetCode = async (email: string, code: string): Promise<void> => {
   const codeIsValid: UserInterface | null = await User.findOne({
     email,
     "resetPasswordVerification.code": code,
@@ -245,12 +245,3 @@ const verifyResetCode = async (email: string, code: string): Promise<void> => {
     throw new AppError("Code is invalid or Code have expired.", 400, true);
 };
 
-export default {
-  createNewUser,
-  loginUser,
-  forgetPassword,
-  resetPassword,
-  resendVerificationEmail,
-  verifyEmail,
-  verifyResetCode,
-};

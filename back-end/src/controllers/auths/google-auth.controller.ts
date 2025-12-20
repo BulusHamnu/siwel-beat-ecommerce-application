@@ -6,7 +6,7 @@ import retriveGoogleUserPayload, {
   type userGooglePayload,
 } from "../../services/retriveGoogleIdToken.js";
 import User, { type UserInterface } from "../../models/user.schema.js";
-import authServices from "../../services/auth.services.js";
+import { createNewUser } from "../../services/auth.service.js";
 import jwt from "jsonwebtoken";
 import AppError from "../../errors/appError.js";
 
@@ -19,7 +19,7 @@ export const setGoogleRedirect = (route: string = "register"): string => {
   return r;
 };
 
-const getGoogleOauthUrlController = async (
+export const getGoogleOauthUrlController = async (
   req: Request<
     {},
     {
@@ -67,7 +67,7 @@ const getGoogleOauthUrlController = async (
 
 /* Google Oauth2 sign up controller */
 async function createUserAndSignToken(userDetail: userGooglePayload) {
-  const newUser = await authServices.createNewUser(userDetail);
+  const newUser = await createNewUser(userDetail);
   logger.info("User created successully.", { userId: newUser._id });
 
   const token: string = jwt.sign(
@@ -84,7 +84,7 @@ async function createUserAndSignToken(userDetail: userGooglePayload) {
   return { token };
 }
 
-const googleSignupFallback = async (
+export const googleSignupFallback = async (
   req: Request<{}, {}, {}, { code: string }>,
   res: Response,
   next: NextFunction
@@ -122,7 +122,7 @@ const googleSignupFallback = async (
 };
 
 /* Google Oauth2 log in controller */
-const googleLoginFallback = async (
+export const googleLoginFallback = async (
   req: Request<{}, {}, {}, { code: string }>,
   res: Response,
   next: NextFunction
@@ -179,10 +179,4 @@ const googleLoginFallback = async (
         .redirect(`${env.FRONTEND_LOGIN_URL}?error=UNEXPECTED_ERROR`);
     }
   }
-};
-
-export default {
-  getGoogleOauthUrlController,
-  googleSignupFallback,
-  googleLoginFallback,
 };

@@ -1,9 +1,9 @@
 import Comment, { type CommentInterface } from "../../models/comment.schema.js";
-import { type FlattenMaps, type ObjectId } from "mongoose";
-import { postNewNotification, notifyAdmins } from "../notification.services.js";
+import { type ObjectId } from "mongoose";
+import * as notificationService from "../notification.service.js";
 import Track from "../../models/track.schema.js";
 import AppError from "../../errors/appError.js";
-import Profile, { type ProfileDocument } from "../../models/profile.schema.js";
+import Profile, { type ProfileInterface } from "../../models/profile.schema.js";
 
 /* Post a comment */
 export interface parentComment extends Omit<CommentInterface, "userId"> {
@@ -25,7 +25,7 @@ async function sendCommentReplyNotification(
 
   if (!parentComment) return;
 
-  await postNewNotification(
+  await notificationService.postNewNotification(
     parentComment?.userId._id!,
     `${parentComment?.userId.username} replied to your comment.`,
     "COMMENT_REPLIED",
@@ -46,7 +46,7 @@ export const postNewComment = async (
     // Notify commenter for replies
     await sendCommentReplyNotification(parentId, comment._id as string);
   } else {
-    await notifyAdmins(
+    await notificationService.notifyAdmins(
       "You have a new comment on your track.",
       "TRACK_COMMENTED",
       comment._id as string

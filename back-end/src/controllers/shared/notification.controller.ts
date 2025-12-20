@@ -1,11 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ApiResponse } from "../responseInterface.js";
-import {
-  deleteNotification,
-  getAllNotifications,
-  getNotification,
-  updateNotificationAsRead,
-} from "../../services/notification.services.js";
+import * as notificationService from "../../services/notification.service.js";
 import type { notification } from "../../models/notification.schema.js";
 
 /* Get all notifications controller */
@@ -18,7 +13,10 @@ export const getAllNotificationsController = async (
     const user = req.user!;
     const { read } = req.query;
 
-    const notifications = await getAllNotifications(user.id, read);
+    const notifications = await notificationService.getAllNotifications(
+      user.id,
+      read
+    );
     const response: ApiResponse<notification[]> = {
       status: true,
       message: "Notifications retrived succesfully.",
@@ -41,7 +39,7 @@ export const getNotificationController = async (
     const user = req.user!;
     const { id } = req.params;
 
-    const notification = await getNotification(user.id, id);
+    const notification = await notificationService.getNotification(user.id, id);
     const response: ApiResponse<notification> = {
       status: true,
       message: "Notification retrived succesfully.",
@@ -70,11 +68,8 @@ export const updateNoticationAsReadController = async (
     const { id } = req.params;
     const { read } = req.body;
 
-    const updatedNotification = await updateNotificationAsRead(
-      user.id,
-      id,
-      read
-    );
+    const updatedNotification =
+      await notificationService.updateNotificationAsRead(user.id, id, read);
     const response: ApiResponse<notification> = {
       status: true,
       message: "Notification was updated succesfully.",
@@ -97,7 +92,7 @@ export const deleteNotificationController = async (
     const user = req.user!;
     const { id } = req.params;
 
-    await deleteNotification(user.id, id);
+    await notificationService.deleteNotification(user.id, id);
     const response: ApiResponse<notification> = {
       status: true,
       message: "Notification was deleted succesfully.",

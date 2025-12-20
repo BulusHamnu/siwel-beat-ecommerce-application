@@ -3,7 +3,7 @@ import type { ApiResponse } from "./responseInterface.js";
 import {
   getCheckoutSummary,
   type checkoutSummary,
-} from "../services/checkout.services.js";
+} from "../services/checkout.service.js";
 
 /* Check out controller */
 export const checkOutController = async (

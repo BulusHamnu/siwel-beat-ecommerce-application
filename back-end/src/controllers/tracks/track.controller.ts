@@ -1,35 +1,24 @@
 import type { Request, Response, NextFunction } from "express";
-import type { ApiResponse } from "./responseInterface.js";
+import type { ApiResponse } from "../responseInterface.js";
 import Track, {
   type TrackInterface,
   type createTrackBody,
-} from "../models/track.schema.js";
-import {
-  createNewTrack,
-  getTracks,
-  updateTrack,
-  type TrackUpdates,
-  type Queries,
-  type tracksResults,
-} from "../services/tracks/track.services.js";
-import {
-  postNewComment,
-  getAllComments,
-  getCommentAndReplies,
-  type populatedComment,
-  updateComment,
-  deleteComment,
-} from "../services/tracks/comment.services.js";
-import { retriveTrackFilePaths } from "../services/tracks/download-track-file.services.js";
-import { type Pagination } from "./responseInterface.js";
-import logger from "../utils/logger.js";
-import AppError from "../errors/appError.js";
-import { type CommentInterface } from "../models/comment.schema.js";
-import supabase from "../services/supabase.js";
-import Stream, { Readable } from "stream";
+} from "../../models/track.schema.js";
+import type {
+  TrackUpdates,
+  Queries,
+  tracksResults,
+} from "../../services/tracks/track.service.js";
+import * as trackService from "../../services/tracks/track.service.js";
+import { retriveTrackFilePaths } from "../../services/tracks/trackDownloadFile.service.js";
+import { type Pagination } from "../responseInterface.js";
+import logger from "../../utils/logger.js";
+import AppError from "../../errors/appError.js";
+import supabase from "../../services/supabase.js";
+import { Readable } from "stream";
 import { fileTypeFromBlob } from "file-type";
-import { postNewNotification } from "../services/notification.services.js";
-import env from "../configs/env.js";
+import * as notificationService from "../../services/notification.service.js";
+import env from "../../configs/env.js";
 
 /* Post new track controller */
 export const postTrackController = async (
@@ -55,7 +44,7 @@ export const postTrackController = async (
       uploaded.license.premium,
     ];
 
-    const newTrack = await createNewTrack({
+    const newTrack = await trackService.createNewTrack({
       ...data,
       fileUrl: uploaded.fileUrl,
       license: uploaded.license,
@@ -79,12 +68,11 @@ export const postTrackController = async (
   }
 };
 
-// GET TRACKS CONTROLLER
+/* Get all tracks controller */
 interface response extends ApiResponse<TrackInterface[]> {
   pagination: Pagination;
 }
 
-// GET ALL TRACK CONTROLLER
 export const getTracksController = async (
   req: Request<{}, ApiResponse<TrackInterface[]>, {}, Queries>,
   res: Response<response>,
@@ -92,7 +80,9 @@ export const getTracksController = async (
 ): Promise<void> => {
   try {
     const queries = req.query;
-    const { tracks, pagination }: tracksResults = await getTracks(queries);
+    const { tracks, pagination }: tracksResults = await trackService.getTracks(
+      queries
+    );
 
     const response: response = {
       status: true,
@@ -107,7 +97,7 @@ export const getTracksController = async (
   }
 };
 
-// GET TRACK CONTROLLER
+/* Get track controller */
 export const getTrackController = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
@@ -131,7 +121,7 @@ export const getTrackController = async (
   }
 };
 
-// DEACTIVATE TRACK CONTROLLER
+/* Deactivate track controller */
 export const deactivateTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
@@ -162,7 +152,7 @@ export const deactivateTrack = async (
   }
 };
 
-// DEACTIVATE TRACK CONTROLLER
+/* Activate track controller */
 export const activateTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
@@ -214,7 +204,12 @@ export const updateTrackController = async (
       uploaded.license.premium,
     ];
 
-    const updatedTrack = await updateTrack(trackId, updates, uploaded);
+    const updatedTrack = await trackService.updateTrack(
+      trackId,
+      updates,
+      uploaded
+    );
+
     const response: ApiResponse<TrackInterface> = {
       status: true,
       message: "Track was updated sucessfully.",
@@ -230,143 +225,6 @@ export const updateTrackController = async (
     if (paths && paths.length > 0) {
       await supabase.safeRemoveTrackFiles(paths);
     }
-    next(error);
-  }
-};
-
-// POST COMMENT
-export const postCommentController = async (
-  req: Request<
-    { id: string },
-    ApiResponse<CommentInterface>,
-    CommentInterface,
-    {}
-  >,
-  res: Response<ApiResponse<CommentInterface>>,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const userId = req.user!.id;
-    const data = req.body;
-    const trackId = req.params.id;
-
-    const comment = await postNewComment(trackId, userId, data);
-    const response: ApiResponse<CommentInterface> = {
-      status: true,
-      message: "Comment posted sucessfully.",
-      data: comment,
-    };
-
-    res.status(201).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// GET A COMMENT
-export const getCommentController = async (
-  req: Request<
-    { commentId: string; id: string },
-    ApiResponse<populatedComment>,
-    {},
-    {}
-  >,
-  res: Response<ApiResponse<populatedComment>>,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { commentId, id } = req.params;
-
-    // get comment
-    const comment: populatedComment = await getCommentAndReplies(commentId, id);
-    const response: ApiResponse<populatedComment> = {
-      status: true,
-      message: "Comment retrive successfully.",
-      data: comment,
-    };
-
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// GET ALL COMMENTS
-export const getAllCommentController = async (
-  req: Request<{ id: string }, ApiResponse<populatedComment[]>, {}, {}>,
-  res: Response<ApiResponse<populatedComment[]>>,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id } = req.params;
-
-    // get comment
-    const comments: populatedComment[] = await getAllComments(id);
-    const response: ApiResponse<populatedComment[]> = {
-      status: true,
-      message: "Comments retrived successfully.",
-      data: comments,
-    };
-
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// UPDATE COMMENT CONTENT
-export const updateCommentController = async (
-  req: Request<
-    { id: string; commentId: string },
-    ApiResponse<populatedComment>,
-    { content: string },
-    {}
-  >,
-  res: Response<ApiResponse<populatedComment>>,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id, commentId } = req.params;
-    const userId = req.user!.id;
-    const content = req.body.content;
-
-    const updatedComment = await updateComment(commentId, id, userId, content);
-
-    const response: ApiResponse<populatedComment> = {
-      status: true,
-      message: "Comment was updated sucessfully.",
-      data: updatedComment,
-    };
-
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// DELETE A COMMENT AND IT'S REPLIES
-export const deleteCommentController = async (
-  req: Request<
-    { id: string; commentId: string },
-    ApiResponse<void>,
-    { content: string },
-    {}
-  >,
-  res: Response<ApiResponse<void>>,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id, commentId } = req.params;
-    const userId = req.user!.id;
-
-    await deleteComment(commentId, id, userId);
-    const response: ApiResponse<void> = {
-      status: true,
-      message: "Comment was deleted sucessfully.",
-    };
-
-    res.status(200).json(response);
-  } catch (error) {
     next(error);
   }
 };
@@ -423,7 +281,7 @@ export const downloadTrackFileController = async (
     res.on("close", async () => {
       if (!res.writableEnded) return;
       // Notify user: so user will know the file was download
-      await postNewNotification(
+      await notificationService.postNewNotification(
         user.id,
         "File downloaded sucessfully.",
         "DOWNLOAD_COMPLETED",
@@ -435,7 +293,7 @@ export const downloadTrackFileController = async (
   }
 };
 
-// PLAY TRACK CONTROLLER
+/* Play track controller */
 export const playTrackController = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response,

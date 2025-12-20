@@ -1,4 +1,4 @@
-import { notifyAdmins } from "./notification.services.js";
+import * as NotificationService from "./notification.service.js";
 import Template from "../utils/emailTemplate.js";
 import env from "../configs/env.js";
 import sendEmail from "./sendEmail.js";
@@ -10,7 +10,7 @@ export const sendMessage = async (data: any): Promise<void> => {
     "New Message From Siwel Beatz App",
     Template.contactMeTemplate(data)
   );
-  await notifyAdmins(
+  await NotificationService.notifyAdmins(
     "New message from contact form, check your email.",
     "MESSAGE_RECEIVED"
   );

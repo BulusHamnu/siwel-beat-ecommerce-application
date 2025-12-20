@@ -2,7 +2,7 @@ import express, { Router } from "express";
 import {
   subscribeToNewletterController,
   unsubscribeToNewletterController,
-} from "../controllers/newsletter.controllers.js";
+} from "../controllers/newsletter.controller.js";
 
 const router = Router();
 

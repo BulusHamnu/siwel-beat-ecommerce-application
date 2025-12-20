@@ -1,21 +1,20 @@
 import type { Response, Request, NextFunction } from "express";
 import logger from "../../utils/logger.js";
 import type { createUserBody } from "../userTypes.js";
-import authServices, {
-  type LoginReturnType,
-} from "../../services/auth.services.js";
+import * as authService from "../../services/auth.service.js";
+import { type LoginReturnType } from "../../services/auth.service.js";
 import type { ApiResponse } from "../responseInterface.js";
 import env from "../../configs/env.js";
 
 /* Sign up new user controller */
-const signUpController = async (
+export const signUpController = async (
   req: Request<{}, {}, createUserBody, {}>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
     const userData: createUserBody = req.body;
-    const newUser = await authServices.createNewUser(userData);
+    const newUser = await authService.createNewUser(userData);
     logger.info("User created successully!", { userId: newUser._id });
 
     const response: ApiResponse<void> = {
@@ -34,14 +33,14 @@ interface loginBody {
   email: string;
   password: string;
 }
-const logInController = async (
+export const logInController = async (
   req: Request<{}, ApiResponse<LoginReturnType>, loginBody, {}>,
   res: Response<ApiResponse<LoginReturnType>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { password, email } = req.body;
-    const result = await authServices.loginUser(password, email);
+    const result = await authService.loginUser(password, email);
 
     res.cookie("token", result.token, env.LOGIN_COOKIE_OPTS);
 
@@ -62,7 +61,7 @@ interface emailVerificationBody {
   code: string;
 }
 
-const verifyEmailController = async (
+export const verifyEmailController = async (
   req: Request<
     {},
     { status: boolean; message: string },
@@ -74,7 +73,7 @@ const verifyEmailController = async (
 ): Promise<void> => {
   try {
     const { email, code }: emailVerificationBody = req.body;
-    await authServices.verifyEmail(email, code);
+    await authService.verifyEmail(email, code);
 
     const response: ApiResponse<void> = {
       status: true,
@@ -87,7 +86,7 @@ const verifyEmailController = async (
 };
 
 /* Resend verification email controller */
-const resendVeficationEmailController = async (
+export const resendVeficationEmailController = async (
   req: Request<{}, { status: boolean; message: string }, {}, {}>,
   res: Response<{ status: boolean; message: string }>,
   next: NextFunction
@@ -95,7 +94,7 @@ const resendVeficationEmailController = async (
   try {
     const email: string | undefined = req.user?.email;
 
-    await authServices.resendVerificationEmail(email || "");
+    await authService.resendVerificationEmail(email || "");
     logger.info("Email verification code sent to: ", { email: email || "" });
 
     const response: ApiResponse<void> = {
@@ -109,14 +108,14 @@ const resendVeficationEmailController = async (
 };
 
 /* Forget password controller */
-const forgetPasswordController = async (
+export const forgetPasswordController = async (
   req: Request<{}, { status: false; message: string }, { email: string }, {}>,
   res: Response<{ status: boolean; message: string }>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const userEmail: string = req.body.email;
-    await authServices.forgetPassword(userEmail);
+    await authService.forgetPassword(userEmail);
     logger.info("Password reset code sent to:", { email: userEmail });
 
     const response: ApiResponse<void> = {
@@ -130,7 +129,7 @@ const forgetPasswordController = async (
 };
 
 /* Verify password reset code controller */
-const verifyResetCodeController = async (
+export const verifyResetCodeController = async (
   req: Request<
     {},
     { status: boolean; message: string },
@@ -143,7 +142,7 @@ const verifyResetCodeController = async (
   try {
     const { code, email } = req.body;
 
-    await authServices.verifyResetCode(email, code);
+    await authService.verifyResetCode(email, code);
     const response: ApiResponse<void> = {
       status: true,
       message: "Code is valid.",
@@ -155,7 +154,7 @@ const verifyResetCodeController = async (
 };
 
 /* Reset password controller */
-const resetpasswordController = async (
+export const resetpasswordController = async (
   req: Request<
     {},
     { status: boolean; message: string },
@@ -167,7 +166,7 @@ const resetpasswordController = async (
 ): Promise<void> => {
   try {
     const { email, password }: { email: string; password: string } = req.body;
-    await authServices.resetPassword(email, password);
+    await authService.resetPassword(email, password);
     logger.info(`User with email ${email} reset their password.`);
 
     const response: ApiResponse<void> = {
@@ -181,7 +180,7 @@ const resetpasswordController = async (
 };
 
 /* Log out controller */
-const logoutController = async (
+export const logoutController = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -202,15 +201,4 @@ const logoutController = async (
   } catch (error) {
     next(error);
   }
-};
-
-export default {
-  signUpController,
-  logInController,
-  verifyEmailController,
-  resendVeficationEmailController,
-  forgetPasswordController,
-  verifyResetCodeController,
-  resetpasswordController,
-  logoutController,
 };

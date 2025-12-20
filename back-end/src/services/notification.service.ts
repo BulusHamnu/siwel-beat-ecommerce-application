@@ -2,7 +2,7 @@ import AppError from "../errors/appError.js";
 import Notification, {
   type notification,
 } from "../models/notification.schema.js";
-import User, { type UserDocument } from "../models/user.schema.js";
+import User, { type UserInterface } from "../models/user.schema.js";
 
 /* Post new notification */
 export const postNewNotification = async (
@@ -92,7 +92,7 @@ export async function notifyAdmins(
   entityId: string | null = null
 ) {
   // There is not specify admin, all active admins will be notify
-  const admins: UserDocument[] = await User.find({
+  const admins: UserInterface[] = await User.find({
     role: "admin",
     isActive: true,
   });

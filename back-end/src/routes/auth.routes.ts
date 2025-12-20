@@ -1,42 +1,42 @@
 import express, { Router } from "express";
 import withAuth from "../middlewares/withAuth.js";
-import authControllers from "../controllers/auths/auth.controllers.js";
-import googleAuthControllers from "../controllers/auths/google-auth.controller.js";
+import * as authController from "../controllers/auths/auth.controller.js";
+import * as googleAuthController from "../controllers/auths/google-auth.controller.js";
 
 const router = Router();
 
-router.post("/auth/register", authControllers.signUpController);
-router.post("/auth/login", authControllers.logInController);
-router.post("/auth/verify-email", authControllers.verifyEmailController);
+router.post("/auth/register", authController.signUpController);
+router.post("/auth/login", authController.logInController);
+router.post("/auth/verify-email", authController.verifyEmailController);
 router.post(
   "/auth/resend-verification-email",
   withAuth,
-  authControllers.resendVeficationEmailController
+  authController.resendVeficationEmailController
 );
-router.post("/auth/forget-password", authControllers.forgetPasswordController);
+router.post("/auth/forget-password", authController.forgetPasswordController);
 router.post(
   "/auth/verify-reset-code",
-  authControllers.verifyResetCodeController
+  authController.verifyResetCodeController
 );
-router.post("/auth/reset-password", authControllers.resetpasswordController);
-router.post("/auth/log-out", withAuth, authControllers.logoutController);
+router.post("/auth/reset-password", authController.resetpasswordController);
+router.post("/auth/log-out", withAuth, authController.logoutController);
 
 /* Google 0auth2 endpoints */
 router.get(
   "/auth/google/register",
-  googleAuthControllers.getGoogleOauthUrlController
+  googleAuthController.getGoogleOauthUrlController
 );
 router.get(
   "/auth/google/register-fallback",
-  googleAuthControllers.googleSignupFallback
+  googleAuthController.googleSignupFallback
 );
 router.get(
   "/auth/google/login",
-  googleAuthControllers.getGoogleOauthUrlController
+  googleAuthController.getGoogleOauthUrlController
 );
 router.get(
   "/auth/google/login-fallback",
-  googleAuthControllers.googleLoginFallback
+  googleAuthController.googleLoginFallback
 );
 
 export default router;

@@ -1,10 +1,7 @@
 import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
 import AppError from "../errors/appError.js";
-import {
-  subscribeToNewsletter,
-  unsubscribeFromNewsletter,
-} from "../services/newsletter.services.js";
+import * as newsletterService from "../services/newsletter.service.js";
 import env from "../configs/env.js";
 import logger from "../utils/logger.js";
 
@@ -18,7 +15,7 @@ export const subscribeToNewletterController = async (
     const { email } = req.body;
     if (!email) throw new AppError("Please provide an email.", 400, true);
 
-    await subscribeToNewsletter(email);
+    await newsletterService.subscribeToNewsletter(email);
 
     logger.info(`${email} just subcribed to the newletter.`);
     const response: ApiResponse<void> = {
@@ -43,7 +40,7 @@ export const unsubscribeToNewletterController = async (
     if (!email || !token)
       throw new AppError("Please provide an email and token.", 400, true);
 
-    await unsubscribeFromNewsletter(email, token);
+    await newsletterService.unsubscribeFromNewsletter(email, token);
 
     let redirect: string =
       env.FRONTEND_URL + "/news-letter/unsubscibe?result=SUCCESS";
