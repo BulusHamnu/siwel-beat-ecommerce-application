@@ -1,9 +1,8 @@
-// import mongoose, { type Date } from "mongoose";
 import { Schema, model, Document } from "mongoose";
-import { removeUnwantedField, comparePassword } from "../utils/helpers.js";
+import bcrypt from "bcrypt";
 
-// user schema types
-export interface UserDocument extends Document {
+/* User type */
+export interface UserInterface extends Document {
   username: string;
   email: string;
   password: string;
@@ -29,8 +28,8 @@ export interface UserDocument extends Document {
   removeUnwantedField<T>(): T;
 }
 
-// user schema
-const userSchema = new Schema<UserDocument>(
+/* User schema */
+const userSchema = new Schema<UserInterface>(
   {
     username: {
       type: String,
@@ -82,15 +81,28 @@ const userSchema = new Schema<UserDocument>(
   { timestamps: true }
 );
 
-// method to compare password
-userSchema.methods.comparePassword = comparePassword;
+/* Schema methods */
+userSchema.methods.comparePassword = async function (
+  this: Document & { toObject(): any },
+  password: string
+): Promise<boolean> {
+  const obj = this.toObject();
+  return await bcrypt.compare(password, obj.password);
+};
 
-// method to remove secret fields
-userSchema.methods.removeUnwantedField = removeUnwantedField;
+userSchema.methods.removeUnwantedField = function <
+  T extends Document & { toObject(): any }
+>(this: T): T {
+  const obj = this.toObject();
+  delete obj.resetPasswordVerification;
+  delete obj.emailVerification;
+  delete obj.password;
+  delete obj.google;
+  return obj;
+};
 
 /* Indexes */
 userSchema.index({ role: 1, isActive: 1 });
 
-// user model
-const User = model<UserDocument>("User", userSchema);
+const User = model<UserInterface>("User", userSchema);
 export default User;

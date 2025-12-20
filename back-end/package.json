@@ -42,6 +42,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/file-type": "^10.6.0",
+    "@types/gapi": "^0.0.47",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mime": "^3.0.4",
     "@types/morgan": "^1.9.10",

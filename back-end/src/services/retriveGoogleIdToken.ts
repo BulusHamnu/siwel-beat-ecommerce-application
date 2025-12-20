@@ -2,13 +2,19 @@ import axios from "axios";
 const googleCallbackUrl = "https://oauth2.googleapis.com/token";
 import qs from "qs";
 import env from "../configs/env.js";
-import { OAuth2Client } from "google-auth-library";
+import {
+  OAuth2Client,
+  type TokenPayload,
+  type Credentials,
+} from "google-auth-library";
 ("google-auth-library");
 const oauth = new OAuth2Client(env.CLIENT_ID);
-import { generateRandCode, setRedirect } from "../utils/helpers.js";
+import { generateRandCode } from "../utils/helpers.js";
+import { setGoogleRedirect } from "../controllers/auths/google-auth.controller.js";
 import logger from "../utils/logger.js";
 
-export interface userGoooglePayload {
+export interface userGooglePayload
+  extends Omit<TokenPayload, "iss" | "sub" | "iat" | "aud" | "exp"> {
   username: string;
   firstName: string;
   lastName: string;
@@ -23,12 +29,12 @@ export interface userGoooglePayload {
   googleId: string;
 }
 
-const retriveGoogleUserPayload = async (
-  code: string,
+/* Verify google user */
+async function retriveGoogleCredentials(
+  code: string | number,
   route: string
-): Promise<userGoooglePayload> => {
-  const redirectUri = setRedirect(route);
-
+): Promise<{ credentials: Credentials }> {
+  const redirectUri = setGoogleRedirect(route);
   const response = await axios.post(
     googleCallbackUrl,
     qs.stringify({
@@ -45,11 +51,21 @@ const retriveGoogleUserPayload = async (
     }
   );
 
+  return { credentials: response.data };
+}
+
+const retriveGoogleUserPayload = async (
+  code: string,
+  route: string
+): Promise<userGooglePayload> => {
+  const { credentials } = await retriveGoogleCredentials(code, route);
+
   const ticket = await oauth.verifyIdToken({
-    idToken: response.data.id_token,
+    idToken: credentials.id_token || "",
     audience: env.CLIENT_ID,
   });
   const payload = ticket.getPayload();
+
   logger.info("Google idToken verify successfully: ", {
     email: payload?.email,
     googleId: payload?.sub,
@@ -65,8 +81,8 @@ const retriveGoogleUserPayload = async (
     isVerified: payload?.email_verified || false,
     role: "user",
     picture: payload?.picture || "",
-    idToken: response.data.id_token || "",
-    accessToken: response.data.access_token,
+    idToken: credentials.id_token || "",
+    accessToken: credentials.access_token || "",
     googleId: payload?.sub || "",
   };
 };

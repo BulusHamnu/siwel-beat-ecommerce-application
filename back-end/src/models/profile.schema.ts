@@ -9,8 +9,8 @@ export interface CartItem {
   type: string;
 }
 
-// user schema types
-export interface ProfileDocument extends Document {
+/* Profile type */
+export interface ProfileInterface extends Document {
   userId: ObjectId;
   firstName: string;
   lastName: string;
@@ -28,8 +28,8 @@ export interface ProfileDocument extends Document {
   };
 }
 
-// user schema
-const profileSchema = new Schema<ProfileDocument>(
+/* Profile schema */
+const profileSchema = new Schema<ProfileInterface>(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -104,5 +104,5 @@ const profileSchema = new Schema<ProfileDocument>(
 profileSchema.index({ userId: 1 }, { unique: true });
 
 // user model
-const profileModel = model<ProfileDocument>("Profile", profileSchema);
+const profileModel = model<ProfileInterface>("Profile", profileSchema);
 export default profileModel;

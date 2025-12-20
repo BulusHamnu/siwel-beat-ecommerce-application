@@ -39,6 +39,7 @@ interface Env {
   AUDIO_FILES_BUCKET: string;
   LICENSE_FILES_BUCKET: string;
   IMAGE_FILES_BUCKET: string;
+  GOOGLEOAUTH2URL: string;
 }
 
 const env: Env = {
@@ -72,6 +73,9 @@ const env: Env = {
   AUDIO_FILES_BUCKET: process.env.AUDIO_FILES_BUCKET || "audios",
   LICENSE_FILES_BUCKET: process.env.LICENSE_FILES_BUCKET || "documents",
   IMAGE_FILES_BUCKET: process.env.IMAGE_FILES_BUCKET || "images",
+  GOOGLEOAUTH2URL:
+    process.env.GOOGLEOAUTH2URL ||
+    "https://accounts.google.com/o/oauth2/v2/auth",
 };
 
 export default env;

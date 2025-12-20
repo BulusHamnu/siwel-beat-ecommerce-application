@@ -1,7 +1,7 @@
 import Track, { type TrackInterface } from "../../models/track.schema.js";
 import AppError from "../../errors/appError.js";
 import Profile, {
-  type ProfileDocument,
+  type ProfileInterface,
   type CartItem,
 } from "../../models/profile.schema.js";
 import mongoose from "mongoose";
@@ -16,7 +16,9 @@ export const addToCart = async (
   const track: TrackInterface | null = await Track.findOne({ _id: trackId });
   if (!track) throw new AppError("Track not found", 404, true);
 
-  const userProfile: ProfileDocument | null = await Profile.findOne({ userId });
+  const userProfile: ProfileInterface | null = await Profile.findOne({
+    userId,
+  });
   // check if product is already in cart, there should be no duplilate in cart
   const productExist = userProfile?.cart.find(
     (track) =>

@@ -1,5 +1,5 @@
-import User, { type UserDocument } from "../../models/user.schema.js";
-import Profile, { type ProfileDocument } from "../../models/profile.schema.js";
+import User, { type UserInterface } from "../../models/user.schema.js";
+import Profile, { type ProfileInterface } from "../../models/profile.schema.js";
 import type { userProfile } from "../../controllers/userTypes.js";
 import AppError from "../../errors/appError.js";
 import supabase from "../supabase.js";
@@ -7,10 +7,10 @@ import env from "../../configs/env.js";
 
 /* Get profile */
 export const getProfile = async (id: string): Promise<userProfile> => {
-  const user: UserDocument | null = await User.findOne({ _id: id });
+  const user: UserInterface | null = await User.findOne({ _id: id });
   if (!user) throw new AppError("User not found.", 404, true);
 
-  const profile: ProfileDocument | null = await Profile.findOne({
+  const profile: ProfileInterface | null = await Profile.findOne({
     userId: user._id,
   });
   const profileObj = profile?.toObject();
@@ -73,11 +73,11 @@ export const updateProfile = async (
   id: string | undefined,
   updates: ProfileUpdates
 ): Promise<userProfile> => {
-  const user: UserDocument | null = await User.findOne({ _id: id });
+  const user: UserInterface | null = await User.findOne({ _id: id });
   if (!user) throw new AppError("User not found.", 404, true);
 
   filterProfileUpdates(updates);
-  const profile: ProfileDocument | null = await Profile.findOneAndUpdate(
+  const profile: ProfileInterface | null = await Profile.findOneAndUpdate(
     { userId: user._id },
     { $set: updates },
     { new: true }
@@ -105,16 +105,17 @@ export const updateProfilePicture = async (
   userId: string,
   pictureUrl: string
 ): Promise<string> => {
-  const profile: ProfileDocument | null = await Profile.findOne({ userId });
+  const profile: ProfileInterface | null = await Profile.findOne({ userId });
   const imgBucket = env.IMAGE_FILES_BUCKET;
   const oldPicturePath = profile?.picture.split(`${imgBucket}/`)[1] || "";
 
   const publicUrl = await supabase.getPublicUrl(imgBucket, pictureUrl); // saved in db so it can be access anywhere
-  const updatedProfile: ProfileDocument | null = await Profile.findOneAndUpdate(
-    { userId },
-    { $set: { picture: publicUrl } },
-    { new: true }
-  );
+  const updatedProfile: ProfileInterface | null =
+    await Profile.findOneAndUpdate(
+      { userId },
+      { $set: { picture: publicUrl } },
+      { new: true }
+    );
 
   if (!updatedProfile)
     throw new AppError("Unable to update profile picture.", 500, true);
