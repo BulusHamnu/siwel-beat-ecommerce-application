@@ -1,19 +1,19 @@
 import User from "../models/user.schema.js";
 import type { createUserBody } from "../controllers/userTypes.js";
-import type { UserDocument } from "../models/user.schema.js";
+import type { UserInterface } from "../models/user.schema.js";
 import AppError from "../errors/appError.js";
-import { createHashpasswordAndEmailVerification } from "../utils/helpers.js";
-import Profile, { type ProfileDocument } from "../models/profile.schema.js";
+import { createHashpasswordAndEmailVerification } from "./shared/auth-shared.services.js";
+import Profile from "../models/profile.schema.js";
 import { generateRandCode } from "../utils/helpers.js";
 import sendEmail from "./sendEmail.js";
 import Template from "../utils/emailTemplate.js";
 import jwt from "jsonwebtoken";
 import env from "../configs/env.js";
-import type mongoose from "mongoose";
+import { type ObjectId } from "mongoose";
 import bcrypt from "bcrypt";
 
-// CREATE NEW USER SERVICE
-export const createNewUser = async ({
+/* Create new user */
+const createNewUser = async ({
   username,
   firstName,
   lastName,
@@ -22,18 +22,16 @@ export const createNewUser = async ({
   provider = "local",
   isVerified,
   role = "user",
-  picture,
+  picture = "",
   accessToken,
   idToken,
   googleId,
-}: createUserBody): Promise<UserDocument> => {
-  // check if user already exist
+}: createUserBody): Promise<UserInterface> => {
   const emailExist = await User.findOne({ email: email });
   if (emailExist) {
-    throw new AppError("User already exist!", 209, true);
+    throw new AppError("User already exist.", 209, true);
   }
 
-  // hash user password
   const { hashPassword, emailVerification } =
     await createHashpasswordAndEmailVerification(password, 15);
 
@@ -52,10 +50,9 @@ export const createNewUser = async ({
     },
   });
 
-  // create user profile if role is user not admin
-  let profile: ProfileDocument | null = null;
-  if (user.role === "user") {
-    profile = await Profile.create({
+  // create user profile if role is not admin
+  if (user.role !== "admin") {
+    await Profile.create({
       userId: user._id,
       firstName,
       lastName,
@@ -63,39 +60,54 @@ export const createNewUser = async ({
     });
   }
 
+  await sendEmail(
+    user.email,
+    "Please verify you email.",
+    Template.emailVerificationTemplate(
+      user.username,
+      user.emailVerification.code
+    )
+  );
+
   return user;
 };
 
-// LOGIN SERVICE
+/* Login user */
 export interface LoginReturnType {
   token: string;
   user: {
-    id: string | mongoose.ObjectId;
+    id: string | ObjectId;
     email: string;
     isVerified: boolean;
     role: string;
   };
 }
 
-export const loginUser = async (
-  password: string,
-  email: string
-): Promise<LoginReturnType> => {
+async function getUserAndValidatePassword(
+  email: string,
+  password: string
+): Promise<UserInterface> {
   const user = await User.findOne({ email: email });
-  if (!user) throw new AppError("User does not exist.", 404, true);
+  if (!user) throw new AppError("User not found.", 404, true);
 
-  // compare password
   const passwordCorrect: boolean = await user.comparePassword(password);
-
   if (!passwordCorrect && user.provider !== "local")
     throw new AppError(
       "Incorrect Password, reset your password or sign in with google.",
       400,
       true
     );
-  if (!passwordCorrect) throw new AppError("Incorrect Password!", 400, true);
+  if (!passwordCorrect) throw new AppError("Incorrect Password.", 400, true);
 
-  // sign token
+  return user;
+}
+
+const loginUser = async (
+  password: string,
+  email: string
+): Promise<LoginReturnType> => {
+  const user = await getUserAndValidatePassword(email, password);
+
   const token: string = jwt.sign(
     {
       id: user._id,
@@ -107,10 +119,9 @@ export const loginUser = async (
     { expiresIn: "7d" }
   );
 
-  // return result
   return {
     user: {
-      id: user._id as mongoose.ObjectId,
+      id: user._id as ObjectId,
       email: user.email,
       isVerified: user.isVerified,
       role: user.role,
@@ -119,22 +130,19 @@ export const loginUser = async (
   };
 };
 
-// FORGET PASSWORD SERVICE
-export const forgetPassword = async (email: string): Promise<void> => {
-  const user: UserDocument | null = await User.findOne({ email });
-  if (!user) throw new AppError("User does not exist.", 404, true);
+/* Forget password */
+const forgetPassword = async (email: string): Promise<void> => {
+  const user: UserInterface | null = await User.findOne({ email });
+  if (!user) throw new AppError("User not found.", 404, true);
 
-  // create password reset code
-  const resetCode: string | number | null = generateRandCode(6);
-
+  const resetCode = generateRandCode(6);
   user.resetPasswordVerification.code = resetCode;
   user.resetPasswordVerification.expiredAt = new Date(
     Date.now() + 15 * 60 * 1000
   );
-
   await user.save();
 
-  // send email
+  // user get reset code
   await sendEmail(
     user.email,
     "Reset Password Code",
@@ -142,14 +150,12 @@ export const forgetPassword = async (email: string): Promise<void> => {
   );
 };
 
-// RESET PASSWORD SERVICE
-export const resetPassword = async (
+/* Reset Password */
+const resetPassword = async (
   email: string,
   password: string
-): Promise<boolean> => {
-  // hash user password
-  const hashPassword: string = await bcrypt.hash(password, 10);
-  const user: UserDocument | null = await User.findOne({ email: email });
+): Promise<void> => {
+  const user: UserInterface | null = await User.findOne({ email: email });
   if (!user?.resetPasswordVerification.code)
     throw new AppError(
       "Unable to reset user password, code not found.",
@@ -157,7 +163,7 @@ export const resetPassword = async (
       true
     );
 
-  // reset code to null
+  const hashPassword: string = await bcrypt.hash(password, 10);
   user.password = hashPassword;
   user.resetPasswordVerification.code = null;
   user.resetPasswordVerification.expiredAt = null;
@@ -169,48 +175,49 @@ export const resetPassword = async (
     "Password Reset Successfully.",
     Template.resetSuccessfulTemplate(user.username)
   );
-
-  return true;
 };
 
-// RESEND VERFICATION SERVICE
-export const resendVerificationEmail = async (
-  email: string
-): Promise<boolean> => {
-  const user: UserDocument | null = await User.findOne({ email });
-  if (!user) throw new AppError("User does not exist.", 404, true);
+/* Resend verification email */
+function generateEmailVerificationToken(): {
+  verificationCode: string | number;
+  expiredAt: Date;
+} {
+  const verificationCode: string | number | null = generateRandCode(6);
+  const expiredAt = new Date(Date.now() + 15 * 60 * 1000);
+  return { verificationCode, expiredAt };
+}
+
+const resendVerificationEmail = async (email: string): Promise<void> => {
+  const user: UserInterface | null = await User.findOne({ email });
+  if (!user) throw new AppError("User not found.", 404, true);
   if (user.isVerified)
     throw new AppError("User is already verified.", 400, true);
 
-  // create verification code
-  const verificationCode: string | number | null = generateRandCode(6);
+  const { verificationCode, expiredAt } = generateEmailVerificationToken();
 
+  // save and send code to user through email
   user.emailVerification.code = verificationCode;
-  user.emailVerification.expiredAt = new Date(Date.now() + 15 * 60 * 1000);
-
+  user.emailVerification.expiredAt = expiredAt;
   await user.save();
+  console.log(verificationCode);
 
-  // send email
   await sendEmail(
     user.email,
     "Email Verification Code",
     Template.emailVerificationTemplate(user.username, verificationCode)
   );
-  return true;
 };
 
-// VERIFY EMAIL SERVICE
-export const verifyEmail = async (
-  email: string,
-  code: string
-): Promise<boolean> => {
-  const user: UserDocument | null = await User.findOne({ email: email });
-  if (!user) throw new AppError("User does not exist.", 404, true);
-  // check if user is already verified
+/* Verify email */
+const verifyEmail = async (email: string, code: string): Promise<boolean> => {
+  const user: UserInterface | null = await User.findOne({ email: email });
+  if (!user) throw new AppError("User not found.", 404, true);
+
+  // can't verify already verified users
   if (user.isVerified)
     throw new AppError("User is already verified.", 400, true);
 
-  const codeIsValid: UserDocument | null = await User.findOne({
+  const codeIsValid: UserInterface | null = await User.findOne({
     "emailVerification.code": code,
     "emailVerification.expiredAt": { $gt: new Date() },
   });
@@ -218,7 +225,6 @@ export const verifyEmail = async (
   if (!codeIsValid)
     throw new AppError("Code is invalid or Code have expired.", 400, true);
 
-  // verified code
   codeIsValid.isVerified = true;
   codeIsValid.emailVerification.code = null;
   codeIsValid.emailVerification.expiredAt = null;
@@ -227,7 +233,24 @@ export const verifyEmail = async (
   return true;
 };
 
-// VERIFY PASSWORD RESET CODE
-const verifyResetCode = async (code: string): Promise<boolean> => {
-  return true;
+/* Verify reset password code */
+const verifyResetCode = async (email: string, code: string): Promise<void> => {
+  const codeIsValid: UserInterface | null = await User.findOne({
+    email,
+    "resetPasswordVerification.code": code,
+    "resetPasswordVerification.expiredAt": { $gt: new Date() },
+  });
+
+  if (!codeIsValid)
+    throw new AppError("Code is invalid or Code have expired.", 400, true);
+};
+
+export default {
+  createNewUser,
+  loginUser,
+  forgetPassword,
+  resetPassword,
+  resendVerificationEmail,
+  verifyEmail,
+  verifyResetCode,
 };
