@@ -1,6 +1,42 @@
 import Order from "../models/order.schema.js";
 import Track from "../models/track.schema.js";
 import Profile from "../models/profile.schema.js";
+import { type UserInterface } from "../models/user.schema.js";
+import AppError from "../errors/appError.js";
+import User from "../models/user.schema.js";
+
+/* Get admin */
+export const getAdmin = async (userId: string): Promise<UserInterface> => {
+  const user: UserInterface | null = await User.findOne({ _id: userId });
+  if (!user) throw new AppError("User not found.", 404, true);
+  return user.removeUnwantedField();
+};
+
+/* Update profile */
+export interface adminUpdateBody {
+  firstname: string;
+  username: string;
+  lastname: string;
+}
+
+export const updateAdmin = async (
+  userId: string,
+  updates: adminUpdateBody
+): Promise<UserInterface> => {
+  const allowFields = ["username", "firstName", "lastName"];
+  for (const key of Object.keys(updates) as (keyof adminUpdateBody)[]) {
+    if (!allowFields.includes(key)) delete updates[key];
+  }
+
+  const user: UserInterface | null = await User.findOneAndUpdate(
+    { _id: userId },
+    { $set: updates },
+    { new: true }
+  );
+
+  if (!user) throw new AppError("User not found.", 404, true);
+  return user.removeUnwantedField();
+};
 
 /* Get dashboard */
 export interface dashboardStatistics {
