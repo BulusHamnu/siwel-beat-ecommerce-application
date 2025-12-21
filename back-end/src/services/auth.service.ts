@@ -20,8 +20,6 @@ export const createNewUser = async ({
   email,
   password,
   provider = "local",
-  isVerified,
-  role = "user",
   picture = "",
   accessToken,
   idToken,
@@ -35,6 +33,8 @@ export const createNewUser = async ({
   const { hashPassword, emailVerification } =
     await createHashpasswordAndEmailVerification(password, 15);
 
+  const isVerified = provider === "google" ? true : false;
+  const role = "user";
   const user = await User.create({
     emailVerification: isVerified == true ? {} : emailVerification,
     username,
@@ -50,15 +50,12 @@ export const createNewUser = async ({
     },
   });
 
-  // create user profile if role is not admin
-  if (user.role !== "admin") {
-    await Profile.create({
-      userId: user._id,
-      firstName,
-      lastName,
-      profilePic: picture,
-    });
-  }
+  await Profile.create({
+    userId: user._id,
+    firstName,
+    lastName,
+    profilePic: picture,
+  });
 
   await sendEmail(
     user.email,
@@ -209,7 +206,10 @@ export const resendVerificationEmail = async (email: string): Promise<void> => {
 };
 
 /* Verify email */
-export const verifyEmail = async (email: string, code: string): Promise<boolean> => {
+export const verifyEmail = async (
+  email: string,
+  code: string
+): Promise<boolean> => {
   const user: UserInterface | null = await User.findOne({ email: email });
   if (!user) throw new AppError("User not found.", 404, true);
 
@@ -234,7 +234,10 @@ export const verifyEmail = async (email: string, code: string): Promise<boolean>
 };
 
 /* Verify reset password code */
-export const verifyResetCode = async (email: string, code: string): Promise<void> => {
+export const verifyResetCode = async (
+  email: string,
+  code: string
+): Promise<void> => {
   const codeIsValid: UserInterface | null = await User.findOne({
     email,
     "resetPasswordVerification.code": code,
@@ -244,4 +247,3 @@ export const verifyResetCode = async (email: string, code: string): Promise<void
   if (!codeIsValid)
     throw new AppError("Code is invalid or Code have expired.", 400, true);
 };
-
