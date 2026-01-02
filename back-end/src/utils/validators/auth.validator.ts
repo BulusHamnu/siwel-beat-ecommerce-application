@@ -4,7 +4,7 @@ import sanitizeData from "../sanitizeData.js";
 
 /* Sign up validator */
 export const signUpValidator = Joi.object({
-  username: Joi.string().required().min(3).messages({
+  username: Joi.string().required().min(3).lowercase().messages({
     "string.min": "username can not be less than 3 letters.",
   }),
   firstName: Joi.string().required().min(3).messages({
@@ -28,6 +28,7 @@ export const signUpValidator = Joi.object({
   confirmPassword: Joi.string().required().valid(Joi.ref("password")).messages({
     "any.only": "Confirm password must be the same with password.",
   }),
+  gender: Joi.string().required().valid("male", "female"),
 });
 
 /* Login validator */
@@ -62,6 +63,7 @@ export const validatePasswordResetBody = Joi.object({
   confirmPassword: Joi.string().required().valid(Joi.ref("password")).messages({
     "any.only": "Confirm password must be the same with password.",
   }),
+  resetToken: Joi.string().required(),
 });
 
 /* ValidateBody function */

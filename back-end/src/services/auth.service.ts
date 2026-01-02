@@ -11,6 +11,7 @@ import jwt from "jsonwebtoken";
 import env from "../configs/env.js";
 import { type ObjectId } from "mongoose";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 /* Create new user */
 export const createNewUser = async ({
@@ -19,6 +20,7 @@ export const createNewUser = async ({
   lastName,
   email,
   password,
+  gender,
   provider = "local",
   picture = "",
   accessToken,
@@ -42,6 +44,7 @@ export const createNewUser = async ({
     provider,
     role,
     isVerified,
+    gender,
     password: hashPassword,
     google: {
       googleId,
@@ -132,9 +135,9 @@ export const forgetPassword = async (email: string): Promise<void> => {
   const user: UserInterface | null = await User.findOne({ email });
   if (!user) throw new AppError("User not found.", 404, true);
 
-  const resetCode = generateRandCode(6);
-  user.resetPasswordVerification.code = resetCode;
-  user.resetPasswordVerification.expiredAt = new Date(
+  const otpCode = generateRandCode(6);
+  user.resetPasswordVerification.otpCode = otpCode;
+  user.resetPasswordVerification.otpExpiredAt = new Date(
     Date.now() + 15 * 60 * 1000
   );
   await user.save();
@@ -143,27 +146,28 @@ export const forgetPassword = async (email: string): Promise<void> => {
   await sendEmail(
     user.email,
     "Reset Password Code",
-    Template.resetPasswordTemplate(user.username, resetCode)
+    Template.resetPasswordTemplate(user.username, otpCode)
   );
 };
 
 /* Reset Password */
 export const resetPassword = async (
   email: string,
-  password: string
+  password: string,
+  resetToken: string
 ): Promise<void> => {
-  const user: UserInterface | null = await User.findOne({ email: email });
-  if (!user?.resetPasswordVerification.code)
-    throw new AppError(
-      "Unable to reset user password, code not found.",
-      404,
-      true
-    );
+  const user: UserInterface | null = await User.findOne({
+    email,
+    "resetPasswordVerification.resetToken": resetToken,
+    "resetPasswordVerification.resetTokenExpiredAt": { $gt: new Date() },
+  });
+
+  if (!user) throw new AppError("Reset token has expired.", 400, true);
 
   const hashPassword: string = await bcrypt.hash(password, 10);
   user.password = hashPassword;
-  user.resetPasswordVerification.code = null;
-  user.resetPasswordVerification.expiredAt = null;
+  user.resetPasswordVerification.resetToken = null;
+  user.resetPasswordVerification.resetTokenExpiredAt = null;
   await user.save();
 
   // send email
@@ -196,7 +200,6 @@ export const resendVerificationEmail = async (email: string): Promise<void> => {
   user.emailVerification.code = verificationCode;
   user.emailVerification.expiredAt = expiredAt;
   await user.save();
-  console.log(verificationCode);
 
   await sendEmail(
     user.email,
@@ -234,16 +237,30 @@ export const verifyEmail = async (
 };
 
 /* Verify reset password code */
+function generateResetToken(): string {
+  return crypto.randomBytes(16).toString("hex");
+}
 export const verifyResetCode = async (
   email: string,
   code: string
-): Promise<void> => {
-  const codeIsValid: UserInterface | null = await User.findOne({
+): Promise<{ resetToken: string }> => {
+  const user: UserInterface | null = await User.findOne({
     email,
-    "resetPasswordVerification.code": code,
-    "resetPasswordVerification.expiredAt": { $gt: new Date() },
+    "resetPasswordVerification.otpCode": code,
+    "resetPasswordVerification.otpExpiredAt": { $gt: new Date() },
   });
 
-  if (!codeIsValid)
+  if (!user)
     throw new AppError("Code is invalid or Code have expired.", 400, true);
+
+  const resetToken = generateResetToken();
+  user.resetPasswordVerification.otpCode = null;
+  user.resetPasswordVerification.otpExpiredAt = null;
+  user.resetPasswordVerification.resetToken = resetToken;
+  user.resetPasswordVerification.resetTokenExpiredAt = new Date(
+    Date.now() + 15 * 60 * 1000
+  );
+  await user.save();
+
+  return { resetToken };
 };

@@ -150,11 +150,11 @@ export const forgetPasswordController = async (
 export const verifyResetCodeController = async (
   req: Request<
     {},
-    { status: boolean; message: string },
+    ApiResponse<{ resetToken: string }>,
     { code: string; email: string },
     {}
   >,
-  res: Response<{ status: boolean; message: string }>,
+  res: Response<ApiResponse<{ resetToken: string }>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -163,10 +163,11 @@ export const verifyResetCodeController = async (
       authValidationUtils.verifyEmailAndCodeValidator
     );
 
-    await authService.verifyResetCode(email, code);
-    const response: ApiResponse<void> = {
+    const { resetToken } = await authService.verifyResetCode(email, code);
+    const response: ApiResponse<{ resetToken: string }> = {
       status: true,
       message: "Code is valid.",
+      data: { resetToken },
     };
     res.status(200).json(response);
   } catch (error) {
@@ -175,24 +176,24 @@ export const verifyResetCodeController = async (
 };
 
 /* Reset password controller */
+interface resetPasswordBody {
+  email: string;
+  password: string;
+  resetToken: string;
+}
 export const resetpasswordController = async (
-  req: Request<
-    {},
-    { status: boolean; message: string },
-    { password: string; email: string },
-    {}
-  >,
-  res: Response<{ status: boolean; message: string }>,
+  req: Request<{}, ApiResponse<void>, resetPasswordBody, {}>,
+  res: Response<ApiResponse<void>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { email, password }: { email: string; password: string } =
+    const { email, password, resetToken }: resetPasswordBody =
       authValidationUtils.validateAndSanitizeBody(
         req.body,
         authValidationUtils.validatePasswordResetBody
       );
 
-    await authService.resetPassword(email, password);
+    await authService.resetPassword(email, password, resetToken);
     logger.info(`User with email ${email} reset their password.`);
 
     const response: ApiResponse<void> = {

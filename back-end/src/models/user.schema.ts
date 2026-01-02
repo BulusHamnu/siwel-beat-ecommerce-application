@@ -10,8 +10,10 @@ export interface UserInterface extends Document {
   role: string;
   isVerified: boolean;
   resetPasswordVerification: {
-    code: string | null | number;
-    expiredAt: Date | null;
+    otpCode: string | null | number;
+    otpExpiredAt: Date | null;
+    resetToken: string | null | number;
+    resetTokenExpiredAt: Date | null;
   };
   emailVerification: { code: string | null | number; expiredAt: Date | null };
   google: {
@@ -64,9 +66,10 @@ const userSchema = new Schema<UserInterface>(
       expiredAt: { type: Date, default: null },
     },
     resetPasswordVerification: {
-      code: { type: String, default: "" },
-      expiredAt: { type: Date, default: null },
-      default: {},
+      otpCode: { type: String, default: "" },
+      otpExpiredAt: { type: Date, default: null },
+      resetToken: { type: String, default: "" },
+      resetTokenExpiredAt: { type: Date, default: null },
     },
     google: {
       googleId: String,
