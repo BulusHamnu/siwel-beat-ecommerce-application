@@ -4,7 +4,7 @@ const sanitizeValue = (
   value: string | number,
   fieldName: string = ""
 ): string | number => {
-  if (typeof value === "number") return value;
+  if (typeof value === "number" || typeof value === "boolean") return value;
 
   let cleanData = value.trim();
   if (

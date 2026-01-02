@@ -9,7 +9,6 @@ export default function validateAndSanitizeBody(data: unknown, validator: any) {
     abortEarly: false,
   });
   if (error) {
-    console.log(error);
     const validationMessages = error.details.map(
       (err: ValidationError) => err.message
     );
