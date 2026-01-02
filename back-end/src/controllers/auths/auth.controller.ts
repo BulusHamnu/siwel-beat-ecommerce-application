@@ -5,6 +5,7 @@ import * as authService from "../../services/auth.service.js";
 import { type LoginReturnType } from "../../services/auth.service.js";
 import type { ApiResponse } from "../responseInterface.js";
 import env from "../../configs/env.js";
+import * as authValidationUtils from "../../utils/validators/auth.validator.js";
 
 /* Sign up new user controller */
 export const signUpController = async (
@@ -13,8 +14,13 @@ export const signUpController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userData: createUserBody = req.body;
-    const newUser = await authService.createNewUser(userData);
+    const cleanSignupBody: createUserBody =
+      authValidationUtils.validateAndSanitizeBody(
+        req.body,
+        authValidationUtils.signUpValidator
+      );
+
+    const newUser = await authService.createNewUser(cleanSignupBody);
     logger.info("User created successully!", { userId: newUser._id });
 
     const response: ApiResponse<void> = {
@@ -39,9 +45,16 @@ export const logInController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { password, email } = req.body;
-    const result = await authService.loginUser(password, email);
+    const { email, password }: loginBody =
+      authValidationUtils.validateAndSanitizeBody(
+        req.body,
+        authValidationUtils.loginValidator
+      );
 
+    const result = await authService.loginUser(
+      password.normalize("NFC"),
+      email
+    );
     res.cookie("token", result.token, env.LOGIN_COOKIE_OPTS);
 
     const response: ApiResponse<LoginReturnType> = {
@@ -62,17 +75,17 @@ interface emailVerificationBody {
 }
 
 export const verifyEmailController = async (
-  req: Request<
-    {},
-    { status: boolean; message: string },
-    { email: string; code: string },
-    {}
-  >,
-  res: Response<{}>,
+  req: Request<{}, ApiResponse<void>, { email: string; code: string }, {}>,
+  res: Response<ApiResponse<void>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { email, code }: emailVerificationBody = req.body;
+    const { email, code }: emailVerificationBody =
+      authValidationUtils.validateAndSanitizeBody(
+        req.body,
+        authValidationUtils.verifyEmailAndCodeValidator
+      );
+
     await authService.verifyEmail(email, code);
 
     const response: ApiResponse<void> = {
@@ -114,7 +127,12 @@ export const forgetPasswordController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userEmail: string = req.body.email;
+    const email = req.body.email;
+    const userEmail: string = authValidationUtils.validateAndSanitizeBody(
+      email,
+      authValidationUtils.validateEmail
+    );
+
     await authService.forgetPassword(userEmail);
     logger.info("Password reset code sent to:", { email: userEmail });
 
@@ -140,7 +158,10 @@ export const verifyResetCodeController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { code, email } = req.body;
+    const { email, code } = authValidationUtils.validateAndSanitizeBody(
+      req.body,
+      authValidationUtils.verifyEmailAndCodeValidator
+    );
 
     await authService.verifyResetCode(email, code);
     const response: ApiResponse<void> = {
@@ -165,7 +186,12 @@ export const resetpasswordController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { email, password }: { email: string; password: string } = req.body;
+    const { email, password }: { email: string; password: string } =
+      authValidationUtils.validateAndSanitizeBody(
+        req.body,
+        authValidationUtils.validatePasswordResetBody
+      );
+
     await authService.resetPassword(email, password);
     logger.info(`User with email ${email} reset their password.`);
 

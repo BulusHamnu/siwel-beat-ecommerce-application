@@ -11,13 +11,21 @@ import type { ApiResponse } from "../controllers/responseInterface.js";
 // error middleware
 const errorHandler: ErrorRequestHandler = (
   err: customAppError,
-  req: Request<{}, ApiResponse<void>, {}, {}>,
-  res: Response<ApiResponse<void>>,
+  req: Request<{}, ApiResponse<void | customAppError>, {}, {}>,
+  res: Response<ApiResponse<void | customAppError>>,
   next: NextFunction
 ) => {
   logger.error("An error occur: ", err);
   if (err instanceof AppError) {
-    res.status(err.status).json({
+    if (err.message.includes("ValidationError")) {
+      return res.status(400).json({
+        status: false,
+        message: err.message,
+        error: err.body,
+      });
+    }
+
+    return res.status(err.status).json({
       status: false,
       message: err.isOperational
         ? err.message
@@ -30,6 +38,7 @@ const errorHandler: ErrorRequestHandler = (
         message: "File is too large!",
       });
     }
+    //
     res.status(500).json({
       status: false,
       message: "An unexepected error occured, please try again later.",

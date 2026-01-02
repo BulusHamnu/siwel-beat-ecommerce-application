@@ -28,6 +28,7 @@
     "express": "^5.1.0",
     "file-type": "^21.1.1",
     "google-auth-library": "^10.4.2",
+    "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.2",
     "mime": "^4.1.0",
     "mongoose": "^8.19.1",
@@ -35,7 +36,8 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.9",
     "qs": "^6.14.0",
-    "winston": "^3.18.3"
+    "winston": "^3.18.3",
+    "xss": "^1.0.15"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -43,6 +45,7 @@
     "@types/express": "^5.0.3",
     "@types/file-type": "^10.6.0",
     "@types/gapi": "^0.0.47",
+    "@types/joi": "^17.2.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mime": "^3.0.4",
     "@types/morgan": "^1.9.10",
