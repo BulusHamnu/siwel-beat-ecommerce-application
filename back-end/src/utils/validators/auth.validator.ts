@@ -1,9 +1,7 @@
-import Joi, { type ValidationError } from "joi";
-import AppError from "../../errors/appError.js";
-import sanitizeData from "../sanitizeData.js";
+import Joi from "joi";
 
 /* Sign up validator */
-export const signUpValidator = Joi.object({
+export const signupBodySchema = Joi.object({
   username: Joi.string().required().min(3).lowercase().messages({
     "string.min": "username can not be less than 3 letters.",
   }),
@@ -32,13 +30,13 @@ export const signUpValidator = Joi.object({
 });
 
 /* Login validator */
-export const loginValidator = Joi.object({
+export const loginBodySchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required().min(5),
 });
 
 /* Validate email and code */
-export const verifyEmailAndCodeValidator = Joi.object({
+export const emailAndCodeBodySchema = Joi.object({
   email: Joi.string().email().required(),
   code: Joi.number().required(),
 });
@@ -47,7 +45,7 @@ export const verifyEmailAndCodeValidator = Joi.object({
 export const validateEmail = Joi.string().email().required().label("email");
 
 /* Validate new password reset body */
-export const validatePasswordResetBody = Joi.object({
+export const resetPasswordBodySchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string()
     .required()
@@ -65,21 +63,3 @@ export const validatePasswordResetBody = Joi.object({
   }),
   resetToken: Joi.string().required(),
 });
-
-/* ValidateBody function */
-export function validateAndSanitizeBody(data: unknown, validator: any) {
-  const { value, error } = validator.validate(data, {
-    stripUnknown: true,
-    abortEarly: false,
-  });
-  if (error) {
-    console.log(error);
-    const validationMessages = error.details.map(
-      (err: ValidationError) => err.message
-    );
-    throw new AppError("ValidationError", 400, true, validationMessages);
-  }
-
-  const sanitizedBody = sanitizeData(value);
-  return sanitizedBody;
-}
