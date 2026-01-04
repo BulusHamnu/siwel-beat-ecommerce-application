@@ -2,12 +2,16 @@ import Favourite, {
   type FavouriteInterface,
 } from "../../models/favourite.schema.js";
 import AppError from "../../errors/appError.js";
+import Track from "../../models/track.schema.js";
 
 /* Add to favourites */
 const addFavouriteTrack = async (
   userId: string,
   trackId: string
 ): Promise<void> => {
+  const track = await Track.findOne({ _id: trackId });
+  if (!track) throw new AppError("Track not found", 404, true);
+
   const favourite = await Favourite.findOne({ trackId, userId });
   if (favourite)
     throw new AppError("Track is already in the favourites list.", 400, true);

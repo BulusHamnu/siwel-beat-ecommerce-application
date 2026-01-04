@@ -1,7 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
 import { type ApiResponse } from "../responseInterface.js";
-import favouriteServices from "../../services/users/usersFavourites.service.js";
+import favouriteServices from "../../services/users/userFavourites.service.js";
 import { type FavouriteInterface } from "../../models/favourite.schema.js";
+import * as userValidator from "../../utils/validators/user.validator.js";
+import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 
 /* Add to favourites controller */
 const addToUserFavourites = async (
@@ -11,7 +13,10 @@ const addToUserFavourites = async (
 ): Promise<void> => {
   try {
     const user = req.user!;
-    const { trackId } = req.body;
+    const { trackId } = validateAndSanitizeBody(
+      req.body,
+      userValidator.trackIdSchema
+    );
 
     await favouriteServices.addFavouriteTrack(user.id, trackId);
 
@@ -54,7 +59,10 @@ const removeFromFavouritesController = async (
 ): Promise<void> => {
   try {
     const user = req.user!;
-    const { trackId } = req.body;
+    const { trackId } = validateAndSanitizeBody(
+      req.body,
+      userValidator.trackIdSchema
+    );
 
     await favouriteServices.removeFromFavourites(trackId, user.id);
     const response: ApiResponse<void> = {

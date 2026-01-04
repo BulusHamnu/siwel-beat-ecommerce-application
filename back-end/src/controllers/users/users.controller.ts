@@ -13,6 +13,8 @@ import supabase from "../../services/supabase.js";
 import Purchase, {
   type PurchaseInterface,
 } from "../../models/purchase.schema.js";
+import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
+import * as userValidator from "../../utils/validators/user.validator.js";
 
 /* Get user profile controller */
 export const getProfileController = async (
@@ -53,11 +55,14 @@ export const updateProfileController = async (
 ): Promise<void> => {
   try {
     const userId: string | undefined = req.user?.id;
-    const updates: ProfileUpdatesInput = req.body;
+    const sanitizedUpdates: ProfileUpdatesInput = validateAndSanitizeBody(
+      req.body,
+      userValidator.userUpdateBodySchema
+    );
 
     const profile: userProfile = await usersServices.updateProfile(
       userId,
-      updates
+      sanitizedUpdates
     );
 
     const response: ApiResponse<userProfile> = {
@@ -113,13 +118,16 @@ export const updateProfilePictureController = async (
 
 /* Get user's purchases controller */
 export const getAllPurchaseController = async (
-  req: Request<{}, {}, {}, { type: string; limit: string; page: string }>,
+  req: Request<{}, ApiResponse<PurchasesResult>, {}, {}>,
   res: Response<ApiResponse<PurchasesResult>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const user = req.user!;
-    const { page, limit, type } = req.query;
+    const { page, limit, type } = validateAndSanitizeBody(
+      req.query,
+      userValidator.getPurchaseQuerySchema
+    );
 
     const purchases = await getAllPurchases(
       user.id,

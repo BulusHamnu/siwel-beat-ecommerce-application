@@ -53,7 +53,6 @@ function filterProfileUpdates(updates: ProfileUpdates) {
     "lastName",
     "gender",
     "bio",
-    "profilePic",
     "notification",
   ];
 

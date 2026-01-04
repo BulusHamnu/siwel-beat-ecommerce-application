@@ -2,6 +2,8 @@ import type { Response, Request, NextFunction } from "express";
 import { type ApiResponse } from "../responseInterface.js";
 import * as cartService from "../../services/users/userCart.service.js";
 import { type CartItem } from "../../models/profile.schema.js";
+import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
+import * as userValidator from "../../utils/validators/user.validator.js";
 
 /* Add to cart controller */
 export const addToCartController = async (
@@ -11,7 +13,10 @@ export const addToCartController = async (
 ): Promise<void> => {
   try {
     const user = req.user!;
-    const { trackId, license } = req.body;
+    const { trackId, license } = validateAndSanitizeBody(
+      req.body,
+      userValidator.cartBodySchema
+    );
 
     await cartService.addToCart(trackId, license, user.id);
 
@@ -33,7 +38,10 @@ export const removeFromCartController = async (
 ): Promise<void> => {
   try {
     const user = req.user!;
-    const { trackId, license } = req.body;
+    const { trackId, license } = validateAndSanitizeBody(
+      req.body,
+      userValidator.cartBodySchema
+    );
 
     await cartService.removeFromCart(trackId, license, user.id);
 
