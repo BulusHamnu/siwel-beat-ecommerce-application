@@ -40,6 +40,10 @@ interface Env {
   LICENSE_FILES_BUCKET: string;
   IMAGE_FILES_BUCKET: string;
   GOOGLEOAUTH2URL: string;
+  TAGGEDBEATFOLDER: string;
+  UNTAGGEDBEATFOLDER: string;
+  BASICLICENSEFOLDER: string;
+  PREMIUMLICENSEFOLDER: string;
 }
 
 const env: Env = {
@@ -76,6 +80,10 @@ const env: Env = {
   GOOGLEOAUTH2URL:
     process.env.GOOGLEOAUTH2URL ||
     "https://accounts.google.com/o/oauth2/v2/auth",
+  TAGGEDBEATFOLDER: process.env.TAGGEDBEATFOLDER || "taggedBeat/",
+  UNTAGGEDBEATFOLDER: process.env.UNTAGGEDBEATFOLDER || "untaggedBeat/",
+  BASICLICENSEFOLDER: process.env.BASICLICENSEFOLDER || "basicLicense/",
+  PREMIUMLICENSEFOLDER: process.env.PREMIUMLICENSEFOLDER || "premiumLicense/",
 };
 
 export default env;

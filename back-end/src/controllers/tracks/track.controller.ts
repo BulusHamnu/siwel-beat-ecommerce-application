@@ -1,9 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ApiResponse } from "../responseInterface.js";
-import Track, {
-  type TrackInterface,
-  type createTrackBody,
-} from "../../models/track.schema.js";
+import Track, { type TrackInterface } from "../../models/track.schema.js";
 import type {
   TrackUpdates,
   Queries,
@@ -14,40 +11,55 @@ import { retriveTrackFilePaths } from "../../services/tracks/trackDownloadFile.s
 import { type Pagination } from "../responseInterface.js";
 import logger from "../../utils/logger.js";
 import AppError from "../../errors/appError.js";
-import supabase from "../../services/supabase.js";
+import supabase, { type uploadedTrackFiles } from "../../services/supabase.js";
 import { Readable } from "stream";
 import { fileTypeFromBlob } from "file-type";
 import * as notificationService from "../../services/notification.service.js";
 import env from "../../configs/env.js";
+import * as trackValidator from "../../utils/validators/track.validator.js";
+import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
+import { type createTrackInput } from "../../services/tracks/track.service.js";
+import { validateTrackidParam } from "../../utils/validators/track.validator.js";
+import type { multerTrackFiles } from "../../middlewares/upload.js";
 
 /* Post new track controller */
+const bundleTrackFilesPath = (files: uploadedTrackFiles): string[] => {
+  if (!files || Object.keys(files).length <= 0) return [];
+
+  const paths: string[] = [];
+  if (files.fileUrl?.tagged) paths.push(files.fileUrl.tagged);
+  if (files.fileUrl?.untagged) paths.push(files.fileUrl.untagged);
+  if (files.license?.basic) paths.push(files.license.basic);
+  if (files.license?.premium) paths.push(files.license.premium);
+
+  return paths;
+};
+
 export const postTrackController = async (
-  req: Request<{}, ApiResponse<TrackInterface>, createTrackBody, {}>,
+  req: Request<{}, ApiResponse<TrackInterface>, createTrackInput, {}>,
   res: Response<ApiResponse<TrackInterface>>,
   next: NextFunction
 ): Promise<void> => {
   let paths: string[] = [];
 
   try {
-    const files = req.files as any;
-    const data: createTrackBody = req.body;
+    const files = req.files as multerTrackFiles;
     // check for files
-    if (Object.keys(files).length <= 3)
-      throw new AppError("Missing track files.", 404, true);
+    if (!files || Object.keys(files)?.length <= 3)
+      throw new AppError("Missing track files.", 400, true);
+
+    const trackBody = validateAndSanitizeBody(
+      req.body,
+      trackValidator.trackBodySchema
+    );
 
     // upload files
-    const uploaded = await supabase.uploadTrackFiles(files);
-    paths = [
-      uploaded.fileUrl.tagged,
-      uploaded.fileUrl.untagged,
-      uploaded.license.basic,
-      uploaded.license.premium,
-    ];
+    const trackFiles = await supabase.uploadTrackFiles(files);
+    paths = bundleTrackFilesPath(trackFiles); // Save track files path for rollback incase of an error
 
     const newTrack = await trackService.createNewTrack({
-      ...data,
-      fileUrl: uploaded.fileUrl,
-      license: uploaded.license,
+      ...trackBody,
+      ...trackFiles,
     });
 
     logger.info("New track created succefully.", { trackId: newTrack._id });
@@ -79,7 +91,11 @@ export const getTracksController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const queries = req.query;
+    const queries = validateAndSanitizeBody(
+      req.query,
+      trackValidator.trackQueriesSchema
+    );
+
     const { tracks, pagination }: tracksResults = await trackService.getTracks(
       queries
     );
@@ -104,7 +120,7 @@ export const getTrackController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const trackId = req.params.id;
+    const trackId = validateTrackidParam(req.params.id);
 
     const track: TrackInterface | null = await Track.findOne({ _id: trackId });
     if (!track) throw new AppError("Track not found.", 404, true);
@@ -128,15 +144,15 @@ export const deactivateTrack = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const trackId = req.params.id;
+    const trackId = validateTrackidParam(req.params.id);
 
     const track: TrackInterface | null = await Track.findOneAndUpdate(
       { _id: trackId },
-      { $set: { status: "in-active" } },
+      { $set: { status: "inactive" } },
       { new: true }
     );
     if (!track) throw new AppError("Track not found.", 404, true);
-    logger.info("Track status was update to: in-active.", {
+    logger.info("Track status was update to: inactive.", {
       trackId: track._id,
     });
 
@@ -159,7 +175,7 @@ export const activateTrack = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const trackId = req.params.id;
+    const trackId = validateTrackidParam(req.params.id);
 
     const track: TrackInterface | null = await Track.findOneAndUpdate(
       { _id: trackId },
@@ -190,24 +206,22 @@ export const updateTrackController = async (
   let paths: string[] = [];
 
   try {
-    const trackId = req.params.id;
-    const updates = req.body;
-    const files = req.files as any;
+    const trackId = validateTrackidParam(req.params.id);
+    const files = req.files as multerTrackFiles;
+
+    const trackBody = validateAndSanitizeBody(
+      req.body,
+      trackValidator.trackUpdateBodySchema
+    );
 
     // upload files if any
-    const uploaded = await supabase.uploadTrackFiles(files);
-
-    paths = [
-      uploaded.fileUrl.tagged,
-      uploaded.fileUrl.untagged,
-      uploaded.license.basic,
-      uploaded.license.premium,
-    ];
+    const trackFiles = await supabase.uploadTrackFiles(files);
+    paths = bundleTrackFilesPath(trackFiles); // Save track files path for rollback incase of an error
 
     const updatedTrack = await trackService.updateTrack(
       trackId,
-      updates,
-      uploaded
+      trackBody,
+      trackFiles
     );
 
     const response: ApiResponse<TrackInterface> = {
@@ -215,10 +229,10 @@ export const updateTrackController = async (
       message: "Track was updated sucessfully.",
       data: updatedTrack,
     };
+
     logger.info("Track was updated succesfully.", {
       id: updatedTrack._id,
     });
-
     res.status(200).json(response);
   } catch (error) {
     // clean files
@@ -257,9 +271,12 @@ export const downloadTrackFileController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const id = req.params.id;
     const user = req.user!;
-    const { type, license } = req.query;
+    const id = validateTrackidParam(req.params.id);
+    const { type, license } = validateAndSanitizeBody(
+      req.query,
+      trackValidator.downloadQuerySchema
+    );
 
     const { fileName, filePath } = await retriveTrackFilePaths(
       user,
@@ -269,7 +286,7 @@ export const downloadTrackFileController = async (
     );
 
     const data = await retriveTrackFile(type, filePath);
-    const readable = Readable.fromWeb(data.stream()); // Stream for fast and reliable download
+    const readable = Readable.fromWeb(data.stream()); // Stream for fast download
 
     // set headers
     const fileTYpe = await fileTypeFromBlob(data);

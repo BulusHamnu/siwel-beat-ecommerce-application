@@ -1,7 +1,7 @@
 import type { Document } from "mongoose";
 import mongoose from "mongoose";
 
-enum BeatType {
+export enum BeatType {
   kit = "kit",
   single = "single",
   album = "album",
@@ -41,17 +41,6 @@ export interface TrackInterface extends Document {
   removeUnwantedFields(): TrackInterface;
 }
 
-export interface createTrackBody {
-  title: string;
-  description: string;
-  type: BeatType;
-  key: string;
-  bpm: number;
-  tags: string[];
-  basicPrice: number;
-  premiumPrice: number;
-  genre: string;
-}
 
 const trackSchema = new mongoose.Schema<TrackInterface>(
   {
@@ -78,7 +67,7 @@ const trackSchema = new mongoose.Schema<TrackInterface>(
     },
     status: {
       type: String,
-      enum: ["active", "in-active"],
+      enum: ["active", "inactive"],
       // default: "active",
     },
     bpm: {
@@ -110,7 +99,7 @@ const trackSchema = new mongoose.Schema<TrackInterface>(
 );
 
 trackSchema.methods.removeUnwantedFields = function (): TrackInterface {
-  const obj: TrackInterface = this.toObject();
+  const obj = this.toObject();
   delete obj.fileUrl;
   delete obj.license;
   return obj;

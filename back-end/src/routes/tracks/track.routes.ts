@@ -15,11 +15,7 @@ router.post(
   upload,
   trackController.postTrackController
 );
-router.get(
-  "/tracks",
-
-  trackController.getTracksController
-);
+router.get("/tracks", trackController.getTracksController);
 router.get("/tracks/:id", trackController.getTrackController);
 router.patch(
   "/tracks/:id",

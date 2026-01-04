@@ -2,13 +2,21 @@ import multer, { type Multer } from "multer";
 import path from "path";
 import fs from "fs";
 import env from "../configs/env.js";
-import type { Request, Response } from "express";
+import type { Request } from "express";
 import AppError from "../errors/appError.js";
 
-// for deleting files if an error occur
-export const deleteFiles = (files: any) => {
+type multerFiles = { [fieldname: string]: Express.Multer.File[] };
+export interface multerTrackFiles extends multerFiles {
+  taggedBeat: Express.Multer.File[];
+  untaggedBeat: Express.Multer.File[];
+  basicLicense: Express.Multer.File[];
+  premiumLicense: Express.Multer.File[];
+}
+
+/* On error delete files from disk */
+export const deleteFiles = (files: multerFiles) => {
   for (const field of Object.keys(files)) {
-    files[field].forEach((file: any) => {
+    files[field]!.forEach((file: Express.Multer.File) => {
       fs.unlink(file.path, (err) => {
         if (err) throw err;
       });
@@ -16,7 +24,7 @@ export const deleteFiles = (files: any) => {
   }
 };
 
-// function to determine which folder to save file
+/* Determine destination */
 export const determineDest = (fieldName: string): string => {
   let desc = "";
 
@@ -43,40 +51,26 @@ export const determineDest = (fieldName: string): string => {
   return desc;
 };
 
-// multer storage
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     const f = determineDest(file.fieldname);
-//     cb(null, f);
-//   },
-//   filename: function (req, file, cb) {
-//     const name = file.originalname.split(".")[0]?.replace(/ /g, "-");
-
-//     cb(null, name + "-" + Date.now() + path.extname(file.originalname));
-//   },
-// });
-
-// memory storage
+/* Memory storage */
 const storage = multer.memoryStorage();
 
-// file filter
+/* File filter */
 const fileFilter = async (
   req: Request,
   file: Express.Multer.File,
-  cb: any
+  cb: multer.FileFilterCallback
 ): Promise<void> => {
   const fileType = file.mimetype;
-  // check the audio files
+  // Check audio files
   if (file.fieldname === "untaggedBeat" || file.fieldname === "taggedBeat") {
     const allowedAudioMimeTypes = ["audio/mpeg", "audio/wav", "audio/midi"];
     if (allowedAudioMimeTypes.includes(fileType)) {
       cb(null, true);
     } else {
-      cb(new AppError("Only audio files are allowed!", 400, true), true);
+      cb(new AppError("Only audio files are allowed.", 400, true));
     }
   }
-
-  // check docs files
+  // Check document files
   if (
     file.fieldname === "basicLicense" ||
     file.fieldname === "premiumLicense"
@@ -92,16 +86,32 @@ const fileFilter = async (
     if (allowedDocumentMimeTypes.includes(fileType)) {
       cb(null, true);
     } else {
-      cb(new AppError("Only documents files are allowed!", 400, true), true);
+      cb(new AppError("Only documents files are allowed.", 400, true));
     }
   }
 };
 
-// profile picture multer middleware
+/* Track upload multer middleware */
+const upload = multer({
+  storage,
+  limits: { fileSize: 5000000 },
+  fileFilter,
+}).fields([
+  { name: "basicLicense", maxCount: 1 },
+  { name: "premiumLicense", maxCount: 1 },
+  { name: "untaggedBeat", maxCount: 1 },
+  { name: "taggedBeat", maxCount: 1 },
+]);
+
+/* Profile picture multer middlware */
 export const uploadPicture = multer({
   limits: { fieldSize: 5000000 },
   storage,
-  fileFilter: (req: Request, file: Express.Multer.File, cb) => {
+  fileFilter: (
+    req: Request,
+    file: Express.Multer.File,
+    cb: multer.FileFilterCallback
+  ) => {
     const allowedFileType: string[] = [
       "image/jpeg",
       "image/png",
@@ -112,21 +122,9 @@ export const uploadPicture = multer({
     if (allowedFileType.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new AppError("Only image is allowed", 400, true));
+      cb(new AppError("Only images are allowed", 400, false));
     }
   },
 }).single("picture");
-
-// track files upload multer middleware
-const upload = multer({
-  storage,
-  limits: { fileSize: 6000000 },
-  fileFilter,
-}).fields([
-  { name: "basicLicense", maxCount: 1 },
-  { name: "premiumLicense", maxCount: 1 },
-  { name: "untaggedBeat", maxCount: 1 },
-  { name: "taggedBeat", maxCount: 1 },
-]);
 
 export default upload;

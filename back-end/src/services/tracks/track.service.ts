@@ -1,16 +1,25 @@
-import type { FilterQuery, ObjectId, Query, UpdateQuery } from "mongoose";
+import type { FilterQuery, ObjectId } from "mongoose";
 import AppError from "../../errors/appError.js";
 import Track, {
   type FileUrlInterface,
   type LicenseInterface,
   type TrackInterface,
-  type createTrackBody,
+  type BeatType,
 } from "../../models/track.schema.js";
-import supabase from "../supabase.js";
+import supabase, { type uploadedTrackFiles } from "../supabase.js";
 import { type Pagination } from "../../controllers/responseInterface.js";
 
 /* Create new track */
-interface createTrackInput extends createTrackBody {
+export interface createTrackInput {
+  title: string;
+  description: string;
+  type: BeatType;
+  key: string;
+  bpm: number;
+  tags: string[];
+  basicPrice: number;
+  premiumPrice: number;
+  genre: string;
   license: LicenseInterface;
   fileUrl: FileUrlInterface;
 }
@@ -37,33 +46,11 @@ async function retriveRelatedTracks({
 export const createNewTrack = async (
   trackbody: createTrackInput
 ): Promise<TrackInterface> => {
-  const {
-    title,
-    description,
-    type,
-    key,
-    bpm,
-    tags,
-    basicPrice,
-    premiumPrice,
-    genre,
-    license,
-    fileUrl,
-  } = trackbody;
-
+  const { type, tags, genre } = trackbody;
   const relatedTrack = await retriveRelatedTracks({ type, genre, tags });
+
   const newTrack: TrackInterface = await Track.create({
-    title,
-    description,
-    type: type.toLowerCase(),
-    key,
-    bpm,
-    tags: tags.map((tag) => tag.toLowerCase()),
-    basicPrice,
-    premiumPrice,
-    genre: genre.toLowerCase(),
-    fileUrl,
-    license,
+    ...trackbody,
     status: "active",
     relatedTrack,
   });
@@ -92,7 +79,7 @@ function buildTrackQueries(
 
   if (genre) matches.genre = genre.toLowerCase();
   if (type) matches.type = type.toLowerCase();
-  matches.status = "active"; // users should not get in-active track
+  matches.status = "active"; // users should not get inactive track
 
   if (tags) {
     tags?.length > 0 && Array.isArray(tags)
@@ -182,49 +169,50 @@ export const getTracks = async ({
 };
 
 /* Update track */
-export interface TrackUpdates extends createTrackBody {
-  "fileUrl.tagged": string;
-  "fileUrl.untagged": string;
-  "license.basic": string;
-  "license.premium": string;
+export interface TrackUpdates extends createTrackInput {
+  "fileUrl.tagged"?: string;
+  "fileUrl.untagged"?: string;
+  "license.basic"?: string;
+  "license.premium"?: string;
 }
 
 function filterUpdatesAndFiles(
   trackUpdates: TrackUpdates,
-  files: { fileUrl: FileUrlInterface; license: LicenseInterface },
+  files: uploadedTrackFiles,
   track: TrackInterface
-) {
+): { cleanUpdateData: TrackUpdates; oldFilesPaths: string[] } {
   const oldFilesPaths: string[] = [];
-  const updates: UpdateQuery<any> = {};
+  const updates: any = {};
 
-  for (const key of Object.keys(trackUpdates) as (keyof createTrackBody)[]) {
+  for (const key of Object.keys(trackUpdates) as (keyof createTrackInput)[]) {
     if (Array.isArray(trackUpdates[key]) && trackUpdates[key].length > 0) {
+      // This will replace the old Array if the Array in the trackUpdates is not empty
       updates[key] = trackUpdates[key];
     } else if (
-      typeof trackUpdates[key] === "string" &&
-      trackUpdates[key] !== ""
+      (typeof trackUpdates[key] === "string" && trackUpdates[key] === "") ||
+      (typeof trackUpdates[key] === "number" && trackUpdates[key] <= 0)
     ) {
-      updates[key] = trackUpdates[key];
+      continue;
     } else {
       updates[key] = trackUpdates[key];
     }
   }
 
-  // filter file and push old file so them can be deleted after replacing them
+  // Filter file and push old file so they can be deleted after replacing them
   if (Object.keys(files).length > 0) {
-    if (files.fileUrl.tagged) {
+    if (files.fileUrl?.tagged) {
       updates["fileUrl.tagged"] = files.fileUrl.tagged;
       oldFilesPaths.push(track.fileUrl.tagged);
     }
-    if (files.fileUrl.untagged) {
+    if (files.fileUrl?.untagged) {
       updates["fileUrl.untagged"] = files.fileUrl.untagged;
       oldFilesPaths.push(track.fileUrl.untagged);
     }
-    if (files.license.basic) {
+    if (files.license?.basic) {
       updates["license.basic"] = files.license.basic;
       oldFilesPaths.push(track.license.basic);
     }
-    if (files.license.premium) {
+    if (files.license?.premium) {
       updates["license.premium"] = files.license.premium;
       oldFilesPaths.push(track.license.premium);
     }
@@ -236,7 +224,7 @@ function filterUpdatesAndFiles(
 export const updateTrack = async (
   trackId: string,
   trackUpdates: TrackUpdates,
-  files: { fileUrl: FileUrlInterface; license: LicenseInterface }
+  files: uploadedTrackFiles
 ): Promise<TrackInterface> => {
   const track: TrackInterface | null = await Track.findOne({ _id: trackId });
   if (!track) throw new AppError("Track not found.", 404, true);
@@ -254,6 +242,7 @@ export const updateTrack = async (
   );
   if (!updatedTrack) throw new AppError("Unable to update track.", 500, true);
 
-  await supabase.safeRemoveTrackFiles(oldFilesPaths);
+  if (oldFilesPaths.length > 0)
+    await supabase.safeRemoveTrackFiles(oldFilesPaths);
   return updatedTrack.removeUnwantedFields();
 };
