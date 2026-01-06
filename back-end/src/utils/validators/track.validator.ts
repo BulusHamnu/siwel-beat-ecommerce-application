@@ -37,21 +37,21 @@ export const trackQueriesSchema = Joi.object({
 });
 
 /* validate track id in the parameter */
-export function validateTrackidParam(trackId: string): string {
-  const paramTrackId = Joi.string()
-    .required()
-    .custom((value, helpers) => {
-      if (!Types.ObjectId.isValid(value)) {
-        return helpers.error("trackId.invalid");
-      }
-      return value;
-    })
-    .label("id")
-    .messages({
-      "any.required": "trackId is required.",
-      "trackId.invalid": "track id in param must be a valid ObjectId.",
-    });
+const paramTrackId = Joi.string()
+  .required()
+  .custom((value, helpers) => {
+    if (!Types.ObjectId.isValid(value)) {
+      return helpers.error("trackId.invalid");
+    }
+    return value;
+  })
+  .label("id")
+  .messages({
+    "any.required": "{#key} is required.",
+    "trackId.invalid": "track id in param must be a valid ObjectId.",
+  });
 
+export function validateTrackidParam(trackId: string): string {
   return validateAndSanitizeBody(trackId, paramTrackId);
 }
 
@@ -84,4 +84,28 @@ export const downloadQuerySchema = Joi.object({
   license: Joi.string().required().valid("basic", "premium").messages({
     "any.only": "license must be basic or premium.",
   }),
+});
+
+/* Comment body schema */
+export const commentBodySchema = Joi.object({
+  content: Joi.string().required(),
+  parentId: Joi.string().optional().allow(null).default(null),
+}).messages({
+  "any.required": "{#key} is required.",
+});
+
+export const getCommentParamBody = Joi.object({
+  id: paramTrackId,
+  commentId: Joi.string()
+    .required()
+    .custom((value, helpers) => {
+      if (!Types.ObjectId.isValid(value)) {
+        return helpers.error("commentId.invalid");
+      }
+      return value;
+    })
+    .messages({
+      "any.required": "{#key} is required.",
+      "commentId.invalid": "commentId in param must be a valid ObjectId.",
+    }),
 });

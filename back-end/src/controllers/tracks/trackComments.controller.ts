@@ -3,6 +3,9 @@ import { type ApiResponse } from "../responseInterface.js";
 import * as commentService from "../../services/tracks/trackComments.service.js";
 import { type populatedComment } from "../../services/tracks/trackComments.service.js";
 import { type CommentInterface } from "../../models/comment.schema.js";
+import { validateTrackidParam } from "../../utils/validators/track.validator.js";
+import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
+import * as trackValidator from "../../utils/validators/track.validator.js";
 
 /* Post new comment controller */
 export const postCommentController = async (
@@ -17,16 +20,24 @@ export const postCommentController = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const data = req.body;
-    const trackId = req.params.id;
+    const trackId = validateTrackidParam(req.params.id);
 
-    const comment = await commentService.postNewComment(trackId, userId, data);
+    const commentBody = validateAndSanitizeBody(
+      req.body,
+      trackValidator.commentBodySchema
+    );
+
+    const comment = await commentService.postNewComment(
+      trackId,
+      userId,
+      commentBody
+    );
+
     const response: ApiResponse<CommentInterface> = {
       status: true,
       message: "Comment posted sucessfully.",
       data: comment,
     };
-
     res.status(201).json(response);
   } catch (error) {
     next(error);
@@ -34,30 +45,32 @@ export const postCommentController = async (
 };
 
 /* Get a comment controller  */
+interface getCommentParam {
+  commentId: string;
+  id: string;
+}
 export const getCommentController = async (
-  req: Request<
-    { commentId: string; id: string },
-    ApiResponse<populatedComment>,
-    {},
-    {}
-  >,
+  req: Request<getCommentParam, ApiResponse<populatedComment>, {}, {}>,
   res: Response<ApiResponse<populatedComment>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { commentId, id } = req.params;
+    const { commentId, id }: getCommentParam = validateAndSanitizeBody(
+      req.params,
+      trackValidator.getCommentParamBody
+    );
 
     // get comment
     const comment: populatedComment = await commentService.getCommentAndReplies(
       commentId,
       id
     );
+
     const response: ApiResponse<populatedComment> = {
       status: true,
       message: "Comment retrive successfully.",
       data: comment,
     };
-
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -101,9 +114,16 @@ export const updateCommentController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id, commentId } = req.params;
     const userId = req.user!.id;
-    const content = req.body.content;
+
+    const { commentId, id }: getCommentParam = validateAndSanitizeBody(
+      req.params,
+      trackValidator.getCommentParamBody
+    );
+    const { content } = validateAndSanitizeBody(
+      req.body,
+      trackValidator.commentBodySchema
+    );
 
     const updatedComment = await commentService.updateComment(
       commentId,
@@ -136,8 +156,11 @@ export const deleteCommentController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id, commentId } = req.params;
     const userId = req.user!.id;
+    const { commentId, id }: getCommentParam = validateAndSanitizeBody(
+      req.params,
+      trackValidator.getCommentParamBody
+    );
 
     await commentService.deleteComment(commentId, id, userId);
     const response: ApiResponse<void> = {
