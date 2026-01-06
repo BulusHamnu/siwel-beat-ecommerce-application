@@ -7,9 +7,14 @@ export enum BeatType {
   album = "album",
 }
 
+export enum LicenseType {
+  basic = "basic",
+  premium = "premium",
+}
+
 enum StatusType {
   active = "active",
-  inactive = "in-active",
+  inactive = "inactive",
 }
 
 export interface FileUrlInterface {
@@ -41,7 +46,6 @@ export interface TrackInterface extends Document {
   removeUnwantedFields(): TrackInterface;
 }
 
-
 const trackSchema = new mongoose.Schema<TrackInterface>(
   {
     title: {
@@ -59,7 +63,8 @@ const trackSchema = new mongoose.Schema<TrackInterface>(
     description: String,
     type: {
       type: String,
-      enum: ["kit", "single", "album"],
+      enum: Object.values(BeatType),
+      default: BeatType.single,
     },
     key: {
       type: String,
@@ -67,8 +72,8 @@ const trackSchema = new mongoose.Schema<TrackInterface>(
     },
     status: {
       type: String,
-      enum: ["active", "inactive"],
-      // default: "active",
+      enum: Object.values(StatusType),
+      default: StatusType.active,
     },
     bpm: {
       type: Number,

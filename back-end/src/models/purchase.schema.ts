@@ -1,5 +1,6 @@
 import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
+import { LicenseType } from "./track.schema.js";
 
 export interface PurchaseInterface extends Document {
   userId: ObjectId;
@@ -24,7 +25,7 @@ const purchase = new mongoose.Schema<PurchaseInterface>(
     type: {
       type: String,
       required: true,
-      enum: ["basic", "premium"],
+      enum: Object.values(LicenseType),
     },
     orderId: {
       type: mongoose.Schema.ObjectId,

@@ -16,11 +16,11 @@ export interface OrderInterface extends Document {
   amount: number;
   currency: string;
   status: Status;
-  products: string[];
   userId: ObjectId;
   paymentMethod: string;
   paymentProvider: string;
   notes: string;
+  refundedAt: Date;
 }
 
 const order = new mongoose.Schema<OrderInterface>(
@@ -38,17 +38,9 @@ const order = new mongoose.Schema<OrderInterface>(
     },
     status: {
       type: String,
-      enum: [
-        "paid",
-        "failed",
-        "pending",
-        "disputed",
-        "refunded",
-        "cancelled",
-        "chargeback",
-      ],
+      enum: Object.values(Status),
+      default: Status.pending,
     },
-    products: [{ type: mongoose.Schema.ObjectId, ref: "Track" }],
     paymentMethod: {
       type: String,
       default: "card",
@@ -63,6 +55,10 @@ const order = new mongoose.Schema<OrderInterface>(
       required: true,
     },
     notes: String,
+    refundedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
