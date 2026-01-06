@@ -23,6 +23,7 @@ const sanitizeData = (
   data: string | number | object | [],
   fieldName: string = ""
 ): any => {
+  if (data === null || data === undefined) return data;
   if (Array.isArray(data)) {
     let arrayData = [];
     for (const value of data) {
