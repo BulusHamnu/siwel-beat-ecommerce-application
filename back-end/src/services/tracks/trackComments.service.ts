@@ -4,6 +4,7 @@ import * as notificationService from "../notification.service.js";
 import Track from "../../models/track.schema.js";
 import AppError from "../../errors/appError.js";
 import Profile from "../../models/profile.schema.js";
+import { Types } from "mongoose";
 
 /* Post a comment */
 export interface parentComment extends Omit<CommentInterface, "userId"> {
@@ -58,6 +59,7 @@ export const postNewComment = async (
 
 /* Get comment and replies */
 export interface populatedComment extends Omit<CommentInterface, "userId"> {
+  _id: Types.ObjectId;
   userId: {
     _id: string;
     isVerified: string;
@@ -83,7 +85,7 @@ async function getCommentsAndProfilesMap(trackId: string) {
   // build comments map for easy look up by key
   let comments = await Comment.find({ trackId: trackId })
     .populate("userId", "_id username isVerified")
-    .lean();
+    .lean<populatedComment[]>();
 
   const userIds = comments.map((comment) => comment.userId._id);
 
@@ -161,15 +163,16 @@ export const updateComment = async (
   userId: string,
   content: string
 ): Promise<populatedComment> => {
-  const updatedComment = await Comment.findOneAndUpdate(
-    {
-      _id: commentId,
-      trackId,
-      userId,
-    },
-    { $set: { content } },
-    { new: true }
-  );
+  const updatedComment: populatedComment | null =
+    await Comment.findOneAndUpdate(
+      {
+        _id: commentId,
+        trackId,
+        userId,
+      },
+      { $set: { content } },
+      { new: true }
+    );
 
   if (!updatedComment) throw new AppError("Comment not found.", 404, true);
 

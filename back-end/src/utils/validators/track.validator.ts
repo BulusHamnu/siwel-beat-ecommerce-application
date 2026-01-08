@@ -47,8 +47,7 @@ const paramTrackId = Joi.string()
   })
   .label("id")
   .messages({
-    "any.required": "{#key} is required.",
-    "trackId.invalid": "{#key} in param must be a valid ObjectId.",
+    "trackId.invalid": "id in param must be a valid ObjectId.",
   });
 
 export function validateTrackidParam(trackId: string): string {
