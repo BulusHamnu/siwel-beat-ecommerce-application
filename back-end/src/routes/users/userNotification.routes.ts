@@ -21,10 +21,17 @@ router.get(
 );
 
 router.patch(
-  "/notifications/:id",
+  "/notifications/:id/read",
   withAuth,
   allowRole("user"),
-  notificationController.updateNoticationAsReadController
+  notificationController.markNoticationAsReadController
+);
+
+router.patch(
+  "/notifications/:id/unread",
+  withAuth,
+  allowRole("user"),
+  notificationController.markNoticationAsUnreadController
 );
 
 router.delete(

@@ -24,10 +24,11 @@ export const postNewNotification = async (
 /* Get all notifications */
 function buildQueries(
   userId: string,
-  read: string = ""
+  status: string = ""
 ): { status?: string; userId: string } {
   const queries: { read?: Boolean; userId: string } = { userId };
-  if (read) queries["read"] = read === "true" ? true : false;
+  if (status && status !== "all")
+    queries["read"] = status === "read" ? true : false;
   return queries;
 }
 
@@ -50,15 +51,16 @@ export const getNotification = async (
     _id: notificationId,
     userId,
   });
+
   if (!notification) throw new AppError("Notification not found", 404, true);
   return notification;
 };
 
 /* Update notification as read */
-export const updateNotificationAsRead = async (
+export const updateNotificationStatus = async (
   userId: string,
   notificationId: string,
-  read: Boolean
+  read: boolean
 ): Promise<notification> => {
   const updatedNotification: notification | null =
     await Notification.findOneAndUpdate(
@@ -78,11 +80,13 @@ export const deleteNotification = async (
   userId: string,
   notificationId: string
 ): Promise<void> => {
-  // Allowed only logged user to delete their notification
-  await Notification.findOneAndDelete({
+  const notificationDeleted = await Notification.findOneAndDelete({
     _id: notificationId,
     userId,
   });
+
+  if (!notificationDeleted)
+    throw new AppError("Notification not found", 404, true);
 };
 
 /* Notify admins for event */

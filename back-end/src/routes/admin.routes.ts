@@ -63,10 +63,17 @@ router.get(
 );
 
 router.patch(
-  "/admins/notifications/:id",
+  "/admins/notifications/:id/read",
   withAuth,
   allowRole("admin"),
-  notificationController.updateNoticationAsReadController
+  notificationController.markNoticationAsReadController
+);
+
+router.patch(
+  "/admins/notifications/:id/unread",
+  withAuth,
+  allowRole("admin"),
+  notificationController.markNoticationAsReadController
 );
 
 router.delete(
