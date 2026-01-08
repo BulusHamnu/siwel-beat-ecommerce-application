@@ -1,27 +1,32 @@
 import type { Request, Response, NextFunction } from "express";
 import { type ApiResponse } from "../responseInterface.js";
 import { type orderResult } from "../../services/shared/ordersShared.service.js";
-import { getAllOrders } from "../../services/shared/ordersShared.service.js";
-import Order, { type OrderInterface } from "../../models/order.schema.js";
-import AppError from "../../errors/appError.js";
+import * as orderService from "../../services/shared/ordersShared.service.js";
+import { type OrderPlusItems } from "../../services/shared/ordersShared.service.js";
+import * as orderValidator from "../../utils/validators/order.validator.js";
+import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 
 /* Get all user orders controller */
+interface OrdersQueryBody {
+  page: number;
+  limit: number;
+  status: string;
+  date: string;
+}
+
 export const getAllOrdersController = async (
-  req: Request<
-    {},
-    ApiResponse<orderResult>,
-    {},
-    { page: number; limit: number; status: string; date: string }
-  >,
+  req: Request<{}, ApiResponse<orderResult>, {}, OrdersQueryBody>,
   res: Response<ApiResponse<orderResult>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const user = req.user!;
-    const { page, limit, status, date } = req.query;
+
+    const { page, limit, status, date }: OrdersQueryBody =
+      validateAndSanitizeBody(req.query, orderValidator.trackQueriesSchema);
 
     const userId = user.role === "user" ? user.id : ""; // For admin get all order while user get all their order
-    const result = await getAllOrders(
+    const result = await orderService.getAllOrders(
       Number(page || 1),
       Number(limit || 10),
       status,
@@ -43,26 +48,17 @@ export const getAllOrdersController = async (
 
 /* Get an order controller */
 export const getOrderController = async (
-  req: Request<{ id: string }, ApiResponse<OrderInterface>, {}, {}>,
-  res: Response<ApiResponse<OrderInterface>>,
+  req: Request<{ id: string }, ApiResponse<OrderPlusItems>, {}, {}>,
+  res: Response<ApiResponse<OrderPlusItems>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const user = req.user!;
-    const { id } = req.params;
+    const { id } = orderValidator.validateOrderParams(req.params);
 
-    const queries: { _id: string; userId?: string } = {
-      _id: id,
-    };
-    if (user.role === "user") queries["userId"] = user.id; // For admin to get any order while user get their order
+    const order: OrderPlusItems = await orderService.getOrder(id, user);
 
-    const order: OrderInterface | null = await Order.findOne(queries).populate(
-      "products",
-      "title basicPrice premiumPrice description type key status bpm tags genre _id"
-    );
-    if (!order) throw new AppError("Order was not found.", 404, true);
-
-    const response: ApiResponse<OrderInterface> = {
+    const response: ApiResponse<OrderPlusItems> = {
       status: true,
       message: "Order retrived successfully.",
       data: order,

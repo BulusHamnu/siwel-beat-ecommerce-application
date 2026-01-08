@@ -20,7 +20,7 @@ export interface OrderInterface extends Document {
   paymentMethod: string;
   paymentProvider: string;
   notes: string;
-  refundedAt: Date;
+  refundedAt: Date | null;
 }
 
 const order = new mongoose.Schema<OrderInterface>(
