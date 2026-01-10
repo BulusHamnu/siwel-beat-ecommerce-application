@@ -7,6 +7,7 @@ import {
   type adminUpdateBody,
 } from "../services/admin.service.js";
 import * as adminService from "../services/admin.service.js";
+import { validateAdminUpdatesBody } from "../utils/validators/admin.validator.js";
 
 /* Get admin profile controller*/
 export const getAdminProfileController = async (
@@ -29,7 +30,6 @@ export const getAdminProfileController = async (
 };
 
 /* Update admin profile controller */
-
 export const updateAdminProfileController = async (
   req: Request<{}, ApiResponse<UserInterface>, adminUpdateBody, {}>,
   res: Response<ApiResponse<UserInterface>>,
@@ -37,9 +37,9 @@ export const updateAdminProfileController = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const updateData = req.body;
-
+    const updateData = validateAdminUpdatesBody(req.body);
     const admin = await adminService.updateAdmin(userId, updateData);
+
     const response: ApiResponse<UserInterface> = {
       status: true,
       message: "Admin profile updated succefully.",

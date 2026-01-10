@@ -34,7 +34,7 @@ export const updateAdmin = async (
     { new: true }
   );
 
-  if (!user) throw new AppError("User not found.", 404, true);
+  if (!user) throw new AppError("Unable to update admin.", 404, true);
   return user.removeUnwantedField();
 };
 
