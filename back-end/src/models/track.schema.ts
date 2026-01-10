@@ -12,7 +12,7 @@ export enum LicenseType {
   premium = "premium",
 }
 
-enum StatusType {
+export enum StatusType {
   active = "active",
   inactive = "inactive",
 }

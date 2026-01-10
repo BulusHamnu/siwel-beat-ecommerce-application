@@ -1,32 +1,40 @@
 import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
-import AppError from "../errors/appError.js";
 import logger from "../utils/logger.js";
 import { sendMessage } from "../services/public.apis.service.js";
+import Joi from "joi";
+import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js";
 
 /* Contact me controller */
+interface ContactmeReqBody {
+  name: string;
+  email: string;
+  request: string;
+  message: string;
+}
+// validator function
+export function validateContactmeBody(data: ContactmeReqBody) {
+  const contactmeBody = Joi.object({
+    email: Joi.string().email().required().lowercase(),
+    message: Joi.string().required(),
+    name: Joi.string().required(),
+    request: Joi.string().required(),
+  });
+
+  return validateAndSanitizeBody(data, contactmeBody);
+}
+
 export const contactme = async (
-  req: Request<
-    {},
-    ApiResponse<void>,
-    { name: string; email: string; request: string; message: string },
-    {}
-  >,
+  req: Request<{}, ApiResponse<void>, ContactmeReqBody, {}>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
 ): Promise<any> => {
   try {
-    const data = req.body;
-    if (!data.name || !data.email || !data.message)
-      throw new AppError(
-        "Please provide name, email and user's message.",
-        400,
-        true
-      );
+    const data: ContactmeReqBody = validateContactmeBody(req.body);
 
     await sendMessage(data);
-
     logger.info(`New message from contact form.`);
+
     const response: ApiResponse<void> = {
       status: true,
       message: "Message was sent successfully.",

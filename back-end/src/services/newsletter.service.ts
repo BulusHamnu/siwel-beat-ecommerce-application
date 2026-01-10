@@ -1,5 +1,5 @@
 import Newsletter, {
-  type newsletterInterface,
+  type NewsletterInterface,
 } from "../models/newsletter.schema.js";
 import AppError from "../errors/appError.js";
 import sendEmail from "./sendEmail.js";
@@ -10,9 +10,9 @@ import * as NotificationService from "./notification.service.js";
 /* Subcribe to news letter */
 async function addToList(
   email: string
-): Promise<{ token: string; sub: newsletterInterface }> {
-  let sub: newsletterInterface | null = null;
-  const subExist: newsletterInterface | null = await Newsletter.findOne({
+): Promise<{ token: string; sub: NewsletterInterface }> {
+  let sub: NewsletterInterface | null = null;
+  const subExist: NewsletterInterface | null = await Newsletter.findOne({
     email,
   });
 

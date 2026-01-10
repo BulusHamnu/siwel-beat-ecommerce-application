@@ -1,9 +1,19 @@
 import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
-import AppError from "../errors/appError.js";
 import * as newsletterService from "../services/newsletter.service.js";
 import env from "../configs/env.js";
 import logger from "../utils/logger.js";
+import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js";
+import AppError from "../errors/appError.js";
+import Joi from "joi";
+
+export function validateNewsletterBody(data: { email: string }) {
+  const newsLetterReqBody = Joi.object({
+    email: Joi.string().email().required().lowercase(),
+  });
+
+  return validateAndSanitizeBody(data, newsLetterReqBody);
+}
 
 /* Subscribe to newsletter controller */
 export const subscribeToNewletter = async (
@@ -12,17 +22,15 @@ export const subscribeToNewletter = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { email } = req.body;
-    if (!email) throw new AppError("Please provide an email.", 400, true);
+    const { email } = validateNewsletterBody(req.body);
 
     await newsletterService.subscribeToNewsletter(email);
+    logger.info(`${email} just subscribed to the newletter.`);
 
-    logger.info(`${email} just subcribed to the newletter.`);
     const response: ApiResponse<void> = {
       status: true,
-      message: "You have successfully subscribed to the news-letter.",
+      message: "Subscription was successful.",
     };
-
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -30,8 +38,12 @@ export const subscribeToNewletter = async (
 };
 
 /* Unsubscribe to newsletter controller */
+export interface NewsletterQuery {
+  email: string;
+  token: string;
+}
 export const unsubscribeToNewletter = async (
-  req: Request<{}, ApiResponse<void>, {}, { email: string; token: string }>,
+  req: Request<{}, ApiResponse<void>, {}, NewsletterQuery>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
 ): Promise<void> => {
@@ -47,7 +59,8 @@ export const unsubscribeToNewletter = async (
     res.status(302).redirect(redirect);
   } catch (error) {
     logger.error(
-      `An error occur while trying to remove user from news-letter.`
+      `An error occur while trying to remove user from news-letter.`,
+      error
     );
     res
       .status(302)
