@@ -3,7 +3,8 @@ import withAuth from "../../middlewares/withAuth.js";
 import allowRole from "../../middlewares/allowRole.js";
 import { uploadPicture } from "../../middlewares/upload.js";
 import * as orderController from "../../controllers/shared/orders.shared.controller.js";
-import * as userController from "../../controllers/users/users.controller.js";
+import * as profileController from "../../controllers/profile.controller.js";
+import * as purchaseController from "../../controllers/users/userPurchases.controller.js";
 import favoritesRoutes from "./userFavourites.routes.js";
 import cartRoutes from "./userCart.routes.js";
 import notificationRoutes from "./userNotification.routes.js";
@@ -15,20 +16,20 @@ router.get(
   "/users/me",
   withAuth,
   allowRole("user"),
-  userController.getProfileController
+  profileController.getProfile
 );
 router.patch(
   "/users/me",
   withAuth,
   allowRole("user"),
-  userController.updateProfileController
+  profileController.updateProfile
 );
 router.patch(
   "/users/me/picture",
   uploadPicture,
   withAuth,
   allowRole("user"),
-  userController.updateProfilePictureController
+  profileController.updateProfilePicture
 );
 
 /* Orders routes */
@@ -36,13 +37,13 @@ router.get(
   "/users/me/orders",
   withAuth,
   allowRole("user"),
-  orderController.getAllOrdersController
+  orderController.getAllOrders
 );
 router.get(
   "/users/me/orders/:id",
   withAuth,
   allowRole("user"),
-  orderController.getOrderController
+  orderController.getOrder
 );
 
 /* Purchases routes */
@@ -50,13 +51,13 @@ router.get(
   "/users/me/purchases",
   withAuth,
   allowRole("user"),
-  userController.getAllPurchaseController
+  purchaseController.getAllPurchase
 );
 router.get(
   "/users/me/purchases/:id",
   withAuth,
   allowRole("user"),
-  userController.getPurchaseController
+  purchaseController.getPurchase
 );
 
 router.use("/users/me", favoritesRoutes);

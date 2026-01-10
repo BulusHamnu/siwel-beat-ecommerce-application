@@ -5,35 +5,26 @@ import * as googleAuthController from "../controllers/auths/google-auth.controll
 
 const router = Router();
 
-router.post("/auth/register", authController.signUpController);
-router.post("/auth/login", authController.logInController);
-router.post("/auth/verify-email", authController.verifyEmailController);
+router.post("/auth/register", authController.signUp);
+router.post("/auth/login", authController.logIn);
+router.post("/auth/verify-email", authController.verifyEmail);
 router.post(
   "/auth/resend-verification-email",
   withAuth,
-  authController.resendVeficationEmailController
+  authController.resendVeficationEmail
 );
-router.post("/auth/forget-password", authController.forgetPasswordController);
-router.post(
-  "/auth/verify-reset-code",
-  authController.verifyResetCodeController
-);
-router.post("/auth/reset-password", authController.resetpasswordController);
-router.post("/auth/log-out", withAuth, authController.logoutController);
+router.post("/auth/forget-password", authController.forgetPassword);
+router.post("/auth/verify-reset-code", authController.verifyResetCode);
+router.post("/auth/reset-password", authController.resetpassword);
+router.post("/auth/log-out", withAuth, authController.logout);
 
 /* Google 0auth2 endpoints */
-router.get(
-  "/auth/google/register",
-  googleAuthController.getGoogleOauthUrlController
-);
+router.get("/auth/google/register", googleAuthController.getGoogleOauthUrl);
 router.get(
   "/auth/google/register-fallback",
   googleAuthController.googleSignupFallback
 );
-router.get(
-  "/auth/google/login",
-  googleAuthController.getGoogleOauthUrlController
-);
+router.get("/auth/google/login", googleAuthController.getGoogleOauthUrl);
 router.get(
   "/auth/google/login-fallback",
   googleAuthController.googleLoginFallback

@@ -5,7 +5,7 @@ import type { notification } from "../../models/notification.schema.js";
 import * as notificationValidator from "../../utils/validators/notification.validator.js";
 
 /* Get all notifications controller */
-export const getAllNotificationsController = async (
+export const getAllNotifications = async (
   req: Request<{}, {}, {}, { status: string }>,
   res: Response<ApiResponse<notification[]>>,
   next: NextFunction
@@ -33,7 +33,7 @@ export const getAllNotificationsController = async (
 };
 
 /* Get a notification controller */
-export const getNotificationController = async (
+export const getNotification = async (
   req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,
   res: Response<ApiResponse<notification>>,
   next: NextFunction
@@ -57,7 +57,7 @@ export const getNotificationController = async (
 };
 
 /* Update notification as read controller*/
-export const markNoticationAsReadController = async (
+export const markNoticationAsRead = async (
   req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,
   res: Response<ApiResponse<notification>>,
   next: NextFunction
@@ -81,7 +81,7 @@ export const markNoticationAsReadController = async (
 };
 
 /* Update notification as unread controller*/
-export const markNoticationAsUnreadController = async (
+export const markNoticationAsUnread = async (
   req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,
   res: Response<ApiResponse<notification>>,
   next: NextFunction
@@ -105,7 +105,7 @@ export const markNoticationAsUnreadController = async (
 };
 
 /* Delete notification  */
-export const deleteNotificationController = async (
+export const deleteNotification = async (
   req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,
   res: Response<ApiResponse<notification>>,
   next: NextFunction

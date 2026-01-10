@@ -6,7 +6,7 @@ import * as userValidator from "../../utils/validators/user.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 
 /* Add to favourites controller */
-const addToUserFavourites = async (
+export const addToUserFavourites = async (
   req: Request<{}, ApiResponse<void>, { trackId: string }, {}>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
@@ -31,7 +31,7 @@ const addToUserFavourites = async (
 };
 
 /* Get favourites controller */
-const getUserFavourites = async (
+export const getUserFavourites = async (
   req: Request<{}, ApiResponse<FavouriteInterface[]>, {}, {}>,
   res: Response<ApiResponse<FavouriteInterface[]>>,
   next: NextFunction
@@ -52,7 +52,7 @@ const getUserFavourites = async (
 };
 
 /* Remove from favourites controller */
-const removeFromFavouritesController = async (
+export const removeFromFavourites = async (
   req: Request<{}, ApiResponse<void>, { trackId: string }, {}>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
@@ -75,8 +75,3 @@ const removeFromFavouritesController = async (
   }
 };
 
-export default {
-  addToUserFavourites,
-  getUserFavourites,
-  removeFromFavouritesController,
-};

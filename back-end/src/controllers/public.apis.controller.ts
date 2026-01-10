@@ -5,7 +5,7 @@ import logger from "../utils/logger.js";
 import { sendMessage } from "../services/public.apis.service.js";
 
 /* Contact me controller */
-export const contactmeController = async (
+export const contactme = async (
   req: Request<
     {},
     ApiResponse<void>,

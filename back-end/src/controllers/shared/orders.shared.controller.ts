@@ -14,7 +14,7 @@ interface OrdersQueryBody {
   date: string;
 }
 
-export const getAllOrdersController = async (
+export const getAllOrders = async (
   req: Request<{}, ApiResponse<orderResult>, {}, OrdersQueryBody>,
   res: Response<ApiResponse<orderResult>>,
   next: NextFunction
@@ -47,7 +47,7 @@ export const getAllOrdersController = async (
 };
 
 /* Get an order controller */
-export const getOrderController = async (
+export const getOrder = async (
   req: Request<{ id: string }, ApiResponse<OrderPlusItems>, {}, {}>,
   res: Response<ApiResponse<OrderPlusItems>>,
   next: NextFunction

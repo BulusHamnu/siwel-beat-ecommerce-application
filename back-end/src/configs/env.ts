@@ -44,6 +44,7 @@ interface Env {
   UNTAGGEDBEATFOLDER: string;
   BASICLICENSEFOLDER: string;
   PREMIUMLICENSEFOLDER: string;
+  HASHSALTNUMBER: number;
 }
 
 const env: Env = {
@@ -84,6 +85,7 @@ const env: Env = {
   UNTAGGEDBEATFOLDER: process.env.UNTAGGEDBEATFOLDER || "untaggedBeat/",
   BASICLICENSEFOLDER: process.env.BASICLICENSEFOLDER || "basicLicense/",
   PREMIUMLICENSEFOLDER: process.env.PREMIUMLICENSEFOLDER || "premiumLicense/",
+  HASHSALTNUMBER: 10,
 };
 
 export default env;

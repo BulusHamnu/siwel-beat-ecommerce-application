@@ -19,7 +19,7 @@ export const setGoogleRedirect = (route: string = "register"): string => {
   return r;
 };
 
-export const getGoogleOauthUrlController = async (
+export const getGoogleOauthUrl = async (
   req: Request<
     {},
     {

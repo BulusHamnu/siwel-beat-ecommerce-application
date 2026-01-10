@@ -35,7 +35,7 @@ const bundleTrackFilesPath = (files: uploadedTrackFiles): string[] => {
   return paths;
 };
 
-export const postTrackController = async (
+export const postTrack = async (
   req: Request<{}, ApiResponse<TrackInterface>, createTrackInput, {}>,
   res: Response<ApiResponse<TrackInterface>>,
   next: NextFunction
@@ -85,7 +85,7 @@ interface response extends ApiResponse<TrackInterface[]> {
   pagination: Pagination;
 }
 
-export const getTracksController = async (
+export const getTracks = async (
   req: Request<{}, ApiResponse<TrackInterface[]>, {}, Queries>,
   res: Response<response>,
   next: NextFunction
@@ -114,7 +114,7 @@ export const getTracksController = async (
 };
 
 /* Get track controller */
-export const getTrackController = async (
+export const getTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
   next: NextFunction
@@ -198,7 +198,7 @@ export const activateTrack = async (
 };
 
 /* Update track controler */
-export const updateTrackController = async (
+export const updateTrack = async (
   req: Request<{ id: string }, ApiResponse<TrackInterface>, TrackUpdates, {}>,
   res: Response<ApiResponse<TrackInterface>>,
   next: NextFunction
@@ -265,7 +265,7 @@ async function retriveTrackFile(type: string, filePath: string): Promise<any> {
   return data;
 }
 
-export const downloadTrackFileController = async (
+export const downloadTrackFile = async (
   req: Request<{ id: string }, {}, {}, { type: string; license: string }>,
   res: Response,
   next: NextFunction
@@ -311,7 +311,7 @@ export const downloadTrackFileController = async (
 };
 
 /* Play track controller */
-export const playTrackController = async (
+export const playTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response,
   next: NextFunction

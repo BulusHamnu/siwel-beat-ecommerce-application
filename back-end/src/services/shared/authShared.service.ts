@@ -1,5 +1,6 @@
 import { generateRandCode } from "../../utils/helpers.js";
 import bcrypt from "bcrypt";
+import env from "../../configs/env.js";
 
 /* Create hash password and email verification */
 interface hashpasswordAndEmailVerificationInterface {
@@ -11,7 +12,7 @@ export const createHashpasswordAndEmailVerification = async (
   password: string,
   codeExpirationTime: number
 ): Promise<hashpasswordAndEmailVerificationInterface> => {
-  const hashPassword: string = await bcrypt.hash(password, 10);
+  const hashPassword: string = await bcrypt.hash(password, env.HASHSALTNUMBER);
   const verificationCode: number | string = generateRandCode(6);
 
   const emailVerification = {

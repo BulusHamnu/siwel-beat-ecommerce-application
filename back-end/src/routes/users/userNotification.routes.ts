@@ -10,35 +10,35 @@ router.get(
   "/notifications",
   withAuth,
   allowRole("user"),
-  notificationController.getAllNotificationsController
+  notificationController.getAllNotifications
 );
 
 router.get(
   "/notifications/:id",
   withAuth,
   allowRole("user"),
-  notificationController.getNotificationController
+  notificationController.getNotification
 );
 
 router.patch(
   "/notifications/:id/read",
   withAuth,
   allowRole("user"),
-  notificationController.markNoticationAsReadController
+  notificationController.markNoticationAsRead
 );
 
 router.patch(
   "/notifications/:id/unread",
   withAuth,
   allowRole("user"),
-  notificationController.markNoticationAsUnreadController
+  notificationController.markNoticationAsUnread
 );
 
 router.delete(
   "/notifications/:id",
   withAuth,
   allowRole("user"),
-  notificationController.deleteNotificationController
+  notificationController.deleteNotification
 );
 
 export default router;

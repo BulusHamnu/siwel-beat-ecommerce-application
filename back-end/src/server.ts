@@ -7,7 +7,6 @@ import type { Express, Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import logger from "./utils/logger.js";
 import AppError from "./errors/appError.js";
-// import type { customAppError } from "./errors/appError.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import authRoutes from "./routes/auth.routes.js";
 import profileRoutes from "./routes/users/users.routes.js";

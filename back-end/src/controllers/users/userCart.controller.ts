@@ -6,7 +6,7 @@ import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.
 import * as userValidator from "../../utils/validators/user.validator.js";
 
 /* Add to cart controller */
-export const addToCartController = async (
+export const addToCart = async (
   req: Request<{}, ApiResponse<void>, { trackId: string; license: string }, {}>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
@@ -31,7 +31,7 @@ export const addToCartController = async (
 };
 
 /* Remove from cart controller */
-export const removeFromCartController = async (
+export const removeFromCart = async (
   req: Request<{}, ApiResponse<void>, { trackId: string; license: string }, {}>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
@@ -56,7 +56,7 @@ export const removeFromCartController = async (
 };
 
 /* Get cart controller */
-export const getCartController = async (
+export const getCart = async (
   req: Request<{}, ApiResponse<CartInterface>, {}, {}>,
   res: Response<ApiResponse<CartInterface>>,
   next: NextFunction

@@ -10,20 +10,20 @@ router.post(
   "/cart",
   withAuth,
   allowRole("user"),
-  cartController.addToCartController
+  cartController.addToCart
 );
 router.patch(
   "/cart",
   withAuth,
   allowRole("user"),
-  cartController.removeFromCartController
+  cartController.removeFromCart
 );
 
 router.get(
   "/cart",
   withAuth,
   allowRole("user"),
-  cartController.getCartController
+  cartController.getCart
 );
 
 export default router;

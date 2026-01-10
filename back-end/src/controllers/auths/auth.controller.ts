@@ -1,6 +1,6 @@
 import type { Response, Request, NextFunction } from "express";
 import logger from "../../utils/logger.js";
-import type { createUserBody } from "../userTypes.js";
+import type { CreateUserBody } from "../userTypes.js";
 import * as authService from "../../services/auth.service.js";
 import { type LoginReturnType } from "../../services/auth.service.js";
 import type { ApiResponse } from "../responseInterface.js";
@@ -9,13 +9,13 @@ import * as authValidator from "../../utils/validators/auth.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 
 /* Sign up new user controller */
-export const signUpController = async (
-  req: Request<{}, {}, createUserBody, {}>,
+export const signUp = async (
+  req: Request<{}, {}, CreateUserBody, {}>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const cleanSignupBody: createUserBody = validateAndSanitizeBody(
+    const cleanSignupBody: CreateUserBody = validateAndSanitizeBody(
       req.body,
       authValidator.signupBodySchema
     );
@@ -39,7 +39,7 @@ interface loginBody {
   email: string;
   password: string;
 }
-export const logInController = async (
+export const logIn = async (
   req: Request<{}, ApiResponse<LoginReturnType>, loginBody, {}>,
   res: Response<ApiResponse<LoginReturnType>>,
   next: NextFunction
@@ -73,7 +73,7 @@ interface emailVerificationBody {
   code: string;
 }
 
-export const verifyEmailController = async (
+export const verifyEmail = async (
   req: Request<{}, ApiResponse<void>, { email: string; code: string }, {}>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
@@ -97,7 +97,7 @@ export const verifyEmailController = async (
 };
 
 /* Resend verification email controller */
-export const resendVeficationEmailController = async (
+export const resendVeficationEmail = async (
   req: Request<{}, { status: boolean; message: string }, {}, {}>,
   res: Response<{ status: boolean; message: string }>,
   next: NextFunction
@@ -119,7 +119,7 @@ export const resendVeficationEmailController = async (
 };
 
 /* Forget password controller */
-export const forgetPasswordController = async (
+export const forgetPassword = async (
   req: Request<{}, { status: false; message: string }, { email: string }, {}>,
   res: Response<{ status: boolean; message: string }>,
   next: NextFunction
@@ -145,7 +145,7 @@ export const forgetPasswordController = async (
 };
 
 /* Verify password reset code controller */
-export const verifyResetCodeController = async (
+export const verifyResetCode = async (
   req: Request<
     {},
     ApiResponse<{ resetToken: string }>,
@@ -179,7 +179,7 @@ interface resetPasswordBody {
   password: string;
   resetToken: string;
 }
-export const resetpasswordController = async (
+export const resetpassword = async (
   req: Request<{}, ApiResponse<void>, resetPasswordBody, {}>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
@@ -202,7 +202,7 @@ export const resetpasswordController = async (
 };
 
 /* Log out controller */
-export const logoutController = async (
+export const logout = async (
   req: Request,
   res: Response,
   next: NextFunction

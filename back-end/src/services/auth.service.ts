@@ -1,5 +1,5 @@
 import User from "../models/user.schema.js";
-import type { createUserBody } from "../controllers/userTypes.js";
+import type { CreateUserBody } from "../controllers/userTypes.js";
 import type { UserInterface } from "../models/user.schema.js";
 import AppError from "../errors/appError.js";
 import { createHashpasswordAndEmailVerification } from "./shared/authShared.service.js";
@@ -26,7 +26,7 @@ export const createNewUser = async ({
   accessToken,
   idToken,
   googleId,
-}: createUserBody): Promise<UserInterface> => {
+}: CreateUserBody): Promise<UserInterface> => {
   const emailExist = await User.findOne({ email: email });
   if (emailExist) {
     throw new AppError("User already exist.", 209, true);

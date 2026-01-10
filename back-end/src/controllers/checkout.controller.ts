@@ -18,7 +18,7 @@ function validateCheckoutReqBody(data: { items: string[] }): {
   return validateAndSanitizeBody(data, itemsSchema);
 }
 
-export const checkOutController = async (
+export const checkOut = async (
   req: Request<{}, ApiResponse<checkoutSummary>, { items: string[] }, {}>,
   res: Response<ApiResponse<checkoutSummary>>,
   next: NextFunction

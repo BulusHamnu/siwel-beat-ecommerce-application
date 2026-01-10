@@ -1,7 +1,7 @@
 import { Router } from "express";
 import withAuth from "../../middlewares/withAuth.js";
 import allowRole from "../../middlewares/allowRole.js";
-import favouriteRoutes from "../../controllers/users/userFavourites.controller.js";
+import * as favouriteRoutes from "../../controllers/users/userFavourites.controller.js";
 
 const router = Router();
 
@@ -22,7 +22,7 @@ router.delete(
   "/favourites",
   withAuth,
   allowRole("user"),
-  favouriteRoutes.removeFromFavouritesController
+  favouriteRoutes.removeFromFavourites
 );
 
 export default router;

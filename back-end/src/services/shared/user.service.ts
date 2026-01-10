@@ -1,12 +1,12 @@
 import User, { type UserInterface } from "../../models/user.schema.js";
 import Profile, { type ProfileInterface } from "../../models/profile.schema.js";
-import type { userProfile } from "../../controllers/userTypes.js";
+import type { UserProfile } from "../../controllers/userTypes.js";
 import AppError from "../../errors/appError.js";
 import supabase from "../supabase.js";
 import env from "../../configs/env.js";
 
 /* Get profile */
-const getProfile = async (id: string): Promise<userProfile> => {
+export const getProfile = async (id: string): Promise<UserProfile> => {
   const user: UserInterface | null = await User.findOne({ _id: id });
   if (!user) throw new AppError("User not found.", 404, true);
 
@@ -14,7 +14,6 @@ const getProfile = async (id: string): Promise<userProfile> => {
     userId: user._id,
   });
   const profileObj = profile?.toObject();
-  delete profileObj.cart;
 
   return {
     username: user.username,
@@ -68,10 +67,10 @@ function filterProfileUpdates(updates: ProfileUpdates) {
   }
 }
 
-const updateProfile = async (
+export const updateProfile = async (
   id: string | undefined,
   updates: ProfileUpdates
-): Promise<userProfile> => {
+): Promise<UserProfile> => {
   const user: UserInterface | null = await User.findOne({ _id: id });
   if (!user) throw new AppError("User not found.", 404, true);
 
@@ -100,7 +99,7 @@ const updateProfile = async (
 };
 
 /* Update profile picture */
-const updateProfilePicture = async (
+export const updateProfilePicture = async (
   userId: string,
   pictureUrl: string
 ): Promise<string> => {
@@ -123,5 +122,3 @@ const updateProfilePicture = async (
   if (oldPicturePath) await supabase.deleteFiles("images", [oldPicturePath]);
   return publicUrl;
 };
-
-export default { getProfile, updateProfile, updateProfilePicture };

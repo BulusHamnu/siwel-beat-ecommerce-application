@@ -1,5 +1,5 @@
 // userbody types
-export interface createUserBody {
+export interface CreateUserBody {
   firstName: string;
   lastName: string;
   username: string;
@@ -15,7 +15,7 @@ export interface createUserBody {
   picture: string;
 }
 
-export interface userProfile {
+export interface UserProfile {
   _id: string;
   email: string;
   isVerified: boolean;

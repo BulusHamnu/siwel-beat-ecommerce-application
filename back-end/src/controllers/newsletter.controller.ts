@@ -6,7 +6,7 @@ import env from "../configs/env.js";
 import logger from "../utils/logger.js";
 
 /* Subscribe to newsletter controller */
-export const subscribeToNewletterController = async (
+export const subscribeToNewletter = async (
   req: Request<{}, ApiResponse<void>, { email: string }, {}>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
@@ -30,7 +30,7 @@ export const subscribeToNewletterController = async (
 };
 
 /* Unsubscribe to newsletter controller */
-export const unsubscribeToNewletterController = async (
+export const unsubscribeToNewletter = async (
   req: Request<{}, ApiResponse<void>, {}, { email: string; token: string }>,
   res: Response<ApiResponse<void>>,
   next: NextFunction

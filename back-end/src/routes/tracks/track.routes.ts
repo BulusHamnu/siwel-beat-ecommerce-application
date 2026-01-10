@@ -13,16 +13,16 @@ router.post(
   withAuth,
   allowRole("admin"),
   upload,
-  trackController.postTrackController
+  trackController.postTrack
 );
-router.get("/tracks", trackController.getTracksController);
-router.get("/tracks/:id", trackController.getTrackController);
+router.get("/tracks", trackController.getTracks);
+router.get("/tracks/:id", trackController.getTrack);
 router.patch(
   "/tracks/:id",
   withAuth,
   allowRole("admin"),
   upload,
-  trackController.updateTrackController
+  trackController.updateTrack
 );
 
 router.post(
@@ -46,10 +46,10 @@ router.get(
   "/tracks/:id/download-file",
   withAuth,
   allowRole("user", "admin"),
-  trackController.downloadTrackFileController
+  trackController.downloadTrackFile
 );
 
 /* Play track */
-router.get("/tracks/:id/play", trackController.playTrackController);
+router.get("/tracks/:id/play", trackController.playTrack);
 
 export default router;

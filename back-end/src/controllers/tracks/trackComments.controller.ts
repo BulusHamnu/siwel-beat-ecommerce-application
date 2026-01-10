@@ -8,7 +8,7 @@ import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.
 import * as trackValidator from "../../utils/validators/track.validator.js";
 
 /* Post new comment controller */
-export const postCommentController = async (
+export const postComment = async (
   req: Request<
     { id: string },
     ApiResponse<CommentInterface>,
@@ -49,7 +49,7 @@ interface getCommentParam {
   commentId: string;
   id: string;
 }
-export const getCommentController = async (
+export const getComment = async (
   req: Request<getCommentParam, ApiResponse<populatedComment>, {}, {}>,
   res: Response<ApiResponse<populatedComment>>,
   next: NextFunction
@@ -78,7 +78,7 @@ export const getCommentController = async (
 };
 
 /* Get all comments controller*/
-export const getAllCommentController = async (
+export const getAllComment = async (
   req: Request<{ id: string }, ApiResponse<populatedComment[]>, {}, {}>,
   res: Response<ApiResponse<populatedComment[]>>,
   next: NextFunction
@@ -103,7 +103,7 @@ export const getAllCommentController = async (
 };
 
 /* Update comment controller */
-export const updateCommentController = async (
+export const updateComment = async (
   req: Request<
     { id: string; commentId: string },
     ApiResponse<populatedComment>,
@@ -145,7 +145,7 @@ export const updateCommentController = async (
 };
 
 /* Delete a comment controller */
-export const deleteCommentController = async (
+export const deleteComment = async (
   req: Request<
     { id: string; commentId: string },
     ApiResponse<void>,

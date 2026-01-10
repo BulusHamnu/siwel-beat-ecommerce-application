@@ -1,9 +1,9 @@
-import express, { Router } from "express";
-import { contactmeController } from "../controllers/public.apis.controller.js";
+import { Router } from "express";
+import { contactme } from "../controllers/public.apis.controller.js";
 
 const router = Router();
 
 // routes
-router.post("/contact-me", contactmeController);
+router.post("/contact-me", contactme);
 
 export default router;

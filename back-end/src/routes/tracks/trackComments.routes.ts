@@ -10,31 +10,31 @@ router.post(
   "/:id/comments",
   withAuth,
   allowRole("user", "admin"),
-  commentController.postCommentController
+  commentController.postComment
 );
 router.get(
   "/:id/comments/:commentId",
   withAuth,
   allowRole("user", "admin"),
-  commentController.getCommentController
+  commentController.getComment
 );
 router.get(
   "/:id/comments",
   withAuth,
   allowRole("user", "admin"),
-  commentController.getAllCommentController
+  commentController.getAllComment
 );
 router.patch(
   "/:id/comments/:commentId",
   withAuth,
   allowRole("user", "admin"),
-  commentController.updateCommentController
+  commentController.updateComment
 );
 router.delete(
   "/:id/comments/:commentId",
   withAuth,
   allowRole("user", "admin"),
-  commentController.deleteCommentController
+  commentController.deleteComment
 );
 
 export default router;
