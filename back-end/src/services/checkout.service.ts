@@ -1,5 +1,5 @@
 import AppError from "../errors/appError.js";
-import { type CartItem } from "../models/profile.schema.js";
+import { type CartItem, type CartInterface } from "../models/cart.schema.js";
 import getUserCartandTracks from "./shared/getUserCartAndTracks.js";
 
 export interface checkoutSummary {
@@ -31,18 +31,27 @@ function verifyItemsStatus(trackMap: Map<string, any>, cartItems: CartItem[]) {
 }
 
 export const getCheckoutSummary = async (
-  userId: string
+  userId: string,
+  items: string[]
 ): Promise<checkoutSummary> => {
-  // Items have to be valid for checkout
-  const { cart, tracks } = await getUserCartandTracks(userId);
+  const { userCart, tracks } = await getUserCartandTracks(userId);
+  const userCartObj: CartInterface = userCart.toObject();
+
+  // Filter selected items
+  const selectedItems = userCartObj.items.filter((item) =>
+    items.includes(String(item.productId))
+  );
 
   const trackMap = new Map<string, any>();
   tracks.forEach((track) => {
-    trackMap.set(track._id.toString(), track);
+    trackMap.set(String(track._id), track);
   });
+  verifyItemsStatus(trackMap, selectedItems); // Items have to be valid for checkout
 
-  verifyItemsStatus(trackMap, cart);
-  const totalAmount = cart.reduce((sum, item) => sum + Number(item.price), 0);
+  const totalAmount = selectedItems.reduce(
+    (sum, item) => sum + Number(item.price),
+    0
+  );
 
-  return { items: cart, total: totalAmount };
+  return { items: selectedItems, total: totalAmount };
 };

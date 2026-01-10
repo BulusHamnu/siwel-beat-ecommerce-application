@@ -67,7 +67,7 @@ async function attachItemsToOrders(
 
   orders.forEach((order) => {
     order.items = [];
-    orderMap.set(order._id.toString(), order);
+    orderMap.set(String(order._id), order);
   });
 
   const orderIds = orders.map((order) => order._id);
