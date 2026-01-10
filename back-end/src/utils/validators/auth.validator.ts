@@ -38,10 +38,10 @@ export const loginBodySchema = Joi.object({
 /* Validate email and code */
 export const emailAndCodeBodySchema = Joi.object({
   email: Joi.string().email().required(),
-  code: Joi.number().required(),
+  code: Joi.string().required().length(6),
 });
 
-/* Valid single email field*/
+/* Validate single email field*/
 export const validateEmail = Joi.string().email().required().label("email");
 
 /* Validate new password reset body */

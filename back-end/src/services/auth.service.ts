@@ -214,24 +214,31 @@ export const verifyEmail = async (
   code: string
 ): Promise<boolean> => {
   const user: UserInterface | null = await User.findOne({ email: email });
-  if (!user) throw new AppError("User not found.", 404, true);
 
+  if (!user) throw new AppError("User not found.", 404, true);
   // can't verify already verified users
   if (user.isVerified)
     throw new AppError("User is already verified.", 400, true);
 
-  const codeIsValid: UserInterface | null = await User.findOne({
-    "emailVerification.code": code,
-    "emailVerification.expiredAt": { $gt: new Date() },
-  });
+  if (!user.emailVerification?.expiredAt) {
+    throw new AppError("Verification code has expired.", 400, true);
+  }
 
-  if (!codeIsValid)
-    throw new AppError("Code is invalid or Code have expired.", 400, true);
+  const storedCode = user.emailVerification.code;
+  const expiredAt = new Date(user.emailVerification.expiredAt).getTime();
+  const currentTimeStamp = Date.now();
 
-  codeIsValid.isVerified = true;
-  codeIsValid.emailVerification.code = null;
-  codeIsValid.emailVerification.expiredAt = null;
-  await codeIsValid.save();
+  if (expiredAt < currentTimeStamp) {
+    throw new AppError("Verification code has expired.", 400, true);
+  }
+  if (storedCode !== code) {
+    throw new AppError("Verification code is invalid.", 400, true);
+  }
+
+  user.isVerified = true;
+  user.emailVerification.code = null;
+  user.emailVerification.expiredAt = null;
+  await user.save();
 
   return true;
 };
@@ -251,7 +258,7 @@ export const verifyResetCode = async (
   });
 
   if (!user)
-    throw new AppError("Code is invalid or Code have expired.", 400, true);
+    throw new AppError("Code is invalid or Code has expired.", 400, true);
 
   const resetToken = generateResetToken();
   user.resetPasswordVerification.otpCode = null;
