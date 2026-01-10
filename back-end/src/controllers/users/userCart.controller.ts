@@ -1,7 +1,7 @@
 import type { Response, Request, NextFunction } from "express";
 import { type ApiResponse } from "../responseInterface.js";
 import * as cartService from "../../services/users/userCart.service.js";
-import { type CartItem } from "../../models/profile.schema.js";
+import { type CartInterface } from "../../models/cart.schema.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import * as userValidator from "../../utils/validators/user.validator.js";
 
@@ -57,15 +57,15 @@ export const removeFromCartController = async (
 
 /* Get cart controller */
 export const getCartController = async (
-  req: Request<{}, ApiResponse<CartItem[]>, {}, {}>,
-  res: Response<ApiResponse<CartItem[]>>,
+  req: Request<{}, ApiResponse<CartInterface>, {}, {}>,
+  res: Response<ApiResponse<CartInterface>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const user = req.user!;
 
     const cart = await cartService.getUserCart(user.id);
-    const response: ApiResponse<CartItem[]> = {
+    const response: ApiResponse<CartInterface> = {
       status: true,
       message: "Cart retrived successfully.",
       data: cart,

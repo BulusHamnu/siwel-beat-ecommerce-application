@@ -12,7 +12,7 @@ router.post(
   allowRole("user"),
   cartController.addToCartController
 );
-router.delete(
+router.patch(
   "/cart",
   withAuth,
   allowRole("user"),

@@ -1,14 +1,6 @@
 import mongoose, { type Date, type ObjectId } from "mongoose";
 import { Document, Schema, Model, model } from "mongoose";
 
-export interface CartItem {
-  productId: ObjectId;
-  name: string;
-  license: string;
-  price: number;
-  type: string;
-}
-
 /* Profile type */
 export interface ProfileInterface extends Document {
   userId: ObjectId;
@@ -16,7 +8,6 @@ export interface ProfileInterface extends Document {
   lastName: string;
   gender: string;
   bio: string;
-  cart: CartItem[];
   picture: string;
   createdAt: Date;
   updatedAt: Date;
@@ -60,30 +51,6 @@ const profileSchema = new Schema<ProfileInterface>(
       type: String,
       default: "",
     },
-    cart: [
-      {
-        productId: {
-          type: mongoose.Schema.ObjectId,
-          ref: "Track",
-        },
-        price: {
-          type: Number,
-          required: true,
-        },
-        name: {
-          type: String,
-          required: true,
-        },
-        license: {
-          type: String,
-          required: true,
-        },
-        type: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
     picture: {
       type: String,
       default: "",

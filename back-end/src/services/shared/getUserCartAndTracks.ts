@@ -1,18 +1,22 @@
-import { type CartItem } from "../../models/profile.schema.js";
-import Profile from "../../models/profile.schema.js";
-import AppError from "../../errors/appError.js";
-import Track from "../../models/track.schema.js";
+import Cart, { type CartInterface } from "../../models/cart.schema.js";
+import Track, { type TrackInterface } from "../../models/track.schema.js";
+
+export async function getCart(userId: string): Promise<CartInterface> {
+  let userCart = await Cart.findOne({ userId });
+  if (!userCart) userCart = await Cart.create({ userId });
+  return userCart;
+}
 
 export default async function getUserCartandTracks(
   userId: string
-): Promise<{ cart: CartItem[]; tracks: any[] }> {
-  const profile = await Profile.findOne({ userId });
-  if (!profile) throw new AppError("Profile not found.", 404, true);
+): Promise<{ userCart: CartInterface; tracks: TrackInterface[] }> {
+  const userCart = await getCart(userId);
+  if (userCart.items.length <= 0) return { userCart, tracks: [] };
 
-  const profileObj = profile.toObject();
-  const cart: CartItem[] = profileObj.cart;
-  const productIds = cart.map((item) => item.productId);
+  const productIds = userCart.items.map((item) => item.productId);
+  const tracks = await Track.find({ _id: { $in: productIds } }).lean<
+    TrackInterface[]
+  >();
 
-  const tracks = await Track.find({ _id: { $in: productIds } }).lean();
-  return { cart, tracks };
+  return { userCart, tracks };
 }

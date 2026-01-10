@@ -1,6 +1,6 @@
 import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
-import { type CartItem } from "./profile.schema.js";
+import { type CartItem } from "./cart.schema.js";
 import { Status } from "./order.schema.js";
 import { LicenseType } from "./track.schema.js";
 
