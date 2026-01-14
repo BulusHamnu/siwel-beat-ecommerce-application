@@ -216,6 +216,10 @@ function filterUpdatesAndFiles(
       updates["license.premium"] = files.license.premium;
       oldFilesPaths.push(track.license.premium);
     }
+    if (files.coverImageUrl) {
+      updates["coverImageUrl"] = files.coverImageUrl;
+      oldFilesPaths.push(track.coverImagePath);
+    }
   }
 
   return { cleanUpdateData: updates, oldFilesPaths };
