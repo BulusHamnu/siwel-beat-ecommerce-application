@@ -11,7 +11,7 @@ export interface ProfileInterface extends Document {
   picture: string;
   createdAt: Date;
   updatedAt: Date;
-  stripeId: string;
+  lemonSqueezyId: string;
   notification: {
     emailNotification: {
       commentAndLikes: boolean;
@@ -43,7 +43,7 @@ const profileSchema = new Schema<ProfileInterface>(
       enum: ["male", "female", "not-specified"],
       default: "not-specified",
     },
-    stripeId: {
+    lemonSqueezyId: {
       type: String,
       default: "",
     },

@@ -6,7 +6,11 @@ import validateAndSanitizeBody from "./validateAndSanitize.js";
 export const trackBodySchema = Joi.object({
   title: Joi.string().required().min(3).max(100),
   description: Joi.string().required().max(1200).min(50),
-  type: Joi.string().required().valid("kit", "single", "album").lowercase(),
+  type: Joi.string()
+    .required()
+    .valid("single")
+    .lowercase()
+    .messages({ "any.only": "Only singles are allowed at the moment." }), //"kit","album"
   key: Joi.string().required(),
   bpm: Joi.number().required().min(10),
   tags: Joi.array().items(Joi.string().lowercase()).min(1).required(),

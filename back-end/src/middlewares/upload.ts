@@ -7,6 +7,7 @@ import AppError from "../errors/appError.js";
 
 type multerFiles = { [fieldname: string]: Express.Multer.File[] };
 export interface multerTrackFiles extends multerFiles {
+  coverImage: Express.Multer.File[];
   taggedBeat: Express.Multer.File[];
   untaggedBeat: Express.Multer.File[];
   basicLicense: Express.Multer.File[];
@@ -55,12 +56,26 @@ export const determineDest = (fieldName: string): string => {
 const storage = multer.memoryStorage();
 
 /* File filter */
+const imageAllowedFileType: string[] = [
+  "image/jpeg",
+  "image/png",
+  "image/svg+xml",
+  "image/webp",
+];
 const fileFilter = async (
   req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ): Promise<void> => {
   const fileType = file.mimetype;
+  // Check for image files
+  if (file.fieldname === "coverImage") {
+    if (imageAllowedFileType.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new AppError("Only images are allowed for coverImage.", 400, false));
+    }
+  }
   // Check audio files
   if (file.fieldname === "untaggedBeat" || file.fieldname === "taggedBeat") {
     const allowedAudioMimeTypes = ["audio/mpeg", "audio/wav", "audio/midi"];
@@ -86,7 +101,13 @@ const fileFilter = async (
     if (allowedDocumentMimeTypes.includes(fileType)) {
       cb(null, true);
     } else {
-      cb(new AppError("Only documents files are allowed.", 400, true));
+      cb(
+        new AppError(
+          "Only documents files are allowed for track licenses..",
+          400,
+          true
+        )
+      );
     }
   }
 };
@@ -97,6 +118,7 @@ const upload = multer({
   limits: { fileSize: 5000000 },
   fileFilter,
 }).fields([
+  { name: "coverImage", maxCount: 1 },
   { name: "basicLicense", maxCount: 1 },
   { name: "premiumLicense", maxCount: 1 },
   { name: "untaggedBeat", maxCount: 1 },
@@ -112,14 +134,7 @@ export const uploadPicture = multer({
     file: Express.Multer.File,
     cb: multer.FileFilterCallback
   ) => {
-    const allowedFileType: string[] = [
-      "image/jpeg",
-      "image/png",
-      "image/svg+xml",
-      "image/webp",
-    ];
-
-    if (allowedFileType.includes(file.mimetype)) {
+    if (imageAllowedFileType.includes(file.mimetype)) {
       cb(null, true);
     } else {
       cb(new AppError("Only images are allowed", 400, false));

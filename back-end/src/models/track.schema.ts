@@ -28,6 +28,8 @@ export interface LicenseInterface {
 }
 
 export interface TrackInterface extends Document {
+  coverImageUrl: string;
+  coverImagePath: string;
   title: string;
   description: string;
   type: BeatType;
@@ -48,6 +50,14 @@ export interface TrackInterface extends Document {
 
 const trackSchema = new mongoose.Schema<TrackInterface>(
   {
+    coverImageUrl: {
+      type: String,
+      required: true,
+    },
+    coverImagePath: {
+      type: String,
+      required: true,
+    },
     title: {
       type: String,
       required: true,
@@ -107,6 +117,7 @@ trackSchema.methods.removeUnwantedFields = function (): TrackInterface {
   const obj = this.toObject();
   delete obj.fileUrl;
   delete obj.license;
+  delete obj.coverImagePath;
   return obj;
 };
 

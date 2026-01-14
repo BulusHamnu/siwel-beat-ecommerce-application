@@ -31,6 +31,7 @@ const bundleTrackFilesPath = (files: uploadedTrackFiles): string[] => {
   if (files.fileUrl?.untagged) paths.push(files.fileUrl.untagged);
   if (files.license?.basic) paths.push(files.license.basic);
   if (files.license?.premium) paths.push(files.license.premium);
+  if (files.coverImagePath) paths.push(files.coverImagePath);
 
   return paths;
 };
@@ -44,8 +45,9 @@ export const postTrack = async (
 
   try {
     const files = req.files as multerTrackFiles;
+
     // check for files
-    if (!files || Object.keys(files)?.length <= 3)
+    if (!files || Object.keys(files)?.length <= 4)
       throw new AppError("Missing track files.", 400, true);
 
     const trackBody = validateAndSanitizeBody(

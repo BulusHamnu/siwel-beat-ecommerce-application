@@ -45,6 +45,7 @@ interface Env {
   BASICLICENSEFOLDER: string;
   PREMIUMLICENSEFOLDER: string;
   HASHSALTNUMBER: number;
+  TRACK_COVER_IMAGE_FOLDER: string;
 }
 
 const env: Env = {
@@ -86,6 +87,7 @@ const env: Env = {
   BASICLICENSEFOLDER: process.env.BASICLICENSEFOLDER || "basicLicense/",
   PREMIUMLICENSEFOLDER: process.env.PREMIUMLICENSEFOLDER || "premiumLicense/",
   HASHSALTNUMBER: 10,
+  TRACK_COVER_IMAGE_FOLDER: process.env.TRACKCOVERIMAGEFOLDER || "coverImages/",
 };
 
 export default env;

@@ -15,6 +15,8 @@ type UndefinedFields<T> = {
 export interface uploadedTrackFiles {
   fileUrl?: UndefinedFields<FileUrlInterface>;
   license?: UndefinedFields<LicenseInterface>;
+  coverImageUrl?: string | undefined;
+  coverImagePath?: string | undefined;
 }
 
 class Supabase {
@@ -112,7 +114,16 @@ class Supabase {
     try {
       if (Object.keys(files).length <= 0) return {};
 
-      const [tagged, untagged, basic, premium] = await Promise.all([
+      const [coverImage, tagged, untagged, basic, premium] = await Promise.all([
+        // coverImage
+        files.coverImage?.length > 0
+          ? this.uploadFile(
+              env.IMAGE_FILES_BUCKET,
+              files.coverImage[0]!.originalname,
+              env.TRACK_COVER_IMAGE_FOLDER, //
+              files.coverImage[0]!.buffer
+            )
+          : Promise.resolve(undefined),
         // taggedBeat
         files.taggedBeat?.length > 0
           ? this.uploadFile(
@@ -151,12 +162,22 @@ class Supabase {
           : Promise.resolve(undefined),
       ]);
 
+      let coverImgPublicUrl: string | undefined = undefined;
+      if (coverImage) {
+        paths.push(coverImage); // the coverImagePath is save so we can delete and update the cover image later.
+        coverImgPublicUrl = await this.getPublicUrl(
+          env.IMAGE_FILES_BUCKET,
+          coverImage
+        ); // Save public as well so user can view it.
+      }
       if (tagged) paths.push(tagged);
       if (untagged) paths.push(untagged);
       if (basic) paths.push(basic);
       if (premium) paths.push(premium);
 
       return {
+        coverImageUrl: coverImgPublicUrl,
+        coverImagePath: coverImage,
         fileUrl: {
           tagged,
           untagged,
@@ -184,6 +205,9 @@ class Supabase {
         path.startsWith(env.BASICLICENSEFOLDER) ||
         path.startsWith(env.PREMIUMLICENSEFOLDER)
     );
+    const coverImagePaths = paths.filter((path) =>
+      path.startsWith(env.TRACK_COVER_IMAGE_FOLDER)
+    );
 
     const requests: Promise<boolean>[] = [];
     if (audioPaths?.length > 0) {
@@ -191,6 +215,9 @@ class Supabase {
     }
     if (licensePaths?.length > 0) {
       requests.push(this.deleteFiles(env.LICENSE_FILES_BUCKET, licensePaths));
+    }
+    if (coverImagePaths?.length > 0) {
+      requests.push(this.deleteFiles(env.IMAGE_FILES_BUCKET, coverImagePaths));
     }
 
     await Promise.all(requests);
