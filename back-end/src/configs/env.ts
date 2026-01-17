@@ -21,9 +21,10 @@ interface Env {
   EMAIL_USER: string;
   ADMIN_EMAIL: string;
   APP_NAME: string;
-  SECRET_KEY: string;
-  CLIENT_ID: string;
-  CLIENT_SECRET: string;
+  TOKEN_SECRET: string;
+  REFRESH_TOKEN_SECRET: string;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
   BACKEND_URL: string;
   FRONTEND_URL: string;
   FRONTEND_LOGIN_URL: string;
@@ -37,15 +38,16 @@ interface Env {
   SUPABASE_URL: string;
   DIR_NAME: string;
   AUDIO_FILES_BUCKET: string;
-  LICENSE_FILES_BUCKET: string;
+  DOCUMENT_FILES_BUCKET: string;
   IMAGE_FILES_BUCKET: string;
-  GOOGLEOAUTH2URL: string;
-  TAGGEDBEATFOLDER: string;
-  UNTAGGEDBEATFOLDER: string;
-  BASICLICENSEFOLDER: string;
-  PREMIUMLICENSEFOLDER: string;
-  HASHSALTNUMBER: number;
+  GOOGLE_OAUTH2_URL: string;
+  TAGGED_AUDIO_FOLDER: string;
+  UNTAGGED_AUDIO_FOLDER: string;
+  BASIC_LICENSE_FOLDER: string;
+  PREMIUM_LICENSE_FOLDER: string;
+  HASH_SALT_NUMBER: number;
   TRACK_COVER_IMAGE_FOLDER: string;
+  USER_PICTURE_FOLDER: string;
 }
 
 const env: Env = {
@@ -56,9 +58,10 @@ const env: Env = {
   EMAIL_PASSWORD: process.env.EMAIL_PASSWORD || "",
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || "",
   APP_NAME: process.env.APP_NAME || "Siwel Beatz App",
-  SECRET_KEY: process.env.SECRET_KEY || "",
-  CLIENT_SECRET: process.env.CLIENT_SECRET || "",
-  CLIENT_ID: process.env.CLIENT_ID || "",
+  TOKEN_SECRET: process.env.TOKEN_SECRET || "",
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "",
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
   BACKEND_URL: process.env.BACKEND_URL || "http://localhost:8080",
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
   FRONTEND_LOGIN_URL: process.env.FRONTEND_LOGIN_URL || "",
@@ -77,17 +80,21 @@ const env: Env = {
   SUPABASE_URL: process.env.SUPABASE_URL || "",
   DIR_NAME: _dirName,
   AUDIO_FILES_BUCKET: process.env.AUDIO_FILES_BUCKET || "audios",
-  LICENSE_FILES_BUCKET: process.env.LICENSE_FILES_BUCKET || "documents",
+
+  DOCUMENT_FILES_BUCKET: process.env.DOCUMENT_FILES_BUCKET || "documents",
   IMAGE_FILES_BUCKET: process.env.IMAGE_FILES_BUCKET || "images",
-  GOOGLEOAUTH2URL:
-    process.env.GOOGLEOAUTH2URL ||
+  GOOGLE_OAUTH2_URL:
+    process.env.GOOGLE_OAUTH2_URL ||
     "https://accounts.google.com/o/oauth2/v2/auth",
-  TAGGEDBEATFOLDER: process.env.TAGGEDBEATFOLDER || "taggedBeat/",
-  UNTAGGEDBEATFOLDER: process.env.UNTAGGEDBEATFOLDER || "untaggedBeat/",
-  BASICLICENSEFOLDER: process.env.BASICLICENSEFOLDER || "basicLicense/",
-  PREMIUMLICENSEFOLDER: process.env.PREMIUMLICENSEFOLDER || "premiumLicense/",
-  HASHSALTNUMBER: 10,
-  TRACK_COVER_IMAGE_FOLDER: process.env.TRACKCOVERIMAGEFOLDER || "coverImages/",
+  TAGGED_AUDIO_FOLDER: process.env.TAGGED_AUDIO_FOLDER || "taggedBeat/",
+  UNTAGGED_AUDIO_FOLDER: process.env.UNTAGGED_AUDIO_FOLDER || "untaggedBeat/",
+  BASIC_LICENSE_FOLDER: process.env.BASIC_LICENSE_FOLDER || "basicLicense/",
+  PREMIUM_LICENSE_FOLDER:
+    process.env.PREMIUM_LICENSE_FOLDER || "premiumLicense/",
+  HASH_SALT_NUMBER: 10,
+  TRACK_COVER_IMAGE_FOLDER:
+    process.env.TRACK_COVER_IMAGE_FOLDER || "coverImages/",
+  USER_PICTURE_FOLDER: process.env.USER_PICTURE_FOLDER || "userPictures/",
 };
 
 export default env;

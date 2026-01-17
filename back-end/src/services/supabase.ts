@@ -125,38 +125,38 @@ class Supabase {
             )
           : Promise.resolve(undefined),
         // taggedBeat
-        files.taggedBeat?.length > 0
+        files.taggedAudio?.length > 0
           ? this.uploadFile(
               env.AUDIO_FILES_BUCKET,
-              files.taggedBeat[0]!.originalname,
-              env.TAGGEDBEATFOLDER, //
-              files.taggedBeat[0]!.buffer
+              files.taggedAudio[0]!.originalname,
+              env.TAGGED_AUDIO_FOLDER, //
+              files.taggedAudio[0]!.buffer
             )
           : Promise.resolve(undefined),
         // untaggedBeat
-        files.untaggedBeat?.length > 0
+        files.untaggedAudio?.length > 0
           ? this.uploadFile(
               env.AUDIO_FILES_BUCKET,
-              files.untaggedBeat[0]!.originalname,
-              env.UNTAGGEDBEATFOLDER,
-              files.untaggedBeat[0]!.buffer
+              files.untaggedAudio[0]!.originalname,
+              env.UNTAGGED_AUDIO_FOLDER,
+              files.untaggedAudio[0]!.buffer
             )
           : Promise.resolve(undefined),
         // basicLicense
         files.basicLicense?.length > 0
           ? this.uploadFile(
-              env.LICENSE_FILES_BUCKET,
+              env.DOCUMENT_FILES_BUCKET,
               files.basicLicense[0]!.originalname,
-              env.BASICLICENSEFOLDER,
+              env.BASIC_LICENSE_FOLDER,
               files.basicLicense[0]!.buffer
             )
           : Promise.resolve(undefined),
         // premiumLicense
         files.premiumLicense?.length > 0
           ? this.uploadFile(
-              env.LICENSE_FILES_BUCKET,
+              env.DOCUMENT_FILES_BUCKET,
               files.premiumLicense[0]!.originalname,
-              env.PREMIUMLICENSEFOLDER,
+              env.PREMIUM_LICENSE_FOLDER,
               files.premiumLicense[0]!.buffer
             )
           : Promise.resolve(undefined),
@@ -197,13 +197,13 @@ class Supabase {
   safeRemoveTrackFiles = async (paths: string[]): Promise<void> => {
     const audioPaths = paths.filter(
       (path) =>
-        path.startsWith(env.TAGGEDBEATFOLDER) ||
-        path.startsWith(env.UNTAGGEDBEATFOLDER)
+        path.startsWith(env.TAGGED_AUDIO_FOLDER) ||
+        path.startsWith(env.UNTAGGED_AUDIO_FOLDER)
     );
     const licensePaths = paths.filter(
       (path) =>
-        path.startsWith(env.BASICLICENSEFOLDER) ||
-        path.startsWith(env.PREMIUMLICENSEFOLDER)
+        path.startsWith(env.BASIC_LICENSE_FOLDER) ||
+        path.startsWith(env.PREMIUM_LICENSE_FOLDER)
     );
     const coverImagePaths = paths.filter((path) =>
       path.startsWith(env.TRACK_COVER_IMAGE_FOLDER)
@@ -214,7 +214,7 @@ class Supabase {
       requests.push(this.deleteFiles(env.AUDIO_FILES_BUCKET, audioPaths));
     }
     if (licensePaths?.length > 0) {
-      requests.push(this.deleteFiles(env.LICENSE_FILES_BUCKET, licensePaths));
+      requests.push(this.deleteFiles(env.DOCUMENT_FILES_BUCKET, licensePaths));
     }
     if (coverImagePaths?.length > 0) {
       requests.push(this.deleteFiles(env.IMAGE_FILES_BUCKET, coverImagePaths));

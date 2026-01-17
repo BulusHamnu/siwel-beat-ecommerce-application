@@ -42,14 +42,14 @@ export const getGoogleOauthUrl = async (
 
     const redirectUri = setGoogleRedirect(path.split("/")[3]);
     const authparams = new URLSearchParams({
-      client_id: env.CLIENT_ID,
+      client_id: env.GOOGLE_CLIENT_ID,
       redirect_uri: redirectUri,
       response_type: "code",
       scope: "openid profile email",
       prompt: "consent",
     });
 
-    const url = `${env.GOOGLEOAUTH2URL}?${authparams.toString()}`;
+    const url = `${env.GOOGLE_OAUTH2_URL}?${authparams.toString()}`;
     logger.info(`Google Oauth prompt url requested for: ${path.split("/")[3]}`);
 
     const response: ApiResponse<{ url: string }> = {
@@ -77,7 +77,7 @@ async function createUserAndSignToken(userDetail: userGooglePayload) {
       isVerified: newUser.isVerified,
       role: newUser.role,
     },
-    env.SECRET_KEY,
+    env.TOKEN_SECRET,
     { expiresIn: "7d" }
   );
 
@@ -149,7 +149,7 @@ export const googleLoginFallback = async (
         isVerified: user.isVerified,
         role: user.role,
       },
-      env.SECRET_KEY,
+      env.TOKEN_SECRET,
       { expiresIn: "7d" }
     );
 

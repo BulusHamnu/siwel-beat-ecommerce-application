@@ -108,7 +108,7 @@ const trackSchema = new mongoose.Schema<TrackInterface>(
         required: true,
       },
     },
-    relatedTrack: [String],
+    relatedTrack: [{ type: mongoose.Types.ObjectId, ref: "Track" }],
   },
   { timestamps: true }
 );

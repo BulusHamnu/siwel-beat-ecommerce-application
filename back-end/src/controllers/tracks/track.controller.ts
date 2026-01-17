@@ -124,7 +124,12 @@ export const getTrack = async (
   try {
     const trackId = validateTrackidParam(req.params.id);
 
-    const track: TrackInterface | null = await Track.findOne({ _id: trackId });
+    const track: TrackInterface | null = await Track.findOne({
+      _id: trackId,
+    }).populate(
+      "relatedTrack",
+      "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre"
+    );
     if (!track) throw new AppError("Track not found.", 404, true);
 
     const response: ApiResponse<TrackInterface> = {
@@ -254,7 +259,7 @@ async function retriveTrackFile(type: string, filePath: string): Promise<any> {
       bucket = env.AUDIO_FILES_BUCKET;
       break;
     case "license":
-      bucket = env.LICENSE_FILES_BUCKET;
+      bucket = env.DOCUMENT_FILES_BUCKET;
       break;
   }
 

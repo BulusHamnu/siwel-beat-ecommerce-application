@@ -115,7 +115,7 @@ export const loginUser = async (
       isVerified: user.isVerified,
       role: user.role,
     },
-    env.SECRET_KEY,
+    env.TOKEN_SECRET,
     { expiresIn: "7d" }
   );
 

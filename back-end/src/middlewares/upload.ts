@@ -8,8 +8,8 @@ import AppError from "../errors/appError.js";
 type multerFiles = { [fieldname: string]: Express.Multer.File[] };
 export interface multerTrackFiles extends multerFiles {
   coverImage: Express.Multer.File[];
-  taggedBeat: Express.Multer.File[];
-  untaggedBeat: Express.Multer.File[];
+  taggedAudio: Express.Multer.File[];
+  untaggedAudio: Express.Multer.File[];
   basicLicense: Express.Multer.File[];
   premiumLicense: Express.Multer.File[];
 }
@@ -77,7 +77,7 @@ const fileFilter = async (
     }
   }
   // Check audio files
-  if (file.fieldname === "untaggedBeat" || file.fieldname === "taggedBeat") {
+  if (file.fieldname === "untaggedAudio" || file.fieldname === "taggedAudio") {
     const allowedAudioMimeTypes = ["audio/mpeg", "audio/wav", "audio/midi"];
     if (allowedAudioMimeTypes.includes(fileType)) {
       cb(null, true);
@@ -121,8 +121,8 @@ const upload = multer({
   { name: "coverImage", maxCount: 1 },
   { name: "basicLicense", maxCount: 1 },
   { name: "premiumLicense", maxCount: 1 },
-  { name: "untaggedBeat", maxCount: 1 },
-  { name: "taggedBeat", maxCount: 1 },
+  { name: "untaggedAudio", maxCount: 1 },
+  { name: "taggedAudio", maxCount: 1 },
 ]);
 
 /* Profile picture multer middlware */

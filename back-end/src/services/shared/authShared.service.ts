@@ -12,7 +12,7 @@ export const createHashpasswordAndEmailVerification = async (
   password: string,
   codeExpirationTime: number
 ): Promise<hashpasswordAndEmailVerificationInterface> => {
-  const hashPassword: string = await bcrypt.hash(password, env.HASHSALTNUMBER);
+  const hashPassword: string = await bcrypt.hash(password, env.HASH_SALT_NUMBER);
   const verificationCode: number | string = generateRandCode(6);
 
   const emailVerification = {

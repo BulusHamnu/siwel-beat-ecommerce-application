@@ -8,7 +8,7 @@ import {
   type Credentials,
 } from "google-auth-library";
 ("google-auth-library");
-const oauth = new OAuth2Client(env.CLIENT_ID);
+const oauth = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 import { generateRandCode } from "../utils/helpers.js";
 import { setGoogleRedirect } from "../controllers/auths/google-auth.controller.js";
 import logger from "../utils/logger.js";
@@ -39,8 +39,8 @@ async function retriveGoogleCredentials(
     googleCallbackUrl,
     qs.stringify({
       code,
-      client_id: env.CLIENT_ID,
-      client_secret: env.CLIENT_SECRET,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
       grant_type: "authorization_code",
       redirect_uri: redirectUri,
     }),
@@ -62,7 +62,7 @@ const retriveGoogleUserPayload = async (
 
   const ticket = await oauth.verifyIdToken({
     idToken: credentials.id_token || "",
-    audience: env.CLIENT_ID,
+    audience: env.GOOGLE_CLIENT_ID,
   });
   const payload = ticket.getPayload();
 

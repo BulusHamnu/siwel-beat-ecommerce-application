@@ -15,7 +15,7 @@ const withAuth = async (
     const token: string = req.cookies.token;
 
     if (!token) throw new AppError("Missing authorization token", 401, true);
-    const user = jwt.verify(token, env.SECRET_KEY) as userPayload;
+    const user = jwt.verify(token, env.TOKEN_SECRET) as userPayload;
 
     req.user = user;
 

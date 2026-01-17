@@ -7,6 +7,7 @@ import AppError from "../errors/appError.js";
 import supabase from "../services/supabase.js";
 import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js";
 import * as userValidator from "../utils/validators/user.validator.js";
+import env from "../configs/env.js";
 
 /* Get user profile controller */
 export const getProfile = async (
@@ -77,16 +78,15 @@ export const updateProfilePicture = async (
   let pictureUrl: string = "";
 
   try {
-    const image = req.file;
     const userId = req.user!.id;
-
+    const image = req.file;
     if (!image) throw new AppError("Please provide an image.", 400, true);
 
     // upload picture
     pictureUrl = await supabase.uploadFile(
-      "images",
+      env.IMAGE_FILES_BUCKET,
       image.originalname,
-      "pictures/",
+      env.USER_PICTURE_FOLDER,
       image.buffer
     );
 
@@ -97,7 +97,6 @@ export const updateProfilePicture = async (
       message: "Profile picture was uploaded successful.",
       data: { picture },
     };
-
     res.status(200).json(response);
   } catch (error) {
     await supabase.deleteFiles("images", [pictureUrl]);
