@@ -37,7 +37,7 @@ export interface UserInterface extends Document {
   // methods
   comparePassword(password: string): Promise<boolean>;
   removeUnwantedField<T>(): T;
-  signToken(user: UserInterface, type: string, expiresIn: string): string;
+  signToken(type: string, expiresIn: string): string;
 }
 
 /* User schema */
@@ -124,17 +124,17 @@ userSchema.methods.removeUnwantedField = function <
 
 /* token signing function */
 userSchema.methods.signToken = function (
-  user: UserInterface,
+  this: UserInterface,
   type: string,
   expiresIn: any = "24h"
 ): string {
   const refreshToken: string = jwt.sign(
     {
-      id: user._id,
-      email: user.email,
-      isVerified: user.isVerified,
-      role: user.role,
-      isActive: user.isActive,
+      id: this._id,
+      email: this.email,
+      isVerified: this.isVerified,
+      role: this.role,
+      isActive: this.isActive,
       type,
     },
     env.REFRESH_TOKEN_SECRET,

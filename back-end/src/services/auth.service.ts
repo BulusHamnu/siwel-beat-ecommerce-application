@@ -107,8 +107,8 @@ export const loginUser = async (
   user: UserLoginSnaphot;
 }> => {
   const user = await getUserAndValidatePassword(email, password);
-  const accessToken = user.signToken(user, "accessToken", "24h");
-  const refreshToken = user.signToken(user, "refreshToken", "7d");
+  const accessToken = user.signToken("accessToken", "24h");
+  const refreshToken = user.signToken("refreshToken", "7d");
 
   const session: Session = {
     refreshToken,
@@ -293,7 +293,7 @@ export const refreshToken = async (refreshToken: string) => {
   if (expiredAt < currentTime)
     throw new AppError("Expired refresh token, Unauthorized.", 401, true);
 
-  const accessToken = user.signToken(user, "accessToken", "24h");
+  const accessToken = user.signToken("accessToken", "24h");
   session.lastUsed = new Date();
   await user.save();
 
