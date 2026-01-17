@@ -1,15 +1,12 @@
 import User from "../models/user.schema.js";
 import type { CreateUserBody } from "../controllers/userTypes.js";
-import type { UserInterface } from "../models/user.schema.js";
+import type { Session, UserInterface } from "../models/user.schema.js";
 import AppError from "../errors/appError.js";
 import { createHashpasswordAndEmailVerification } from "./shared/authShared.service.js";
 import Profile from "../models/profile.schema.js";
 import { generateRandCode } from "../utils/helpers.js";
 import sendEmail from "./sendEmail.js";
 import Template from "../utils/emailTemplate.js";
-import jwt from "jsonwebtoken";
-import env from "../configs/env.js";
-import { type ObjectId } from "mongoose";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
@@ -73,16 +70,6 @@ export const createNewUser = async ({
 };
 
 /* Login user */
-export interface LoginReturnType {
-  token: string;
-  user: {
-    id: string | ObjectId;
-    email: string;
-    isVerified: boolean;
-    role: string;
-  };
-}
-
 async function getUserAndValidatePassword(
   email: string,
   password: string
@@ -102,31 +89,47 @@ async function getUserAndValidatePassword(
   return user;
 }
 
+export interface UserLoginSnaphot {
+  id: string;
+  email: string;
+  isVerified: boolean;
+  role: string;
+  isActive: boolean;
+}
+
 export const loginUser = async (
   password: string,
-  email: string
-): Promise<LoginReturnType> => {
+  email: string,
+  deviceInfo: string
+): Promise<{
+  accessToken: string;
+  refreshToken: string;
+  user: UserLoginSnaphot;
+}> => {
   const user = await getUserAndValidatePassword(email, password);
+  const accessToken = user.signToken(user, "accessToken", "24h");
+  const refreshToken = user.signToken(user, "refreshToken", "7d");
 
-  const token: string = jwt.sign(
-    {
-      id: user._id,
-      email: user.email,
-      isVerified: user.isVerified,
-      role: user.role,
-    },
-    env.TOKEN_SECRET,
-    { expiresIn: "7d" }
-  );
+  const session: Session = {
+    refreshToken,
+    expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    lastUsed: new Date(),
+    deviceInfo,
+  };
+
+  user.sessions.push(session);
+  await user.save();
 
   return {
     user: {
-      id: user._id as ObjectId,
+      id: user._id as string,
       email: user.email,
       isVerified: user.isVerified,
       role: user.role,
+      isActive: user.isActive,
     },
-    token,
+    accessToken,
+    refreshToken,
   };
 };
 
@@ -270,4 +273,29 @@ export const verifyResetCode = async (
   await user.save();
 
   return { resetToken };
+};
+
+/* Refresh token */
+export const refreshToken = async (refreshToken: string) => {
+  const user: UserInterface | null = await User.findOne({
+    "sessions.refreshToken": refreshToken,
+  });
+  if (!user) throw new AppError("Unauthorized.", 401, true);
+
+  const session = user.sessions.find(
+    (session) => session.refreshToken === refreshToken
+  );
+  if (!session) throw new AppError("Unauthorized.", 401, true);
+
+  const currentTime = Date.now();
+  const expiredAt = new Date(session.expiredAt).getTime();
+
+  if (expiredAt < currentTime)
+    throw new AppError("Expired refresh token, Unauthorized.", 401, true);
+
+  const accessToken = user.signToken(user, "accessToken", "24h");
+  session.lastUsed = new Date();
+  await user.save();
+
+  return accessToken;
 };

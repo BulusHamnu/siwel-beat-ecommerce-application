@@ -12,13 +12,16 @@ const withAuth = async (
   next: NextFunction
 ): Promise<any> => {
   try {
-    const token: string = req.cookies.token;
+    const accessToken: string | undefined =
+      req.headers["authorization"]?.split(" ")[1];
+    if (!accessToken)
+      throw new AppError("Missing authorization token", 401, true);
 
-    if (!token) throw new AppError("Missing authorization token", 401, true);
-    const user = jwt.verify(token, env.TOKEN_SECRET) as userPayload;
+    const payload = jwt.verify(accessToken, env.TOKEN_SECRET) as userPayload;
+    if (payload.type !== "accessToken")
+      throw new AppError("Invalid token, Unauthorized.", 401, true);
 
-    req.user = user;
-
+    req.user = payload;
     next();
   } catch (error) {
     // check if error is from json-web-token

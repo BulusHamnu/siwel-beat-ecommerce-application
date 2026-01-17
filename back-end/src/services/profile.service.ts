@@ -1,4 +1,7 @@
-import User, { type UserInterface } from "../models/user.schema.js";
+import User, {
+  type Session,
+  type UserInterface,
+} from "../models/user.schema.js";
 import Profile, { type ProfileInterface } from "../models/profile.schema.js";
 import type { UserProfile } from "../controllers/userTypes.js";
 import AppError from "../errors/appError.js";
@@ -15,12 +18,20 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
   });
   const profileObj = profile?.toObject();
 
+  const sessions = user.sessions.map((session: Session) => {
+    return {
+      deviceInfo: session.deviceInfo,
+      lastSessionRefreshAt: session.lastUsed,
+    };
+  });
+
   return {
     username: user.username,
     isVerified: user.isVerified,
     email: user.email,
     role: user.role,
     isActive: user.isActive,
+    sessions,
     ...profileObj,
   };
 };

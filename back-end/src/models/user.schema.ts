@@ -1,6 +1,14 @@
 import { Schema, model, Document } from "mongoose";
 import bcrypt from "bcrypt";
+import jwt, { type SignOptions } from "jsonwebtoken";
+import env from "../configs/env.js";
 
+export interface Session {
+  refreshToken: string;
+  expiredAt: Date;
+  deviceInfo: string;
+  lastUsed: Date;
+}
 /* User type */
 export interface UserInterface extends Document {
   username: string;
@@ -24,10 +32,12 @@ export interface UserInterface extends Document {
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
+  sessions: Session[];
 
   // methods
   comparePassword(password: string): Promise<boolean>;
   removeUnwantedField<T>(): T;
+  signToken(user: UserInterface, type: string, expiresIn: string): string;
 }
 
 /* User schema */
@@ -80,6 +90,14 @@ const userSchema = new Schema<UserInterface>(
       type: Boolean,
       default: true,
     },
+    sessions: [
+      {
+        refreshToken: String,
+        expiredAt: Date,
+        deviceInfo: String,
+        lastUsed: Date,
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -102,6 +120,28 @@ userSchema.methods.removeUnwantedField = function <
   delete obj.password;
   delete obj.google;
   return obj;
+};
+
+/* token signing function */
+userSchema.methods.signToken = function (
+  user: UserInterface,
+  type: string,
+  expiresIn: any = "24h"
+): string {
+  const refreshToken: string = jwt.sign(
+    {
+      id: user._id,
+      email: user.email,
+      isVerified: user.isVerified,
+      role: user.role,
+      isActive: user.isActive,
+      type,
+    },
+    env.REFRESH_TOKEN_SECRET,
+    { expiresIn }
+  );
+
+  return refreshToken;
 };
 
 /* Indexes */

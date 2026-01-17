@@ -2,13 +2,14 @@ import type { Response, Request, NextFunction } from "express";
 import logger from "../../utils/logger.js";
 import type { CreateUserBody } from "../userTypes.js";
 import * as authService from "../../services/auth.service.js";
-import { type LoginReturnType } from "../../services/auth.service.js";
 import type { ApiResponse } from "../responseInterface.js";
 import env from "../../configs/env.js";
 import * as authValidator from "../../utils/validators/auth.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
+import AppError from "../../errors/appError.js";
+import User from "../../models/user.schema.js";
 
-/* Sign up new user controller */
+/* Sign up new user */
 export const signUp = async (
   req: Request<{}, {}, CreateUserBody, {}>,
   res: Response,
@@ -34,11 +35,17 @@ export const signUp = async (
   }
 };
 
-/* Login controller */
+/* Login  */
 interface loginBody {
   email: string;
   password: string;
 }
+
+interface LoginReturnType {
+  accessToken: string;
+  user: authService.UserLoginSnaphot;
+}
+
 export const logIn = async (
   req: Request<{}, ApiResponse<LoginReturnType>, loginBody, {}>,
   res: Response<ApiResponse<LoginReturnType>>,
@@ -50,16 +57,18 @@ export const logIn = async (
       authValidator.loginBodySchema
     );
 
-    const result = await authService.loginUser(
+    const deviceInfo = req.headers["user-agent"] || "Unidentified";
+    const { accessToken, user, refreshToken } = await authService.loginUser(
       password.normalize("NFC"),
-      email
+      email,
+      deviceInfo
     );
-    res.cookie("token", result.token, env.LOGIN_COOKIE_OPTS);
 
+    res.cookie("refreshToken", refreshToken, env.LOGIN_COOKIE_OPTS);
     const response: ApiResponse<LoginReturnType> = {
       status: true,
       message: "Login successully!",
-      data: result,
+      data: { user, accessToken },
     };
     res.status(200).json(response);
   } catch (error) {
@@ -67,7 +76,30 @@ export const logIn = async (
   }
 };
 
-/* Verify email controller */
+/* Refresh token */
+export const refreshToken = async (
+  req: Request<{}, ApiResponse<{ accessToken: string }>, {}, {}>,
+  res: Response<ApiResponse<{ accessToken: string }>>,
+  next: NextFunction
+) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) throw new AppError("Missing refresh token.", 401, true);
+
+    const accessToken = await authService.refreshToken(refreshToken);
+
+    const response: ApiResponse<{ accessToken: string }> = {
+      status: true,
+      message: "Access token",
+      data: { accessToken },
+    };
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* Verify email  */
 interface emailVerificationBody {
   email: string;
   code: string;
@@ -96,7 +128,7 @@ export const verifyEmail = async (
   }
 };
 
-/* Resend verification email controller */
+/* Resend verification email  */
 export const resendVeficationEmail = async (
   req: Request<{}, { status: boolean; message: string }, {}, {}>,
   res: Response<{ status: boolean; message: string }>,
@@ -118,7 +150,7 @@ export const resendVeficationEmail = async (
   }
 };
 
-/* Forget password controller */
+/* Forget password  */
 export const forgetPassword = async (
   req: Request<{}, { status: false; message: string }, { email: string }, {}>,
   res: Response<{ status: boolean; message: string }>,
@@ -144,7 +176,7 @@ export const forgetPassword = async (
   }
 };
 
-/* Verify password reset code controller */
+/* Verify password reset code  */
 export const verifyResetCode = async (
   req: Request<
     {},
@@ -173,12 +205,13 @@ export const verifyResetCode = async (
   }
 };
 
-/* Reset password controller */
+/* Reset password  */
 interface resetPasswordBody {
   email: string;
   password: string;
   resetToken: string;
 }
+
 export const resetpassword = async (
   req: Request<{}, ApiResponse<void>, resetPasswordBody, {}>,
   res: Response<ApiResponse<void>>,
@@ -208,12 +241,19 @@ export const logout = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    res.cookie("token", "", env.LOGIN_COOKIE_OPTS);
+    const refreshToken = req.cookies.refreshToken;
 
+    await User.updateOne(
+      { "sessions.refreshToken": refreshToken },
+      { $pull: { sessions: { refreshToken } } }
+    );
+
+    res.cookie("refreshToken", "", env.LOGIN_COOKIE_OPTS);
     const response: ApiResponse<void> = {
       status: true,
-      message: "Logout successully!",
+      message: "Logout successully.",
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);

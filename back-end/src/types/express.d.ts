@@ -4,6 +4,8 @@ export interface Payload {
   isVerified: boolean;
   email: string;
   role: string;
+  isActive: string;
+  type: string;
 }
 
 declare global {
