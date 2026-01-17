@@ -29,7 +29,7 @@ router.patch(
   uploadPicture,
   withAuth,
   allowRole("user"),
-  profileController.updateProfilePicture
+  profileController.updateUserAvatar
 );
 
 /* Orders routes */

@@ -47,7 +47,7 @@ interface Env {
   PREMIUM_LICENSE_FOLDER: string;
   HASH_SALT_NUMBER: number;
   TRACK_COVER_IMAGE_FOLDER: string;
-  USER_PICTURE_FOLDER: string;
+  USER_AVATAR_FOLDER: string;
 }
 
 const env: Env = {
@@ -94,7 +94,7 @@ const env: Env = {
   HASH_SALT_NUMBER: 10,
   TRACK_COVER_IMAGE_FOLDER:
     process.env.TRACK_COVER_IMAGE_FOLDER || "coverImages/",
-  USER_PICTURE_FOLDER: process.env.USER_PICTURE_FOLDER || "userPictures/",
+  USER_AVATAR_FOLDER: process.env.USER_AVATAR_FOLDER || "userAvatars/",
 };
 
 export default env;

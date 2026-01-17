@@ -8,7 +8,7 @@ export interface ProfileInterface extends Document {
   lastName: string;
   gender: string;
   bio: string;
-  picture: string;
+  avatar: string;
   createdAt: Date;
   updatedAt: Date;
   lemonSqueezyId: string;
@@ -51,7 +51,7 @@ const profileSchema = new Schema<ProfileInterface>(
       type: String,
       default: "",
     },
-    picture: {
+    avatar: {
       type: String,
       default: "",
     },

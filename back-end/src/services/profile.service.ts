@@ -1,9 +1,9 @@
-import User, { type UserInterface } from "../../models/user.schema.js";
-import Profile, { type ProfileInterface } from "../../models/profile.schema.js";
-import type { UserProfile } from "../../controllers/userTypes.js";
-import AppError from "../../errors/appError.js";
-import supabase from "../supabase.js";
-import env from "../../configs/env.js";
+import User, { type UserInterface } from "../models/user.schema.js";
+import Profile, { type ProfileInterface } from "../models/profile.schema.js";
+import type { UserProfile } from "../controllers/userTypes.js";
+import AppError from "../errors/appError.js";
+import supabase from "./supabase.js";
+import env from "../configs/env.js";
 
 /* Get profile */
 export const getProfile = async (id: string): Promise<UserProfile> => {
@@ -99,19 +99,20 @@ export const updateProfile = async (
 };
 
 /* Update profile picture */
-export const updateProfilePicture = async (
+export const updateUserAvatar = async (
   userId: string,
   pictureUrl: string
 ): Promise<string> => {
   const profile: ProfileInterface | null = await Profile.findOne({ userId });
   const imgBucket = env.IMAGE_FILES_BUCKET;
-  const oldPicturePath = profile?.picture.split(`${imgBucket}/`)[1] || "";
+  const oldPicturePath = profile?.avatar.split(`${imgBucket}/`)[1] || "";
 
   const publicUrl = await supabase.getPublicUrl(imgBucket, pictureUrl); // saved in db so it can be access anywhere
+
   const updatedProfile: ProfileInterface | null =
     await Profile.findOneAndUpdate(
       { userId },
-      { $set: { picture: publicUrl } },
+      { $set: { avatar: publicUrl } },
       { new: true }
     );
 

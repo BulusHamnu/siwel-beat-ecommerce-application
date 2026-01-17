@@ -26,7 +26,7 @@ export interface UserProfile {
   username: string;
   role: string;
   isActive: string;
-  profilePic: string;
+  avatar: string;
   createdAt: Date;
   updatedAt: Date;
   notification: {

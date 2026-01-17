@@ -27,7 +27,7 @@ router.patch(
   uploadPicture,
   withAuth,
   allowRole("admin"),
-  profileController.updateProfilePicture
+  profileController.updateUserAvatar
 );
 
 /* Orders routes */

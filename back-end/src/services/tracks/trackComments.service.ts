@@ -5,6 +5,7 @@ import Track from "../../models/track.schema.js";
 import AppError from "../../errors/appError.js";
 import Profile from "../../models/profile.schema.js";
 import { Types } from "mongoose";
+import type { UserProfile } from "../../controllers/userTypes.js";
 
 /* Post a comment */
 export interface parentComment extends Omit<CommentInterface, "userId"> {
@@ -73,8 +74,8 @@ function addProfilePictures(
   profiles: Map<string, any>
 ): void {
   // add user picture so it will be display with user details
-  const profile = profiles.get(comment.userId._id.toString());
-  comment.userId.picture = profile?.picture || "";
+  const profile: UserProfile = profiles.get(comment.userId._id.toString());
+  comment.userId.picture = profile?.avatar || "";
   if (comment.replies)
     comment.replies.forEach((reply) => {
       addProfilePictures(reply, profiles);

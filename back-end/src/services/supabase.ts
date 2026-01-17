@@ -31,9 +31,10 @@ class Supabase {
 
   // methods
   getFileName = (originalname: string): string => {
-    const name_g = originalname.replace(/[^\w.-]/g, "-");
-    let name = Date.now() + "-" + name_g;
-    return name;
+    let newFileName = originalname.split(".")[0]!;
+    newFileName = newFileName.replace(/[^\w.-]/g, "-");
+    newFileName = Date.now() + "-" + newFileName;
+    return newFileName;
   };
 
   // upload file to supabase storage

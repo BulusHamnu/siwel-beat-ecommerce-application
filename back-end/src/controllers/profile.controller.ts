@@ -1,13 +1,14 @@
 import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
 import type { UserProfile } from "./userTypes.js";
-import { type ProfileUpdatesInput } from "../services/shared/user.service.js";
-import * as userService from "../services/shared/user.service.js";
+import { type ProfileUpdatesInput } from "../services/profile.service.js";
+import * as userService from "../services/profile.service.js";
 import AppError from "../errors/appError.js";
 import supabase from "../services/supabase.js";
 import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js";
 import * as userValidator from "../utils/validators/user.validator.js";
 import env from "../configs/env.js";
+import { checkAndResizeImgRatio } from "../utils/helpers.js";
 
 /* Get user profile controller */
 export const getProfile = async (
@@ -70,9 +71,9 @@ export const updateProfile = async (
 };
 
 /* Post profile picture */
-export const updateProfilePicture = async (
-  req: Request<{}, ApiResponse<{ picture: string }>, {}, {}>,
-  res: Response<ApiResponse<{ picture: string }>>,
+export const updateUserAvatar = async (
+  req: Request<{}, ApiResponse<{ avatar: string }>, {}, {}>,
+  res: Response<ApiResponse<{ avatar: string }>>,
   next: NextFunction
 ): Promise<void> => {
   let pictureUrl: string = "";
@@ -80,26 +81,28 @@ export const updateProfilePicture = async (
   try {
     const userId = req.user!.id;
     const image = req.file;
+
     if (!image) throw new AppError("Please provide an image.", 400, true);
+    const imageBuffer = await checkAndResizeImgRatio(image.buffer, "avatar");
 
     // upload picture
     pictureUrl = await supabase.uploadFile(
       env.IMAGE_FILES_BUCKET,
       image.originalname,
-      env.USER_PICTURE_FOLDER,
-      image.buffer
+      env.USER_AVATAR_FOLDER,
+      imageBuffer
     );
 
-    const picture = await userService.updateProfilePicture(userId!, pictureUrl);
+    const avatar = await userService.updateUserAvatar(userId!, pictureUrl);
 
-    const response: ApiResponse<{ picture: string }> = {
+    const response: ApiResponse<{ avatar: string }> = {
       status: true,
       message: "Profile picture was uploaded successful.",
-      data: { picture },
+      data: { avatar },
     };
     res.status(200).json(response);
   } catch (error) {
-    await supabase.deleteFiles("images", [pictureUrl]);
+    if (pictureUrl) await supabase.deleteFiles("images", [pictureUrl]);
     next(error);
   }
 };
