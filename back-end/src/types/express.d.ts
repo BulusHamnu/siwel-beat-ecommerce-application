@@ -4,7 +4,7 @@ export interface Payload {
   isVerified: boolean;
   email: string;
   role: string;
-  isActive: string;
+  isActive: boolean;
   type: string;
 }
 

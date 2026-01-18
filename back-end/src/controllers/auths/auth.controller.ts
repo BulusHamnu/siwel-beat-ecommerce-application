@@ -248,7 +248,7 @@ export const logout = async (
       { $pull: { sessions: { refreshToken } } }
     );
 
-    res.cookie("refreshToken", "", env.LOGIN_COOKIE_OPTS);
+    res.clearCookie("refreshToken", env.LOGIN_COOKIE_OPTS);
     const response: ApiResponse<void> = {
       status: true,
       message: "Logout successully.",

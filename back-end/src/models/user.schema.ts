@@ -128,6 +128,9 @@ userSchema.methods.signToken = function (
   type: string,
   expiresIn: any = "24h"
 ): string {
+  const secret =
+    type === "accessToken" ? env.TOKEN_SECRET : env.REFRESH_TOKEN_SECRET;
+
   const refreshToken: string = jwt.sign(
     {
       id: this._id,
@@ -137,7 +140,7 @@ userSchema.methods.signToken = function (
       isActive: this.isActive,
       type,
     },
-    env.REFRESH_TOKEN_SECRET,
+    secret,
     { expiresIn }
   );
 
