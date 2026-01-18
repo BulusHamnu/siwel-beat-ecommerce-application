@@ -9,78 +9,34 @@ import { uploadPicture } from "../middlewares/upload.js";
 
 const router = Router();
 
-/* Admin profile */
-router.get(
-  "/admins/me",
-  withAuth,
-  allowRole("admin"),
-  profileController.getProfile
-);
-router.patch(
-  "/admins/me",
-  withAuth,
-  allowRole("admin"),
-  profileController.updateProfile
-);
-router.patch(
-  "/admins/me/picture",
-  uploadPicture,
-  withAuth,
-  allowRole("admin"),
-  profileController.updateUserAvatar
-);
+router.use(withAuth);
+router.use(allowRole("admin"));
 
-/* Orders routes */
-router.get(
-  "/admins/orders",
-  withAuth,
-  allowRole("admin"),
-  ordersController.getAllOrders
-);
-router.get(
-  "/admins/orders/:id",
-  withAuth,
-  allowRole("admin"),
-  ordersController.getOrder
-);
+/* Admin profile */
+router.get("/me", profileController.getProfile);
+router.patch("/me", profileController.updateProfile);
+router.patch("/me/picture", uploadPicture, profileController.updateUserAvatar);
 
 /* Dashboard routes */
-router.get("/admins/dashboard", withAuth, allowRole("admin"), getDashboard);
+router.get("/dashboard", getDashboard);
 
 /* Notifications routes */
-router.get(
-  "/admins/notifications",
-  withAuth,
-  allowRole("admin"),
-  notificationController.getAllNotifications
-);
-
-router.get(
-  "/admins/notifications/:id",
-  withAuth,
-  allowRole("admin"),
-  notificationController.getNotification
-);
+router.get("/notifications", notificationController.getAllNotifications);
+router.get("/notifications/:id", notificationController.getNotification);
 
 router.patch(
-  "/admins/notifications/:id/read",
-  withAuth,
-  allowRole("admin"),
+  "/notifications/:id/read",
+  notificationController.markNoticationAsRead
+);
+router.patch(
+  "/notifications/:id/unread",
   notificationController.markNoticationAsRead
 );
 
-router.patch(
-  "/admins/notifications/:id/unread",
-  withAuth,
-  allowRole("admin"),
-  notificationController.markNoticationAsRead
-);
+router.delete("/notifications/:id", notificationController.deleteNotification);
 
-router.delete(
-  "/admins/notifications/:id",
-  withAuth,
-  allowRole("admin"),
-  notificationController.deleteNotification
-);
+/* Orders routes */
+router.get("/orders", ordersController.getAllOrders);
+router.get("/orders/:id", ordersController.getOrder);
 
 export default router;

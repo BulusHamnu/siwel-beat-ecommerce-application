@@ -11,57 +11,26 @@ import notificationRoutes from "./userNotification.routes.js";
 
 const router = Router();
 
+router.use(withAuth);
+router.use(allowRole("user"));
+
 /* Profile */
-router.get(
-  "/users/me",
-  withAuth,
-  allowRole("user"),
-  profileController.getProfile
-);
-router.patch(
-  "/users/me",
-  withAuth,
-  allowRole("user"),
-  profileController.updateProfile
-);
-router.patch(
-  "/users/me/picture",
-  uploadPicture,
-  withAuth,
-  allowRole("user"),
-  profileController.updateUserAvatar
-);
+router.get("/me", profileController.getProfile);
+router.patch("/me", profileController.updateProfile);
+router.patch("/me/picture", uploadPicture, profileController.updateUserAvatar);
+
+router.use("/me", notificationRoutes);
+router.use("/me", favoritesRoutes);
 
 /* Orders routes */
-router.get(
-  "/users/me/orders",
-  withAuth,
-  allowRole("user"),
-  orderController.getAllOrders
-);
-router.get(
-  "/users/me/orders/:id",
-  withAuth,
-  allowRole("user"),
-  orderController.getOrder
-);
+router.get("/me/orders", orderController.getAllOrders);
+router.get("/me/orders/:id", orderController.getOrder);
 
 /* Purchases routes */
-router.get(
-  "/users/me/purchases",
-  withAuth,
-  allowRole("user"),
-  purchaseController.getAllPurchase
-);
-router.get(
-  "/users/me/purchases/:id",
-  withAuth,
-  allowRole("user"),
-  purchaseController.getPurchase
-);
+router.get("/me/purchases", purchaseController.getAllPurchase);
+router.get("/me/purchases/:id", purchaseController.getPurchase);
 
-router.use("/users/me", favoritesRoutes);
-router.use("/users/me", cartRoutes);
-router.use("/users/me", notificationRoutes);
+/* Cart routes */
+router.use("/me", cartRoutes);
 
 export default router;

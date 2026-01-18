@@ -2,39 +2,21 @@ import { Router } from "express";
 import withAuth from "../../middlewares/withAuth.js";
 import allowRole from "../../middlewares/allowRole.js";
 import * as commentController from "../../controllers/tracks/trackComments.controller.js";
+import requiredVerifiedEmail from "../../middlewares/requiredVerifiedEmail.js";
 
 const router = Router();
 
 // Track comments routes
-router.post(
-  "/:id/comments",
-  withAuth,
-  allowRole("user", "admin"),
-  commentController.postComment
-);
-router.get(
-  "/:id/comments/:commentId",
-  withAuth,
-  allowRole("user", "admin"),
-  commentController.getComment
-);
-router.get(
-  "/:id/comments",
-  withAuth,
-  allowRole("user", "admin"),
-  commentController.getAllComment
-);
-router.patch(
-  "/:id/comments/:commentId",
-  withAuth,
-  allowRole("user", "admin"),
-  commentController.updateComment
-);
-router.delete(
-  "/:id/comments/:commentId",
-  withAuth,
-  allowRole("user", "admin"),
-  commentController.deleteComment
-);
+router.get("/:id/comments/:commentId", commentController.getComment);
+router.get("/:id/comments", commentController.getAllComment);
+
+/* Only autheticated users can post, update and delete comment */
+router.use(withAuth);
+router.use(requiredVerifiedEmail);
+router.use(allowRole("user", "admin"));
+
+router.post("/:id/comments", commentController.postComment);
+router.patch("/:id/comments/:commentId", commentController.updateComment);
+router.delete("/:id/comments/:commentId", commentController.deleteComment);
 
 export default router;

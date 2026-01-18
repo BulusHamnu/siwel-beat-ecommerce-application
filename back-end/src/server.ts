@@ -9,7 +9,7 @@ import logger from "./utils/logger.js";
 import AppError from "./errors/appError.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import authRoutes from "./routes/auth.routes.js";
-import profileRoutes from "./routes/users/users.routes.js";
+import usersRoutes from "./routes/users/users.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import trackRoutes from "./routes/tracks/track.routes.js";
 import publicApis from "./routes/public.apis.routes.js";
@@ -46,13 +46,13 @@ app.get(
     }
   }
 );
-app.use("/api", publicApis);
-app.use("/api", authRoutes);
-app.use("/api", profileRoutes);
-app.use("/api", adminRoutes);
-app.use("/api", trackRoutes);
-app.use("/api", newsLetterRoutes);
-app.use("/api", checkoutRoutes);
+app.use("/api/v1/contact-me", publicApis);
+app.use("/api/v1/news-letter", newsLetterRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/tracks", trackRoutes);
+app.use("/api/v1/checkout", checkoutRoutes);
+app.use("/api/v1/users", usersRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 // error handler
 app.use(errorHandler);
