@@ -7,29 +7,20 @@ import retriveGoogleUserPayload, {
 } from "../../services/retriveGoogleIdToken.js";
 import User, { type UserInterface } from "../../models/user.schema.js";
 import { createNewUser } from "../../services/auth.service.js";
-import jwt from "jsonwebtoken";
 import AppError from "../../errors/appError.js";
+import Joi from "joi";
+import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 
-/* Get gogle Oauth2 url controller */
-export const setGoogleRedirect = (route: string = "register"): string => {
-  const loginRedirectUri = `${env.BACKEND_URL}/api/auth/google/login-fallback`;
-  const registerRedirectUri = `${env.BACKEND_URL}/api/auth/google/register-fallback`;
-
-  const r = route === "register" ? registerRedirectUri : loginRedirectUri;
-  return r;
-};
+/* Get google Oauth url */
+function validateQueryBody(data: { state: string }) {
+  const stateSchema = Joi.object({
+    state: Joi.string().required().valid("signup", "login"),
+  });
+  return validateAndSanitizeBody(data, stateSchema);
+}
 
 export const getGoogleOauthUrl = async (
-  req: Request<
-    {},
-    {
-      status: boolean;
-      message: string;
-      data?: { url: string };
-    },
-    {},
-    {}
-  >,
+  req: Request<{}, ApiResponse<{ url: string }>, {}, { state: string }>,
   res: Response<{
     status: boolean;
     message: string;
@@ -38,19 +29,18 @@ export const getGoogleOauthUrl = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const path = req.path;
-
-    const redirectUri = setGoogleRedirect(path.split("/")[3]);
+    const { state } = validateQueryBody(req.query);
     const authparams = new URLSearchParams({
       client_id: env.GOOGLE_CLIENT_ID,
-      redirect_uri: redirectUri,
+      redirect_uri: env.GOOGLE_REDIRECT_URL,
       response_type: "code",
       scope: "openid profile email",
       prompt: "consent",
+      state,
     });
 
     const url = `${env.GOOGLE_OAUTH2_URL}?${authparams.toString()}`;
-    logger.info(`Google Oauth prompt url requested for: ${path.split("/")[3]}`);
+    logger.info(`Google Oauth prompt url requested for: ${state}`);
 
     const response: ApiResponse<{ url: string }> = {
       status: true,
@@ -66,117 +56,69 @@ export const getGoogleOauthUrl = async (
 };
 
 /* Google Oauth2 sign up controller */
-async function createUserAndSignToken(userDetail: userGooglePayload) {
-  const newUser = await createNewUser(userDetail);
-  logger.info("User created successully.", { userId: newUser._id });
-
-  const token: string = jwt.sign(
-    {
-      id: newUser._id,
-      email: newUser.email,
-      isVerified: newUser.isVerified,
-      role: newUser.role,
-    },
-    env.TOKEN_SECRET,
-    { expiresIn: "7d" }
-  );
-
-  return { token };
+function validateCodeAndState(code: string, state: string) {
+  if (!code) throw new AppError("CONSENT_CANCELLED", 400, true);
+  if (!state) throw new AppError("MISSSING_STATE", 400, true);
+  if (state !== "login" && state !== "signup")
+    throw new AppError("INVALID_STATE", 400, true);
+  return;
 }
 
-export const googleSignupFallback = async (
-  req: Request<{}, {}, {}, { code: string }>,
+export const googleCallback = async (
+  req: Request<{}, {}, {}, { code: string; state: string }>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  let authFlow = "";
   try {
-    const code = req.query.code;
-    if (!code) throw new AppError("Consent cancelled.", 400, true);
+    const { code, state } = req.query;
+    validateCodeAndState(code, state);
+    authFlow = state;
 
     const verifiedUserPayload: userGooglePayload =
-      await retriveGoogleUserPayload(code, "register");
-    const { token } = await createUserAndSignToken(verifiedUserPayload);
+      await retriveGoogleUserPayload(code);
 
-    res.cookie("token", token, env.LOGIN_COOKIE_OPTS);
-    res.status(301).redirect(`${env.FRONTEND_URL}`);
+    let user: UserInterface | null = null;
+    if (state === "signup") {
+      user = await createNewUser({
+        ...verifiedUserPayload,
+        provider: "google",
+      });
+      logger.info("User created successully.", { userId: user._id });
+      //
+    } else {
+      user = await User.findOne({
+        email: verifiedUserPayload.email,
+      });
+
+      if (!user) throw new AppError("NOT_FOUND", 404, true);
+      if (user && user.provider !== "google")
+        throw new AppError("NOT_LINKED", 400, true);
+    }
+
+    const refreshToken = user.signToken("refreshToken", "7d");
+    res.cookie("refreshToken", refreshToken, env.LOGIN_COOKIE_OPTS);
+
+    res
+      .status(302)
+      .redirect(`${env.FRONTEND_URL}/oauth/callback?state=${state}`);
   } catch (error: any) {
-    logger.error(
-      "An error occur while user is signing up using google oauth2.",
-      error
-    );
+    logger.error("An error occur while in google oauth2 callback.", error);
 
     if (error.message.includes("User already exist.")) {
       return res
-        .status(301)
-        .redirect(`${env.FRONTEND_LOGIN_URL}?error=USER_EXIST`);
-    } else if (error.message.includes("Consent cancelled.")) {
-      return res
-        .status(301)
-        .redirect(`${env.FRONTEND_SIGNUP_URL}?error=CONSENT_CANCELLED`);
-    } else {
-      res
-        .status(301)
-        .redirect(`${env.FRONTEND_SIGNUP_URL}?error=UNEXPECTED_ERROR`);
+        .status(302)
+        .redirect(
+          `${env.FRONTEND_URL}/oauth/callback?state=${authFlow}&error=USER_EXIST`
+        );
     }
-  }
-};
 
-/* Google Oauth2 log in controller */
-export const googleLoginFallback = async (
-  req: Request<{}, {}, {}, { code: string }>,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const code = req.query.code;
-    if (!code) throw new AppError("Consent cancelled.", 400, true);
-
-    const verifiedUserPayload: userGooglePayload =
-      await retriveGoogleUserPayload(code, "login");
-
-    const user: UserInterface | null = await User.findOne({
-      email: verifiedUserPayload.email,
-    });
-    if (!user) throw new AppError("User not found.", 404, true);
-
-    if (user && user.provider !== "google")
-      throw new AppError("Account not linked.", 400, true);
-
-    const token: string = jwt.sign(
-      {
-        id: user._id,
-        email: user.email,
-        isVerified: user.isVerified,
-        role: user.role,
-      },
-      env.TOKEN_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.cookie("token", token, env.LOGIN_COOKIE_OPTS);
-    res.status(301).redirect(`${env.FRONTEND_URL}`);
-  } catch (error: any) {
-    logger.error(
-      "An error occur while user is signing in using google oauth2.",
-      error
-    );
-
-    if (error.message.includes("Consent cancelled.")) {
-      return res
-        .status(301)
-        .redirect(`${env.FRONTEND_LOGIN_URL}?error=CONSENT_CANCELLED`);
-    } else if (error.message.includes("User not found.")) {
-      return res
-        .status(301)
-        .redirect(`${env.FRONTEND_LOGIN_URL}?error=NOT_FOUND`);
-    } else if (error.message.includes("Account not linked.")) {
-      return res
-        .status(301)
-        .redirect(`${env.FRONTEND_SIGNUP_URL}?error=NOT_LINKED`);
-    } else {
-      res
-        .status(301)
-        .redirect(`${env.FRONTEND_LOGIN_URL}?error=UNEXPECTED_ERROR`);
-    }
+    return res
+      .status(302)
+      .redirect(
+        `${env.FRONTEND_URL}/oauth/callback?state=${authFlow}&error=${
+          error.message || "UNEXPECTED_ERROR"
+        }`
+      );
   }
 };

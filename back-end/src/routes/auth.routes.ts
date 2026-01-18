@@ -1,4 +1,4 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import withAuth from "../middlewares/withAuth.js";
 import * as authController from "../controllers/auths/auth.controller.js";
 import * as googleAuthController from "../controllers/auths/google-auth.controller.js";
@@ -20,15 +20,7 @@ router.post("/auth/reset-password", authController.resetpassword);
 router.post("/auth/log-out", authController.logout);
 
 /* Google 0auth2 endpoints */
-router.get("/auth/google/register", googleAuthController.getGoogleOauthUrl);
-router.get(
-  "/auth/google/register-fallback",
-  googleAuthController.googleSignupFallback
-);
-router.get("/auth/google/login", googleAuthController.getGoogleOauthUrl);
-router.get(
-  "/auth/google/login-fallback",
-  googleAuthController.googleLoginFallback
-);
+router.get("/oauth/google/callback", googleAuthController.googleCallback);
+router.get("/oauth/google", googleAuthController.getGoogleOauthUrl);
 
 export default router;

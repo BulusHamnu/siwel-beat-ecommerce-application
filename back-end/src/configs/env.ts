@@ -10,6 +10,7 @@ interface loginCookieOpts {
   maxAge: number;
   sameSite: boolean | "lax" | "strict" | "none" | undefined;
   httpOnly: true;
+  path: string;
 }
 
 // type definition
@@ -27,8 +28,6 @@ interface Env {
   GOOGLE_CLIENT_SECRET: string;
   BACKEND_URL: string;
   FRONTEND_URL: string;
-  FRONTEND_LOGIN_URL: string;
-  FRONTEND_SIGNUP_URL: string;
   LOGIN_COOKIE_OPTS: loginCookieOpts;
   CLOUDINARY_API_KEY: string;
   CLOUDINARY_NAME: string;
@@ -48,6 +47,7 @@ interface Env {
   HASH_SALT_NUMBER: number;
   TRACK_COVER_IMAGE_FOLDER: string;
   USER_AVATAR_FOLDER: string;
+  GOOGLE_REDIRECT_URL: string;
 }
 
 const env: Env = {
@@ -63,14 +63,13 @@ const env: Env = {
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
   BACKEND_URL: process.env.BACKEND_URL || "http://localhost:8080",
-  FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
-  FRONTEND_LOGIN_URL: process.env.FRONTEND_LOGIN_URL || "",
-  FRONTEND_SIGNUP_URL: process.env.FRONTEND_SIGNUP_URL || "",
+  FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:8080",
   LOGIN_COOKIE_OPTS: {
     secure: process.env.NODE_ENV === "production",
     maxAge: 7 * 24 * 60 * 60 * 1000,
     sameSite: "strict",
     httpOnly: true,
+    path: "/auth/refresh-token",
   },
   CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET || "",
   CLOUDINARY_NAME: process.env.CLOUDINARY_NAME || "",
@@ -95,6 +94,7 @@ const env: Env = {
   TRACK_COVER_IMAGE_FOLDER:
     process.env.TRACK_COVER_IMAGE_FOLDER || "coverImages/",
   USER_AVATAR_FOLDER: process.env.USER_AVATAR_FOLDER || "userAvatars/",
+  GOOGLE_REDIRECT_URL: process.env.GOOGLE_REDIRECT_URL || "",
 };
 
 export default env;

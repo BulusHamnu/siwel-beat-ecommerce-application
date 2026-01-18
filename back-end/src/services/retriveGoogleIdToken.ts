@@ -10,7 +10,6 @@ import {
 ("google-auth-library");
 const oauth = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 import { generateRandCode } from "../utils/helpers.js";
-import { setGoogleRedirect } from "../controllers/auths/google-auth.controller.js";
 import logger from "../utils/logger.js";
 
 export interface userGooglePayload
@@ -31,10 +30,8 @@ export interface userGooglePayload
 
 /* Verify google user */
 async function retriveGoogleCredentials(
-  code: string | number,
-  route: string
+  code: string | number
 ): Promise<{ credentials: Credentials }> {
-  const redirectUri = setGoogleRedirect(route);
   const response = await axios.post(
     googleCallbackUrl,
     qs.stringify({
@@ -42,7 +39,7 @@ async function retriveGoogleCredentials(
       client_id: env.GOOGLE_CLIENT_ID,
       client_secret: env.GOOGLE_CLIENT_SECRET,
       grant_type: "authorization_code",
-      redirect_uri: redirectUri,
+      redirect_uri: env.GOOGLE_REDIRECT_URL,
     }),
     {
       headers: {
@@ -55,10 +52,9 @@ async function retriveGoogleCredentials(
 }
 
 const retriveGoogleUserPayload = async (
-  code: string,
-  route: string
+  code: string
 ): Promise<userGooglePayload> => {
-  const { credentials } = await retriveGoogleCredentials(code, route);
+  const { credentials } = await retriveGoogleCredentials(code);
 
   const ticket = await oauth.verifyIdToken({
     idToken: credentials.id_token || "",

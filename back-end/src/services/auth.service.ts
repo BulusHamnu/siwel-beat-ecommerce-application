@@ -57,14 +57,15 @@ export const createNewUser = async ({
     profilePic: picture,
   });
 
-  await sendEmail(
-    user.email,
-    "Please verify you email.",
-    Template.emailVerificationTemplate(
-      user.username,
-      user.emailVerification.code
-    )
-  );
+  if (!isVerified)
+    await sendEmail(
+      user.email,
+      "Please verify you email.",
+      Template.emailVerificationTemplate(
+        user.username,
+        user.emailVerification.code
+      )
+    );
 
   return user;
 };
