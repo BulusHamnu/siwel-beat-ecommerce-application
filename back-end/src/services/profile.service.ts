@@ -17,6 +17,7 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
     userId: user._id,
   });
   const profileObj = profile?.toObject();
+  delete profileObj.avatarPath;
 
   const sessions = user.sessions.map((session: Session) => {
     return {
@@ -31,8 +32,8 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
     email: user.email,
     role: user.role,
     isActive: user.isActive,
-    sessions,
     ...profileObj,
+    sessions,
   };
 };
 
@@ -116,14 +117,14 @@ export const updateUserAvatar = async (
 ): Promise<string> => {
   const profile: ProfileInterface | null = await Profile.findOne({ userId });
   const imgBucket = env.IMAGE_FILES_BUCKET;
-  const oldPicturePath = profile?.avatar.split(`${imgBucket}/`)[1] || "";
+  const oldPicturePath = profile?.avatarPath;
 
   const publicUrl = await supabase.getPublicUrl(imgBucket, pictureUrl); // saved in db so it can be access anywhere
 
   const updatedProfile: ProfileInterface | null =
     await Profile.findOneAndUpdate(
       { userId },
-      { $set: { avatar: publicUrl } },
+      { $set: { avatar: publicUrl, avatarPath: pictureUrl } },
       { new: true }
     );
 
@@ -131,6 +132,7 @@ export const updateUserAvatar = async (
     throw new AppError("Unable to update profile picture.", 500, true);
 
   // delete old picture
+  console.log({ oldPicturePath, publicUrl });
   if (oldPicturePath) await supabase.deleteFiles("images", [oldPicturePath]);
   return publicUrl;
 };

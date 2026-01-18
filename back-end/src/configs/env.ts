@@ -69,7 +69,7 @@ const env: Env = {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     sameSite: "strict",
     httpOnly: true,
-    path: "/api/auth",
+    path: "/api/v1/auth",
   },
   CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET || "",
   CLOUDINARY_NAME: process.env.CLOUDINARY_NAME || "",

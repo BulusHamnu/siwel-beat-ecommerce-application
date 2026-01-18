@@ -31,7 +31,6 @@ export async function checkAndResizeImgRatio(
   type: string
 ): Promise<Buffer> {
   const { height, width } = imageSize(imageBuffer);
-  console.log({ height, width });
 
   // Resize banner
   if (type === "banner") {
