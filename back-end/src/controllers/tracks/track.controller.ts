@@ -88,7 +88,7 @@ interface response extends ApiResponse<TrackInterface[]> {
 }
 
 export const getTracks = async (
-  req: Request<{}, ApiResponse<TrackInterface[]>, {}, Queries>,
+  req: Request<{}, ApiResponse<TrackInterface[]>, {}>,
   res: Response<response>,
   next: NextFunction
 ): Promise<void> => {

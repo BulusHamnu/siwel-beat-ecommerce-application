@@ -43,12 +43,12 @@ export interface NewsletterQuery {
   token: string;
 }
 export const unsubscribeToNewletter = async (
-  req: Request<{}, ApiResponse<void>, {}, NewsletterQuery>,
+  req: Request<{}, ApiResponse<void>, {}, any>,
   res: Response<ApiResponse<void>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { email, token } = req.query;
+    const { email, token }: NewsletterQuery = req.query;
     if (!email || !token)
       throw new AppError("Please provide an email and token.", 400, true);
 

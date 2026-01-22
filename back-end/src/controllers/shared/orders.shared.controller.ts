@@ -15,7 +15,7 @@ interface OrdersQueryBody {
 }
 
 export const getAllOrders = async (
-  req: Request<{}, ApiResponse<orderResult>, {}, OrdersQueryBody>,
+  req: Request<{}, ApiResponse<orderResult>, {}>,
   res: Response<ApiResponse<orderResult>>,
   next: NextFunction
 ): Promise<void> => {

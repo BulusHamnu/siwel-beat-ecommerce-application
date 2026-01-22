@@ -48,9 +48,9 @@ export const postComment = async (
 interface getCommentParam {
   commentId: string;
   id: string;
-}
+} //getCommentParam
 export const getComment = async (
-  req: Request<getCommentParam, ApiResponse<populatedComment>, {}, {}>,
+  req: Request<{}, ApiResponse<populatedComment>, {}, {}>,
   res: Response<ApiResponse<populatedComment>>,
   next: NextFunction
 ): Promise<void> => {
