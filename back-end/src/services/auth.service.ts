@@ -98,6 +98,14 @@ export interface UserLoginSnaphot {
   isActive: boolean;
 }
 
+function removeOldSessions(sessions: Session[]): Session[] {
+  const thirtyDaysAgo = Date.now() - 1000 * 60 * 60 * 24 * 30;
+  return sessions.filter((session) => {
+    const expiredAt = new Date(session.expiredAt).getTime();
+    return expiredAt > thirtyDaysAgo;
+  });
+}
+
 export const loginUser = async (
   password: string,
   email: string,
@@ -118,7 +126,10 @@ export const loginUser = async (
     deviceInfo,
   };
 
-  user.sessions.push(session);
+  // Remove expired session that were not log out.
+  const userFilteredSessions = removeOldSessions(user.sessions);
+  userFilteredSessions.push(session);
+  user.sessions = userFilteredSessions;
   await user.save();
 
   return {
