@@ -26,7 +26,7 @@ export const createNewUser = async ({
 }: CreateUserBody): Promise<UserInterface> => {
   const emailExist = await User.findOne({ email: email });
   if (emailExist) {
-    throw new AppError("User already exist.", 209, true);
+    throw new AppError("User already exist.", 409, true);
   }
 
   const { hashPassword, emailVerification } =

@@ -1,10 +1,19 @@
-import express, { Router } from "express";
+import { Router } from "express";
 import * as newsLetterController from "../controllers/newsletter.controller.js";
+import { newsLetterLimiter } from "../middlewares/rateLimiter.js";
 
 const router = Router();
 
 // routes
-router.post("/subscribe", newsLetterController.subscribeToNewletter);
-router.get("/unsubscribe", newsLetterController.unsubscribeToNewletter);
+router.post(
+  "/subscribe",
+  newsLetterLimiter,
+  newsLetterController.subscribeToNewletter
+);
+router.get(
+  "/unsubscribe",
+  newsLetterLimiter,
+  newsLetterController.unsubscribeToNewletter
+);
 
 export default router;
