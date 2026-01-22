@@ -158,13 +158,14 @@ export const forgetPassword = async (
 ): Promise<void> => {
   try {
     const email = req.body.email;
+    logger.info(`${email}: request for a password reset.`);
+
     const userEmail: string = validateAndSanitizeBody(
       email,
       authValidator.validateEmail
     );
 
     await authService.forgetPassword(userEmail);
-    logger.info("Password reset code sent to:", { email: userEmail });
 
     const response: ApiResponse<void> = {
       status: true,
@@ -222,7 +223,7 @@ export const resetpassword = async (
       validateAndSanitizeBody(req.body, authValidator.resetPasswordBodySchema);
 
     await authService.resetPassword(email, password, resetToken);
-    logger.info(`User with email ${email} reset their password.`);
+    logger.info(`${email}: password was reset successully..`);
 
     const response: ApiResponse<void> = {
       status: true,

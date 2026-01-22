@@ -85,7 +85,7 @@ function validateProductsStatus(
 
 export const getUserCart = async (userId: string): Promise<CartInterface> => {
   const { userCart, tracks } = await getUserCartandTracks(userId);
-  const userCartObj: CartInterface = userCart.toObject(); // so we can add new fields to item objects
+  const userCartObj: CartInterface = userCart.toObject(); // So we can add new fields to item objects
 
   if (userCartObj.items.length <= 0 && tracks.length <= 0) return userCart;
 
