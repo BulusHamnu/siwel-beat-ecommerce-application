@@ -8,9 +8,8 @@ import * as purchaseController from "../../controllers/users/userPurchases.contr
 import favoritesRoutes from "./userFavourites.routes.js";
 import cartRoutes from "./userCart.routes.js";
 import notificationRoutes from "./userNotification.routes.js";
-import {
+import rateLimiter, {
   generalApiLimiter,
-  uploadAvatarLimiter,
   creationApiLimiter,
 } from "../../middlewares/rateLimiter.js";
 
@@ -20,32 +19,32 @@ router.use(withAuth);
 router.use(allowRole("user"));
 
 /* Profile */
-router.get("/me", generalApiLimiter, profileController.getProfile);
-router.patch("/me", creationApiLimiter, profileController.updateProfile);
+router.get("/me", generalApiLimiter(), profileController.getProfile);
+router.patch("/me", creationApiLimiter(), profileController.updateProfile);
 router.patch(
   "/me/picture",
-  uploadAvatarLimiter,
+  rateLimiter(20, 10 * 60 * 1000),
   uploadPicture,
-  profileController.updateUserAvatar
+  profileController.updateUserAvatar,
 );
 
 router.use("/me", notificationRoutes);
 router.use("/me", favoritesRoutes);
 
 /* Orders routes */
-router.get("/me/orders", generalApiLimiter, orderController.getAllOrders);
-router.get("/me/orders/:id", generalApiLimiter, orderController.getOrder);
+router.get("/me/orders", generalApiLimiter(), orderController.getAllOrders);
+router.get("/me/orders/:id", generalApiLimiter(), orderController.getOrder);
 
 /* Purchases routes */
 router.get(
   "/me/purchases",
-  generalApiLimiter,
-  purchaseController.getAllPurchase
+  generalApiLimiter(),
+  purchaseController.getAllPurchase,
 );
 router.get(
   "/me/purchases/:id",
-  generalApiLimiter,
-  purchaseController.getPurchase
+  generalApiLimiter(),
+  purchaseController.getPurchase,
 );
 
 /* Cart routes */

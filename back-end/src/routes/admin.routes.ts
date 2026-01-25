@@ -6,10 +6,9 @@ import * as ordersController from "../controllers/shared/orders.shared.controlle
 import * as notificationController from "../controllers/shared/notification.controller.js";
 import * as profileController from "../controllers/profile.controller.js";
 import { uploadPicture } from "../middlewares/upload.js";
-import {
-  generalApiLimiter,
-  uploadAvatarLimiter,
+import rateLimiter, {
   creationApiLimiter,
+  generalApiLimiter,
 } from "../middlewares/rateLimiter.js";
 
 const router = Router();
@@ -18,49 +17,53 @@ router.use(withAuth);
 router.use(allowRole("admin"));
 
 /* Admin profile */
-router.get("/me", generalApiLimiter, profileController.getProfile);
-router.patch("/me", creationApiLimiter, profileController.updateProfile);
+router.get(
+  "/me",
+  rateLimiter(20, 10 * 60 * 1000),
+  profileController.getProfile,
+);
+router.patch("/me", creationApiLimiter(), profileController.updateProfile);
 router.patch(
   "/me/picture",
-  uploadAvatarLimiter,
+  rateLimiter(20, 10 * 60 * 1000),
   uploadPicture,
-  profileController.updateUserAvatar
+  profileController.updateUserAvatar,
 );
 
 /* Dashboard routes */
-router.get("/dashboard", generalApiLimiter, getDashboard);
+router.get("/dashboard", generalApiLimiter(), getDashboard);
 
 /* Notifications routes */
 router.get(
   "/notifications",
-  generalApiLimiter,
-  notificationController.getAllNotifications
+  generalApiLimiter(),
+  notificationController.getAllNotifications,
 );
 router.get(
   "/notifications/:id",
-  generalApiLimiter,
-  notificationController.getNotification
+  generalApiLimiter(),
+  notificationController.getNotification,
 );
 
 router.patch(
   "/notifications/:id/read",
-  generalApiLimiter,
-  notificationController.markNoticationAsRead
+  generalApiLimiter(),
+  notificationController.markNoticationAsRead,
 );
 router.patch(
   "/notifications/:id/unread",
-  generalApiLimiter,
-  notificationController.markNoticationAsRead
+  generalApiLimiter(),
+  notificationController.markNoticationAsRead,
 );
 
 router.delete(
   "/notifications/:id",
-  generalApiLimiter,
-  notificationController.deleteNotification
+  generalApiLimiter(),
+  notificationController.deleteNotification,
 );
 
 /* Orders routes */
-router.get("/orders", generalApiLimiter, ordersController.getAllOrders); // Issue here
-router.get("/orders/:id", generalApiLimiter, ordersController.getOrder);
+router.get("/orders", generalApiLimiter(), ordersController.getAllOrders); // Issue here
+router.get("/orders/:id", generalApiLimiter(), ordersController.getOrder);
 
 export default router;

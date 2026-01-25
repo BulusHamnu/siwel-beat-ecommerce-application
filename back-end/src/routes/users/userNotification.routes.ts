@@ -7,30 +7,30 @@ const router = Router();
 /* Notifications routes */
 router.get(
   "/notifications",
-  generalApiLimiter,
-  notificationController.getAllNotifications
+  generalApiLimiter(),
+  notificationController.getAllNotifications,
 );
 router.get(
   "/notifications/:id",
-  generalApiLimiter,
-  notificationController.getNotification
+  generalApiLimiter(),
+  notificationController.getNotification,
 );
 
 router.patch(
   "/notifications/:id/read",
-  generalApiLimiter,
-  notificationController.markNoticationAsRead
+  generalApiLimiter(),
+  notificationController.markNoticationAsRead,
 );
 router.patch(
   "/notifications/:id/unread",
-  generalApiLimiter,
-  notificationController.markNoticationAsUnread
+  generalApiLimiter(),
+  notificationController.markNoticationAsUnread,
 );
 
 router.delete(
   "/notifications/:id",
-  generalApiLimiter,
-  notificationController.deleteNotification
+  generalApiLimiter(),
+  notificationController.deleteNotification,
 );
 
 export default router;

@@ -10,14 +10,18 @@ const router = Router();
 /* Favourites routes */
 router.post(
   "/favourites",
-  creationApiLimiter,
-  favouriteRoutes.addToUserFavourites
+  creationApiLimiter(),
+  favouriteRoutes.addToUserFavourites,
 );
-router.get("/favourites", generalApiLimiter, favouriteRoutes.getUserFavourites);
+router.get(
+  "/favourites",
+  generalApiLimiter(),
+  favouriteRoutes.getUserFavourites,
+);
 router.delete(
   "/favourites",
-  creationApiLimiter,
-  favouriteRoutes.removeFromFavourites
+  creationApiLimiter(),
+  favouriteRoutes.removeFromFavourites,
 );
 
 export default router;

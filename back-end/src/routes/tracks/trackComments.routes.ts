@@ -13,26 +13,34 @@ const router = Router();
 // Track comments routes
 router.get(
   "/:id/comments/:commentId",
-  generalApiLimiter,
-  commentController.getComment
+  generalApiLimiter(),
+  commentController.getComment,
 );
-router.get("/:id/comments", generalApiLimiter, commentController.getAllComment);
+router.get(
+  "/:id/comments",
+  generalApiLimiter(),
+  commentController.getAllComment,
+);
 
 /* Only autheticated users can post, update and delete comment */
 router.use(withAuth);
 router.use(requiredVerifiedEmail);
 router.use(allowRole("user", "admin"));
 
-router.post("/:id/comments", generalApiLimiter, commentController.postComment);
+router.post(
+  "/:id/comments",
+  generalApiLimiter(),
+  commentController.postComment,
+);
 router.patch(
   "/:id/comments/:commentId",
-  creationApiLimiter,
-  commentController.updateComment
+  creationApiLimiter(),
+  commentController.updateComment,
 );
 router.delete(
   "/:id/comments/:commentId",
-  creationApiLimiter,
-  commentController.deleteComment
+  creationApiLimiter(),
+  commentController.deleteComment,
 );
 
 export default router;
