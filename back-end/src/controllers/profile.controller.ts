@@ -84,8 +84,8 @@ export const updateUserAvatar = async (
 
     if (!image)
       throw new AppError(
-        ErrorCodes.VALIDATION_ERROR,
-        "Please provide an image.",
+        ErrorCodes.IMAGE_REQUIRED,
+        "Please provide an image for your avatar.",
         400,
         true,
         null,
