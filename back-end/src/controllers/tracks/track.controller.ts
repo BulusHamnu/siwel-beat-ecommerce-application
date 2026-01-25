@@ -20,7 +20,7 @@ import * as trackValidator from "../../utils/validators/track.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import { type createTrackInput } from "../../services/tracks/track.service.js";
 import { validateTrackidParam } from "../../utils/validators/track.validator.js";
-import type { multerTrackFiles } from "../../middlewares/upload.js";
+import type { MulterTrackFiles } from "../../middlewares/upload.js";
 
 /* Post new track controller */
 const bundleTrackFilesPath = (files: uploadedTrackFiles): string[] => {
@@ -44,18 +44,10 @@ export const postTrack = async (
   let paths: string[] = [];
 
   try {
-    const files = req.files as multerTrackFiles;
+    const files = req.files as MulterTrackFiles;
 
     // check for files
-    if (!files || Object.keys(files)?.length <= 4)
-      throw new AppError(
-        ErrorCodes.TRACK_FILES_REQUIRED,
-        "Missing track files.",
-        400,
-        true,
-        {}, // Add specific details here later.
-      );
-
+    trackValidator.validateTrackFiles(files);
     const trackBody = validateAndSanitizeBody(
       req.body,
       trackValidator.trackBodySchema,
@@ -240,7 +232,7 @@ export const updateTrack = async (
 
   try {
     const trackId = validateTrackidParam(req.params.id);
-    const files = req.files as multerTrackFiles;
+    const files = req.files as MulterTrackFiles;
 
     const trackBody = validateAndSanitizeBody(
       req.body,

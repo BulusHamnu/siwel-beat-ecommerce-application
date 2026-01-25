@@ -1,6 +1,9 @@
 import Joi from "joi";
 import { Types } from "mongoose";
 import validateAndSanitizeBody from "./validateAndSanitize.js";
+import { type MulterTrackFiles } from "../../middlewares/upload.js";
+import AppError from "../../errors/appError.js";
+import { ErrorCodes } from "../../errors/appError.js";
 
 /* trackBodySchema */
 export const trackBodySchema = Joi.object({
@@ -112,3 +115,39 @@ export const getCommentParamBody = Joi.object({
       "commentId.invalid": "{#key} in param must be a valid ObjectId.",
     }),
 });
+
+/* Track files validator */
+export function validateTrackFiles(files: MulterTrackFiles) {
+  // Details is use to tell the client what files are missing. Note: using files with Joi binary covert binary to unusable string.
+  const details: { [fieldname: string]: string } = {
+    basicLicense: "basicLicense is required.",
+    premiumLicense: "premiumLicense is required.",
+    taggedAudio: "taggedAudio is required.",
+    untaggedAudio: "untaggedAudio is required.",
+    coverImage: "coverImage is required.",
+  };
+
+  if (Object.keys(files).length <= 0) {
+    throw new AppError(
+      ErrorCodes.TRACK_FILES_REQUIRED,
+      "Missing track files.",
+      400,
+      true,
+      details,
+    );
+  }
+
+  if (Object.keys(files).length <= 4) {
+    for (const fileName of Object.keys(files) as (keyof MulterTrackFiles)[]) {
+      if (files[fileName]) delete details[fileName];
+    }
+
+    throw new AppError(
+      ErrorCodes.TRACK_FILES_REQUIRED,
+      "Missing some track files.",
+      400,
+      true,
+      details,
+    );
+  }
+}

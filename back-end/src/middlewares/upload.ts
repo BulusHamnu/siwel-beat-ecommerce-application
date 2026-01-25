@@ -6,7 +6,7 @@ import type { Request } from "express";
 import AppError, { ErrorCodes } from "../errors/appError.js";
 
 type multerFiles = { [fieldname: string]: Express.Multer.File[] };
-export interface multerTrackFiles extends multerFiles {
+export interface MulterTrackFiles extends multerFiles {
   coverImage: Express.Multer.File[];
   taggedAudio: Express.Multer.File[];
   untaggedAudio: Express.Multer.File[];

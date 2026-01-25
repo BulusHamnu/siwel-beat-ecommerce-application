@@ -7,7 +7,7 @@ import type {
   LicenseInterface,
 } from "../models/track.schema.js";
 import { fileTypeFromBuffer } from "file-type";
-import { type multerTrackFiles } from "../middlewares/upload.js";
+import { type MulterTrackFiles } from "../middlewares/upload.js";
 
 type UndefinedFields<T> = {
   [K in keyof T]: T[K] | undefined;
@@ -122,7 +122,7 @@ class Supabase {
 
   // function for uploading files
   uploadTrackFiles = async (
-    files: multerTrackFiles,
+    files: MulterTrackFiles,
   ): Promise<uploadedTrackFiles> => {
     const paths: string[] = [];
 
