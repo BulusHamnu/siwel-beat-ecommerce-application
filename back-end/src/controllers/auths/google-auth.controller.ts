@@ -56,8 +56,12 @@ export const getGoogleOauthUrl = async (
 };
 
 /* Google Oauth2 sign up controller */
-function validateCodeAndState(code: string, state: string) {
-  if (!code)
+function validateCodeAndState(
+  code: string,
+  state: string,
+  error: string | null = null,
+) {
+  if ((error && error?.includes("access_denied")) || !code) {
     throw new AppError(
       ErrorCodes.GOOGLE_CONSENT_CANCELLED,
       "Google oauth consent screen cancelled.",
@@ -65,6 +69,8 @@ function validateCodeAndState(code: string, state: string) {
       true,
       null,
     );
+  }
+
   if (!state)
     throw new AppError(
       ErrorCodes.OAUTH_STATE_REQUIRED,
@@ -85,14 +91,14 @@ function validateCodeAndState(code: string, state: string) {
 }
 
 export const googleCallback = async (
-  req: Request<{}, {}, {}, { code: string; state: string }>,
+  req: Request<{}, {}, {}, { code: string; state: string; error: string }>,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
   let authFlow = "";
   try {
-    const { code, state } = req.query;
-    validateCodeAndState(code, state);
+    const { code, state, error } = req.query;
+    validateCodeAndState(code, state, error);
     authFlow = state;
 
     const verifiedUserPayload: userGooglePayload =
@@ -136,16 +142,8 @@ export const googleCallback = async (
       .status(302)
       .redirect(`${env.FRONTEND_URL}/oauth/callback?state=${state}`);
   } catch (error: any) {
-    logger.error("An error occur while in google oauth2 callback.", error);
+    logger.error("An error occured in google oauth2 callback.", error);
 
-    // Because "User already exist." error is throw from a different service.
-    if (error.message.includes("User already exist.")) {
-      return res
-        .status(302)
-        .redirect(
-          `${env.FRONTEND_URL}/oauth/callback?state=${authFlow}&error=USER_EXIST`,
-        );
-    }
     // For unexpected error.
     return res
       .status(302)
