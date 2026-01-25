@@ -3,7 +3,7 @@ import type { ApiResponse } from "./responseInterface.js";
 import type { UserProfile } from "./userTypes.js";
 import { type ProfileUpdatesInput } from "../services/profile.service.js";
 import * as userService from "../services/profile.service.js";
-import AppError from "../errors/appError.js";
+import AppError, { ErrorCodes } from "../errors/appError.js";
 import supabase from "../services/supabase.js";
 import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js";
 import * as userValidator from "../utils/validators/user.validator.js";
@@ -19,7 +19,7 @@ export const getProfile = async (
     {}
   >,
   res: Response<{ status: boolean; message: string; data?: UserProfile }>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const userId: string = req.user!.id;
@@ -45,18 +45,18 @@ export const updateProfile = async (
     {}
   >,
   res: Response<{ status: boolean; message: string; data?: UserProfile }>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const userId: string | undefined = req.user!.id;
     const sanitizedUpdates: ProfileUpdatesInput = validateAndSanitizeBody(
       req.body,
-      userValidator.userUpdateBodySchema
+      userValidator.userUpdateBodySchema,
     );
 
     const profile: UserProfile = await userService.updateProfile(
       userId,
-      sanitizedUpdates
+      sanitizedUpdates,
     );
 
     const response: ApiResponse<UserProfile> = {
@@ -74,7 +74,7 @@ export const updateProfile = async (
 export const updateUserAvatar = async (
   req: Request<{}, ApiResponse<{ avatar: string }>, {}, {}>,
   res: Response<ApiResponse<{ avatar: string }>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   let pictureUrl: string = "";
 
@@ -82,7 +82,14 @@ export const updateUserAvatar = async (
     const userId = req.user!.id;
     const image = req.file;
 
-    if (!image) throw new AppError("Please provide an image.", 400, true);
+    if (!image)
+      throw new AppError(
+        ErrorCodes.VALIDATION_ERROR,
+        "Please provide an image.",
+        400,
+        true,
+        null,
+      );
     const imageBuffer = await checkAndResizeImgRatio(image.buffer, "avatar");
 
     // upload picture
@@ -90,7 +97,7 @@ export const updateUserAvatar = async (
       env.IMAGE_FILES_BUCKET,
       image.originalname,
       env.USER_AVATAR_FOLDER,
-      imageBuffer
+      imageBuffer,
     );
 
     const avatar = await userService.updateUserAvatar(userId!, pictureUrl);

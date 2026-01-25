@@ -1,12 +1,11 @@
 import { getDateRange } from "../../utils/helpers.js";
 import Order, { type OrderInterface } from "../../models/order.schema.js";
 import { type Pagination } from "../../controllers/responseInterface.js";
-import AppError from "../../errors/appError.js";
+import AppError, { ErrorCodes } from "../../errors/appError.js";
 import type { userPayload } from "../../middlewares/withAuth.js";
 import OrderItem, {
   type OrderItemInterface,
 } from "../../models/orderItem.schema.js";
-import type { Types } from "mongoose";
 
 export interface Queries {
   status?: string;
@@ -33,7 +32,7 @@ function buildQueries(status: string, date: string, userId?: string): Queries {
 export async function getOrdersAndCount(
   skip: number,
   limit: number,
-  queries: Queries
+  queries: Queries,
 ): Promise<{
   ordersCounts: number;
   ordersWithOverhead: OrderInterface[];
@@ -61,7 +60,7 @@ export interface OrderPlusItems extends OrderInterface {
 }
 
 async function attachItemsToOrders(
-  orders: OrderInterface[]
+  orders: OrderInterface[],
 ): Promise<OrderPlusItems[]> {
   const orderMap = new Map<string, any>();
 
@@ -92,7 +91,7 @@ export const getAllOrders = async (
   limit: number,
   status: string,
   date: string,
-  userId: string = ""
+  userId: string = "",
 ): Promise<orderResult> => {
   const skip = (page - 1) * limit; // calculate skip
 
@@ -100,7 +99,7 @@ export const getAllOrders = async (
   const { ordersCounts, ordersWithOverhead } = await getOrdersAndCount(
     skip,
     limit,
-    queries
+    queries,
   );
 
   // For easy navigation through orders
@@ -123,7 +122,7 @@ export const getAllOrders = async (
 /* Get order */
 export const getOrder = async (
   id: string,
-  user: userPayload
+  user: userPayload,
 ): Promise<OrderPlusItems> => {
   const queries: { _id: string; userId?: string } = {
     _id: id,
@@ -131,7 +130,14 @@ export const getOrder = async (
   if (user.role === "user") queries["userId"] = user.id; // For admin to get any order while user get their order
 
   const order: OrderInterface | null = await Order.findOne(queries);
-  if (!order) throw new AppError("Order not found.", 404, true);
+  if (!order)
+    throw new AppError(
+      ErrorCodes.ORDER_NOT_FOUND,
+      "Order not found.",
+      404,
+      true,
+      null,
+    );
 
   const orderItems: OrderItemInterface[] = await OrderItem.find({
     orderId: order._id,

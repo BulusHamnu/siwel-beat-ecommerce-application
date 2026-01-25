@@ -7,7 +7,7 @@ import retriveGoogleUserPayload, {
 } from "../../services/retriveGoogleIdToken.js";
 import User, { type UserInterface } from "../../models/user.schema.js";
 import { createNewUser } from "../../services/auth.service.js";
-import AppError from "../../errors/appError.js";
+import AppError, { ErrorCodes } from "../../errors/appError.js";
 import Joi from "joi";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 
@@ -26,7 +26,7 @@ export const getGoogleOauthUrl = async (
     message: string;
     data?: { url: string };
   }>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { state } = validateQueryBody(req.query);
@@ -57,17 +57,37 @@ export const getGoogleOauthUrl = async (
 
 /* Google Oauth2 sign up controller */
 function validateCodeAndState(code: string, state: string) {
-  if (!code) throw new AppError("CONSENT_CANCELLED", 400, true);
-  if (!state) throw new AppError("MISSSING_STATE", 400, true);
+  if (!code)
+    throw new AppError(
+      ErrorCodes.GOOGLE_CONSENT_CANCELLED,
+      "Google oauth consent screen cancelled.",
+      400,
+      true,
+      null,
+    );
+  if (!state)
+    throw new AppError(
+      ErrorCodes.OAUTH_STATE_REQUIRED,
+      "Oauth state is required.",
+      400,
+      true,
+      null,
+    );
   if (state !== "login" && state !== "signup")
-    throw new AppError("INVALID_STATE", 400, true);
+    throw new AppError(
+      ErrorCodes.OAUTH_STATE_INVALID,
+      "Invalid oauth state.",
+      400,
+      true,
+      { state },
+    );
   return;
 }
 
 export const googleCallback = async (
   req: Request<{}, {}, {}, { code: string; state: string }>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   let authFlow = "";
   try {
@@ -91,9 +111,22 @@ export const googleCallback = async (
         email: verifiedUserPayload.email,
       });
 
-      if (!user) throw new AppError("NOT_FOUND", 404, true);
+      if (!user)
+        throw new AppError(
+          ErrorCodes.USER_NOT_FOUND,
+          "User not found.",
+          404,
+          true,
+          null,
+        );
       if (user && user.provider !== "google")
-        throw new AppError("NOT_LINKED", 400, true);
+        throw new AppError(
+          ErrorCodes.GOOGLE_NOT_LINKED,
+          "Google not linked.",
+          400,
+          true,
+          null,
+        );
     }
 
     const refreshToken = user.signToken("refreshToken", "7d");
@@ -105,20 +138,21 @@ export const googleCallback = async (
   } catch (error: any) {
     logger.error("An error occur while in google oauth2 callback.", error);
 
+    // Because "User already exist." error is throw from a different service.
     if (error.message.includes("User already exist.")) {
       return res
         .status(302)
         .redirect(
-          `${env.FRONTEND_URL}/oauth/callback?state=${authFlow}&error=USER_EXIST`
+          `${env.FRONTEND_URL}/oauth/callback?state=${authFlow}&error=USER_EXIST`,
         );
     }
-
+    // For unexpected error.
     return res
       .status(302)
       .redirect(
         `${env.FRONTEND_URL}/oauth/callback?state=${authFlow}&error=${
-          error.message || "UNEXPECTED_ERROR"
-        }`
+          error.code || "UNEXPECTED_ERROR"
+        }`,
       );
   }
 };

@@ -1,4 +1,4 @@
-import AppError from "../errors/appError.js";
+import AppError, { ErrorCodes } from "../errors/appError.js";
 import logger from "../utils/logger.js";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import env from "../configs/env.js";
@@ -25,7 +25,7 @@ class Supabase {
   constructor() {
     this.client = createClient(
       env.SUPABASE_URL,
-      env.SUPABASE_SERVICE_KEY
+      env.SUPABASE_SERVICE_KEY,
     ).storage;
   }
 
@@ -42,7 +42,7 @@ class Supabase {
     bucket: string,
     fileName: string,
     folder: string = "/",
-    buffer: Buffer
+    buffer: Buffer,
   ): Promise<string> => {
     const name = this.getFileName(fileName);
     const filePath = folder + name;
@@ -59,7 +59,13 @@ class Supabase {
 
     if (error) {
       if (error.stack?.includes("Invalid key")) {
-        throw new AppError(`Invalid file name for "${fileName}"`, 400, true);
+        throw new AppError(
+          ErrorCodes.FILE_NAME_INVALID,
+          `Invalid name, please try renaming the file. `,
+          400,
+          true,
+          { filename: fileName },
+        );
       } else {
         throw error;
       }
@@ -81,9 +87,11 @@ class Supabase {
     if (error) {
       logger.error("An error occurred while downloading file.", error);
       throw new AppError(
+        ErrorCodes.SUPABASE_DOWNLOAD_ERROR,
         "An error occurred while downloading file.",
         500,
-        false
+        false,
+        null,
       );
     }
     // change file blob to buffer so we can save to disk
@@ -95,12 +103,18 @@ class Supabase {
   // deletes list of files in supabase storage
   deleteFiles = async (
     bucket: string,
-    filesPath: string[]
+    filesPath: string[],
   ): Promise<boolean> => {
     const { data, error } = await this.client.from(bucket).remove(filesPath);
     if (error) {
       logger.error("An error occurred while deleting files.", error);
-      throw new AppError("An error occurred while deleting filse.", 500, false);
+      throw new AppError(
+        ErrorCodes.SUPABASE_DELETION_ERROR,
+        "An error occurred while deleting filse.",
+        500,
+        false,
+        null,
+      );
     }
     logger.info("Files deleted successfully.");
     return true;
@@ -108,7 +122,7 @@ class Supabase {
 
   // function for uploading files
   uploadTrackFiles = async (
-    files: multerTrackFiles
+    files: multerTrackFiles,
   ): Promise<uploadedTrackFiles> => {
     const paths: string[] = [];
 
@@ -122,7 +136,7 @@ class Supabase {
               env.IMAGE_FILES_BUCKET,
               files.coverImage[0]!.originalname,
               env.TRACK_COVER_IMAGE_FOLDER, //
-              files.coverImage[0]!.buffer
+              files.coverImage[0]!.buffer,
             )
           : Promise.resolve(undefined),
         // taggedBeat
@@ -131,7 +145,7 @@ class Supabase {
               env.AUDIO_FILES_BUCKET,
               files.taggedAudio[0]!.originalname,
               env.TAGGED_AUDIO_FOLDER, //
-              files.taggedAudio[0]!.buffer
+              files.taggedAudio[0]!.buffer,
             )
           : Promise.resolve(undefined),
         // untaggedBeat
@@ -140,7 +154,7 @@ class Supabase {
               env.AUDIO_FILES_BUCKET,
               files.untaggedAudio[0]!.originalname,
               env.UNTAGGED_AUDIO_FOLDER,
-              files.untaggedAudio[0]!.buffer
+              files.untaggedAudio[0]!.buffer,
             )
           : Promise.resolve(undefined),
         // basicLicense
@@ -149,7 +163,7 @@ class Supabase {
               env.DOCUMENT_FILES_BUCKET,
               files.basicLicense[0]!.originalname,
               env.BASIC_LICENSE_FOLDER,
-              files.basicLicense[0]!.buffer
+              files.basicLicense[0]!.buffer,
             )
           : Promise.resolve(undefined),
         // premiumLicense
@@ -158,7 +172,7 @@ class Supabase {
               env.DOCUMENT_FILES_BUCKET,
               files.premiumLicense[0]!.originalname,
               env.PREMIUM_LICENSE_FOLDER,
-              files.premiumLicense[0]!.buffer
+              files.premiumLicense[0]!.buffer,
             )
           : Promise.resolve(undefined),
       ]);
@@ -168,7 +182,7 @@ class Supabase {
         paths.push(coverImage); // the coverImagePath is save so we can delete and update the cover image later.
         coverImgPublicUrl = await this.getPublicUrl(
           env.IMAGE_FILES_BUCKET,
-          coverImage
+          coverImage,
         ); // Save public as well so user can view it.
       }
       if (tagged) paths.push(tagged);
@@ -199,15 +213,15 @@ class Supabase {
     const audioPaths = paths.filter(
       (path) =>
         path.startsWith(env.TAGGED_AUDIO_FOLDER) ||
-        path.startsWith(env.UNTAGGED_AUDIO_FOLDER)
+        path.startsWith(env.UNTAGGED_AUDIO_FOLDER),
     );
     const licensePaths = paths.filter(
       (path) =>
         path.startsWith(env.BASIC_LICENSE_FOLDER) ||
-        path.startsWith(env.PREMIUM_LICENSE_FOLDER)
+        path.startsWith(env.PREMIUM_LICENSE_FOLDER),
     );
     const coverImagePaths = paths.filter((path) =>
-      path.startsWith(env.TRACK_COVER_IMAGE_FOLDER)
+      path.startsWith(env.TRACK_COVER_IMAGE_FOLDER),
     );
 
     const requests: Promise<boolean>[] = [];

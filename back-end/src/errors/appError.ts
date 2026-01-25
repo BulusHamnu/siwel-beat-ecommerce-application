@@ -1,18 +1,87 @@
+/* Error codes */
+export enum ErrorCodes {
+  USER_ALREADY_EXISTS = "USER_ALREADY_EXISTS",
+  USER_NOT_FOUND = "USER_NOT_FOUND",
+
+  EMAIL_ALREADY_VERIFIED = "USER_ALREADY_VERIFIED",
+  EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED",
+
+  PASSWORD_INCORRECT = "INCORRECT_PASSWORD",
+  RESET_TOKEN_EXPIRED = "RESET_TOKEN_EXPIRED",
+  REFRESH_TOKEN_EXPIRED = "REFRESH_TOKEN_EXPIRED",
+
+  AUTH_TOKEN_INVALID = "AUTH_TOKEN_INVALID",
+  AUTH_TOKEN_REQUIRED = "AUTH_TOKEN_REQUIRED",
+
+  UNAUTHENTICATED = "UNAUTHENTICATED",
+  UNAUTHORIZED = "UNAUTHORIZED",
+
+  RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED",
+  ROLE_NOT_ALLOWED = "ROLE_NOT_ALLOWED",
+
+  VERIFICATION_CODE_EXPIRED = "VERIFICATION_CODE_EXPIRED",
+  VERIFICATION_CODE_INVALID = "VERIFICATION_CODE_INVALID",
+
+  CART_INVALID = "CART_INVALID",
+
+  EMAIL_ALREADY_SUBSCRIBED = "EMAIL_ALREADY_SUBSCRIBED",
+  NEWSLETTER_SUBSCRIPTION_ERROR = "NEWSLETTER_SUBSCRIPTION_ERROR",
+
+  VALIDATION_ERROR = "VALIDATION_ERROR",
+  PROFILE_UPDATE_ERROR = "PROFILE_UPDATE_ERROR",
+
+  SUPABASE_DOWNLOAD_ERROR = "SUPABASE_DOWNLOAD_ERROR",
+  SUPABASE_DELETION_ERROR = "SUPABASE_DELETION_ERROR",
+
+  TRACK_NOT_FOUND = "TRACK_NOT_FOUND",
+  TRACK_UPDATE_ERROR = "TRACK_UPDATE_ERROR",
+  TRACK_ALREADY_EXISTS = "TRACK_ALREADY_EXISTS",
+  TRACK_FILES_REQUIRED = "TRACK_FILES_REQUIRED",
+  TRACK_DOWNLOAD_ERROR = "TRACK_DOWNLOAD_ERROR",
+  PRODUCT_ALREADY_EXISTS = "PRODUCT_ALREADY_EXISTS",
+
+  COMMENT_NOT_FOUND = "COMMENT_NOT_FOUND",
+  ORDER_NOT_FOUND = "ORDER_NOT_FOUND",
+  PURCHASE_NOT_FOUND = "PURCHASE_NOT_FOUND",
+  NOTIFICATION_NOT_FOUND = "NOTIFICATION_NOT_FOUND",
+
+  CLOUDINARY_UPLOAD_ERROR = "CLOUDINARY_UPLOAD_ERROR",
+  IMAGE_SIZE_INVALID = "IMAGE_SIZE_INVALID",
+  FILE_NAME_INVALID = "FILE_NAME_INVALID",
+  DOWNLOAD_FILE_TYPE_INVALID = "DOWNLOAD_FILE_TYPE_INVALID",
+
+  GOOGLE_CONSENT_CANCELLED = "GOOGLE_CONSENT_CANCELLED",
+  OAUTH_STATE_INVALID = "OAUTH_STATE_INVALID",
+  OAUTH_STATE_REQUIRED = "OAUTH_STATE_REQUIRED",
+  GOOGLE_NOT_LINKED = "GOOGLE_NOT_LINKED",
+}
+
 // custom error class
 export interface customAppError extends Error {
+  readonly code: string;
   readonly status: number;
   readonly isOperational: boolean;
+  readonly details: string;
 }
 
 class AppError extends Error implements customAppError {
+  public readonly code: string;
   public readonly status: number;
   public readonly isOperational: boolean;
-  public body: any | null;
+  public readonly details: any;
 
-  constructor(message: string, status: number, isOperational: boolean) {
+  constructor(
+    code: string,
+    message: string,
+    status: number,
+    isOperational: boolean,
+    details: any,
+  ) {
     super(message);
+    this.code = code;
     this.status = status;
     this.isOperational = isOperational;
+    this.details = details;
     this.name = this.constructor.name;
 
     Error.captureStackTrace(this, this.constructor);

@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 import env from "../configs/env.js";
 import type { Request } from "express";
-import AppError from "../errors/appError.js";
+import AppError, { ErrorCodes } from "../errors/appError.js";
 
 type multerFiles = { [fieldname: string]: Express.Multer.File[] };
 export interface multerTrackFiles extends multerFiles {
@@ -43,7 +43,13 @@ export const determineDest = (fieldName: string): string => {
       desc = path.join(env.DIR_NAME, "uploads", "beats", "untagged");
       break;
     default:
-      throw new AppError(`${fieldName} is not allowed.`, 400, true);
+      throw new AppError(
+        ErrorCodes.VALIDATION_ERROR,
+        `Unsupported field.`,
+        400,
+        true,
+        { fieldname: fieldName },
+      );
   }
 
   /* if (!fs.existsSync(desc)) {
@@ -65,7 +71,7 @@ const imageAllowedFileType: string[] = [
 const fileFilter = async (
   req: Request,
   file: Express.Multer.File,
-  cb: multer.FileFilterCallback
+  cb: multer.FileFilterCallback,
 ): Promise<void> => {
   const fileType = file.mimetype;
   // Check for image files
@@ -73,7 +79,15 @@ const fileFilter = async (
     if (imageAllowedFileType.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new AppError("Only images are allowed for coverImage.", 400, false));
+      cb(
+        new AppError(
+          ErrorCodes.VALIDATION_ERROR,
+          "Only images are allowed for coverImage.",
+          400,
+          true,
+          null,
+        ),
+      );
     }
   }
   // Check audio files
@@ -82,7 +96,15 @@ const fileFilter = async (
     if (allowedAudioMimeTypes.includes(fileType)) {
       cb(null, true);
     } else {
-      cb(new AppError("Only audio files are allowed.", 400, true));
+      cb(
+        new AppError(
+          ErrorCodes.VALIDATION_ERROR,
+          "Only audio files are allowed.",
+          400,
+          true,
+          null,
+        ),
+      );
     }
   }
   // Check document files
@@ -103,10 +125,12 @@ const fileFilter = async (
     } else {
       cb(
         new AppError(
+          ErrorCodes.VALIDATION_ERROR,
           "Only documents files are allowed for track licenses..",
           400,
-          true
-        )
+          true,
+          null,
+        ),
       );
     }
   }
@@ -132,12 +156,20 @@ export const uploadPicture = multer({
   fileFilter: (
     req: Request,
     file: Express.Multer.File,
-    cb: multer.FileFilterCallback
+    cb: multer.FileFilterCallback,
   ) => {
     if (imageAllowedFileType.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new AppError("Only images are allowed", 400, false));
+      cb(
+        new AppError(
+          ErrorCodes.VALIDATION_ERROR,
+          "Only images are allowed",
+          400,
+          true,
+          null,
+        ),
+      );
     }
   },
 }).single("picture");

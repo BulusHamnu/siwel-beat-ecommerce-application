@@ -2,7 +2,10 @@ export interface ApiResponse<T> {
   status: boolean;
   message: string;
   data?: T;
-  error?: T;
+  error?: {
+    code: string;
+    details: any;
+  };
 }
 
 export interface Pagination {

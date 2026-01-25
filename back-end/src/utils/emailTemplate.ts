@@ -146,7 +146,7 @@ const Template: emailTemplate = {
               border: none;
             "
           >
-            <a style="color: white" target="_blank" href="${env.FRONTEND_LOGIN_URL}"
+            <a style="color: white" target="_blank" href="${`${env.FRONTEND_URL}/auth/login`}"
               >Login</a
             >
           </button>

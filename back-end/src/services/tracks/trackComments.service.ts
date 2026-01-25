@@ -2,7 +2,7 @@ import Comment, { type CommentInterface } from "../../models/comment.schema.js";
 import { type FlattenMaps, type ObjectId } from "mongoose";
 import * as notificationService from "../notification.service.js";
 import Track from "../../models/track.schema.js";
-import AppError from "../../errors/appError.js";
+import AppError, { ErrorCodes } from "../../errors/appError.js";
 import Profile from "../../models/profile.schema.js";
 import { Types } from "mongoose";
 import type { UserProfile } from "../../controllers/userTypes.js";
@@ -18,11 +18,11 @@ export interface parentComment extends Omit<CommentInterface, "userId"> {
 
 async function sendCommentReplyNotification(
   parentId: ObjectId,
-  entityId: string
+  entityId: string,
 ): Promise<void> {
   const parentComment = (await Comment.findOne({ _id: parentId }).populate(
     "userId",
-    "username email _id"
+    "username email _id",
   )) as parentComment | null;
 
   if (!parentComment) return;
@@ -31,17 +31,24 @@ async function sendCommentReplyNotification(
     parentComment?.userId._id!,
     `${parentComment?.userId.username} replied to your comment.`,
     "COMMENT_REPLIED",
-    entityId
+    entityId,
   );
 }
 
 export const postNewComment = async (
   trackId: string,
   userId: string,
-  { parentId, content }: CommentInterface
+  { parentId, content }: CommentInterface,
 ): Promise<CommentInterface> => {
   const track = await Track.findOne({ _id: trackId });
-  if (!track) throw new AppError("Track not found.", 404, true);
+  if (!track)
+    throw new AppError(
+      ErrorCodes.TRACK_NOT_FOUND,
+      "Track not found.",
+      404,
+      true,
+      null,
+    );
 
   const comment = await Comment.create({ content, parentId, trackId, userId });
   if (parentId) {
@@ -51,7 +58,7 @@ export const postNewComment = async (
     await notificationService.notifyAdmins(
       "You have a new comment on your track.",
       "TRACK_COMMENTED",
-      comment._id as string
+      comment._id as string,
     );
   }
 
@@ -71,7 +78,7 @@ export interface populatedComment extends Omit<CommentInterface, "userId"> {
 
 function addProfilePictures(
   comment: populatedComment,
-  profiles: Map<string, any>
+  profiles: Map<string, any>,
 ): void {
   // add user picture so it will be display with user details
   const profile: UserProfile = profiles.get(comment.userId._id.toString());
@@ -111,15 +118,29 @@ async function getCommentsAndProfilesMap(trackId: string) {
 
 export const getCommentAndReplies = async (
   commentId: string,
-  trackId: string
+  trackId: string,
 ): Promise<populatedComment> => {
   const track = await Track.findOne({ _id: trackId });
-  if (!track) throw new AppError("Track not found.", 404, true);
+  if (!track)
+    throw new AppError(
+      ErrorCodes.TRACK_NOT_FOUND,
+      "Track not found.",
+      404,
+      true,
+      null,
+    );
 
   const { commentsMap, profilesMap } = await getCommentsAndProfilesMap(trackId);
 
   const comment: populatedComment = commentsMap.get(commentId);
-  if (!comment) throw new AppError("Comment not found.", 404, true);
+  if (!comment)
+    throw new AppError(
+      ErrorCodes.COMMENT_NOT_FOUND,
+      "Comment not found.",
+      404,
+      true,
+      null,
+    );
 
   // build tree to link comment with their replies
   commentsMap.forEach((comment) => {
@@ -135,10 +156,17 @@ export const getCommentAndReplies = async (
 
 /* Get all comment */
 export const getAllComments = async (
-  id: string
+  id: string,
 ): Promise<populatedComment[]> => {
   const track = await Track.findOne({ _id: id });
-  if (!track) throw new AppError("Track not found.", 404, true);
+  if (!track)
+    throw new AppError(
+      ErrorCodes.TRACK_NOT_FOUND,
+      "Track not found.",
+      404,
+      true,
+      null,
+    );
 
   const rootComments: populatedComment[] = [];
   const { commentsMap, profilesMap } = await getCommentsAndProfilesMap(id);
@@ -162,7 +190,7 @@ export const updateComment = async (
   commentId: string,
   trackId: string,
   userId: string,
-  content: string
+  content: string,
 ): Promise<populatedComment> => {
   const updatedComment: populatedComment | null =
     await Comment.findOneAndUpdate(
@@ -172,10 +200,17 @@ export const updateComment = async (
         userId,
       },
       { $set: { content } },
-      { new: true }
+      { new: true },
     );
 
-  if (!updatedComment) throw new AppError("Comment not found.", 404, true);
+  if (!updatedComment)
+    throw new AppError(
+      ErrorCodes.COMMENT_NOT_FOUND,
+      "Comment not found.",
+      404,
+      true,
+      null,
+    );
 
   const { commentsMap, profilesMap } = await getCommentsAndProfilesMap(trackId);
   // build tree to link comment with their replies
@@ -194,7 +229,7 @@ export const updateComment = async (
 export const deleteComment = async (
   commentId: string,
   id: string,
-  userId: string
+  userId: string,
 ): Promise<void> => {
   // delete comment with replies to reduce orphan comment
   await Promise.all([

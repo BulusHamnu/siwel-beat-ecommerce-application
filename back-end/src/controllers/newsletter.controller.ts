@@ -4,7 +4,7 @@ import * as newsletterService from "../services/newsletter.service.js";
 import env from "../configs/env.js";
 import logger from "../utils/logger.js";
 import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js";
-import AppError from "../errors/appError.js";
+import AppError, { ErrorCodes } from "../errors/appError.js";
 import Joi from "joi";
 
 export function validateNewsletterBody(data: { email: string }) {
@@ -19,7 +19,7 @@ export function validateNewsletterBody(data: { email: string }) {
 export const subscribeToNewletter = async (
   req: Request<{}, ApiResponse<void>, { email: string }, {}>,
   res: Response<ApiResponse<void>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { email } = validateNewsletterBody(req.body);
@@ -45,12 +45,18 @@ export interface NewsletterQuery {
 export const unsubscribeToNewletter = async (
   req: Request<{}, ApiResponse<void>, {}, any>,
   res: Response<ApiResponse<void>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { email, token }: NewsletterQuery = req.query;
     if (!email || !token)
-      throw new AppError("Please provide an email and token.", 400, true);
+      throw new AppError(
+        ErrorCodes.VALIDATION_ERROR,
+        "Please provide an email and token.",
+        400,
+        true,
+        null,
+      );
 
     await newsletterService.unsubscribeFromNewsletter(email, token);
 
@@ -60,7 +66,7 @@ export const unsubscribeToNewletter = async (
   } catch (error) {
     logger.error(
       `An error occur while trying to remove user from news-letter.`,
-      error
+      error,
     );
     res
       .status(302)

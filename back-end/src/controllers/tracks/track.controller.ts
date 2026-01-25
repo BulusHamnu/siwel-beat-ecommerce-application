@@ -10,7 +10,7 @@ import * as trackService from "../../services/tracks/track.service.js";
 import { retriveTrackFilePaths } from "../../services/tracks/trackDownloadFile.service.js";
 import { type Pagination } from "../responseInterface.js";
 import logger from "../../utils/logger.js";
-import AppError from "../../errors/appError.js";
+import AppError, { ErrorCodes } from "../../errors/appError.js";
 import supabase, { type uploadedTrackFiles } from "../../services/supabase.js";
 import { Readable } from "stream";
 import { fileTypeFromBlob } from "file-type";
@@ -39,7 +39,7 @@ const bundleTrackFilesPath = (files: uploadedTrackFiles): string[] => {
 export const postTrack = async (
   req: Request<{}, ApiResponse<TrackInterface>, createTrackInput, {}>,
   res: Response<ApiResponse<TrackInterface>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   let paths: string[] = [];
 
@@ -48,11 +48,17 @@ export const postTrack = async (
 
     // check for files
     if (!files || Object.keys(files)?.length <= 4)
-      throw new AppError("Missing track files.", 400, true);
+      throw new AppError(
+        ErrorCodes.TRACK_FILES_REQUIRED,
+        "Missing track files.",
+        400,
+        true,
+        {}, // Add specific details here later.
+      );
 
     const trackBody = validateAndSanitizeBody(
       req.body,
-      trackValidator.trackBodySchema
+      trackValidator.trackBodySchema,
     );
 
     // upload files
@@ -67,7 +73,7 @@ export const postTrack = async (
     logger.info("New track created succefully.", { trackId: newTrack._id });
     const response: ApiResponse<TrackInterface> = {
       status: true,
-      message: "New track created succefully.",
+      message: "New track created successfully.",
       data: newTrack,
     };
 
@@ -90,17 +96,16 @@ interface response extends ApiResponse<TrackInterface[]> {
 export const getTracks = async (
   req: Request<{}, ApiResponse<TrackInterface[]>, {}>,
   res: Response<response>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const queries = validateAndSanitizeBody(
       req.query,
-      trackValidator.trackQueriesSchema
+      trackValidator.trackQueriesSchema,
     );
 
-    const { tracks, pagination }: tracksResults = await trackService.getTracks(
-      queries
-    );
+    const { tracks, pagination }: tracksResults =
+      await trackService.getTracks(queries);
 
     const response: response = {
       status: true,
@@ -119,7 +124,7 @@ export const getTracks = async (
 export const getTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const trackId = validateTrackidParam(req.params.id);
@@ -128,9 +133,16 @@ export const getTrack = async (
       _id: trackId,
     }).populate(
       "relatedTrack",
-      "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre"
+      "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre",
     );
-    if (!track) throw new AppError("Track not found.", 404, true);
+    if (!track)
+      throw new AppError(
+        ErrorCodes.TRACK_NOT_FOUND,
+        "Track not found.",
+        404,
+        true,
+        null,
+      );
 
     const response: ApiResponse<TrackInterface> = {
       status: true,
@@ -148,7 +160,7 @@ export const getTrack = async (
 export const deactivateTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const trackId = validateTrackidParam(req.params.id);
@@ -156,9 +168,16 @@ export const deactivateTrack = async (
     const track: TrackInterface | null = await Track.findOneAndUpdate(
       { _id: trackId },
       { $set: { status: "inactive" } },
-      { new: true }
+      { new: true },
     );
-    if (!track) throw new AppError("Track not found.", 404, true);
+    if (!track)
+      throw new AppError(
+        ErrorCodes.TRACK_NOT_FOUND,
+        "Track not found.",
+        404,
+        true,
+        null,
+      );
     logger.info("Track status was update to: inactive.", {
       trackId: track._id,
     });
@@ -179,7 +198,7 @@ export const deactivateTrack = async (
 export const activateTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const trackId = validateTrackidParam(req.params.id);
@@ -187,9 +206,16 @@ export const activateTrack = async (
     const track: TrackInterface | null = await Track.findOneAndUpdate(
       { _id: trackId },
       { $set: { status: "active" } },
-      { new: true }
+      { new: true },
     );
-    if (!track) throw new AppError("Track not found.", 404, true);
+    if (!track)
+      throw new AppError(
+        ErrorCodes.TRACK_NOT_FOUND,
+        "Track not found.",
+        404,
+        true,
+        null,
+      );
     logger.info("Track status was update to: active.", { trackId: track._id });
 
     const response: ApiResponse<TrackInterface> = {
@@ -208,7 +234,7 @@ export const activateTrack = async (
 export const updateTrack = async (
   req: Request<{ id: string }, ApiResponse<TrackInterface>, TrackUpdates, {}>,
   res: Response<ApiResponse<TrackInterface>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   let paths: string[] = [];
 
@@ -218,7 +244,7 @@ export const updateTrack = async (
 
     const trackBody = validateAndSanitizeBody(
       req.body,
-      trackValidator.trackUpdateBodySchema
+      trackValidator.trackUpdateBodySchema,
     );
 
     // upload files if any
@@ -228,7 +254,7 @@ export const updateTrack = async (
     const updatedTrack = await trackService.updateTrack(
       trackId,
       trackBody,
-      trackFiles
+      trackFiles,
     );
 
     const response: ApiResponse<TrackInterface> = {
@@ -265,8 +291,14 @@ async function retriveTrackFile(type: string, filePath: string): Promise<any> {
 
   const { data, error } = await supabase.client.from(bucket).download(filePath);
   if (error) {
-    logger.error("An error occur while downloading file from supabase", error);
-    throw new AppError("Download error.", 500, true);
+    logger.error("An error occur while downloading file.", error);
+    throw new AppError(
+      ErrorCodes.TRACK_DOWNLOAD_ERROR,
+      "Download error.",
+      500,
+      true,
+      null,
+    );
   }
 
   return data;
@@ -275,21 +307,21 @@ async function retriveTrackFile(type: string, filePath: string): Promise<any> {
 export const downloadTrackFile = async (
   req: Request<{ id: string }, {}, {}, { type: string; license: string }>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
     const id = validateTrackidParam(req.params.id);
     const { type, license } = validateAndSanitizeBody(
       req.query,
-      trackValidator.downloadQuerySchema
+      trackValidator.downloadQuerySchema,
     );
 
     const { fileName, filePath } = await retriveTrackFilePaths(
       user,
       id,
       license,
-      type
+      type,
     );
 
     const data = await retriveTrackFile(type, filePath);
@@ -309,7 +341,7 @@ export const downloadTrackFile = async (
         user.id,
         "File downloaded sucessfully.",
         "DOWNLOAD_COMPLETED",
-        id
+        id,
       );
     });
   } catch (error) {
@@ -321,7 +353,7 @@ export const downloadTrackFile = async (
 export const playTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<any> => {
   try {
     const { id } = req.params;

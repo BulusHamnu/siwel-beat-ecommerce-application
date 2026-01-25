@@ -4,14 +4,21 @@ import User, {
 } from "../models/user.schema.js";
 import Profile, { type ProfileInterface } from "../models/profile.schema.js";
 import type { UserProfile } from "../controllers/userTypes.js";
-import AppError from "../errors/appError.js";
+import AppError, { ErrorCodes } from "../errors/appError.js";
 import supabase from "./supabase.js";
 import env from "../configs/env.js";
 
 /* Get profile */
 export const getProfile = async (id: string): Promise<UserProfile> => {
   const user: UserInterface | null = await User.findOne({ _id: id });
-  if (!user) throw new AppError("User not found.", 404, true);
+  if (!user)
+    throw new AppError(
+      ErrorCodes.USER_NOT_FOUND,
+      "User not found.",
+      404,
+      true,
+      null,
+    );
 
   const profile: ProfileInterface | null = await Profile.findOne({
     userId: user._id,
@@ -81,16 +88,23 @@ function filterProfileUpdates(updates: ProfileUpdates) {
 
 export const updateProfile = async (
   id: string | undefined,
-  updates: ProfileUpdates
+  updates: ProfileUpdates,
 ): Promise<UserProfile> => {
   const user: UserInterface | null = await User.findOne({ _id: id });
-  if (!user) throw new AppError("User not found.", 404, true);
+  if (!user)
+    throw new AppError(
+      ErrorCodes.USER_NOT_FOUND,
+      "User not found.",
+      404,
+      true,
+      null,
+    );
 
   filterProfileUpdates(updates);
   const profile: ProfileInterface | null = await Profile.findOneAndUpdate(
     { userId: user._id },
     { $set: updates },
-    { new: true }
+    { new: true },
   );
 
   if (updates["username"]) {
@@ -113,7 +127,7 @@ export const updateProfile = async (
 /* Update profile picture */
 export const updateUserAvatar = async (
   userId: string,
-  pictureUrl: string
+  pictureUrl: string,
 ): Promise<string> => {
   const profile: ProfileInterface | null = await Profile.findOne({ userId });
   const imgBucket = env.IMAGE_FILES_BUCKET;
@@ -125,11 +139,17 @@ export const updateUserAvatar = async (
     await Profile.findOneAndUpdate(
       { userId },
       { $set: { avatar: publicUrl, avatarPath: pictureUrl } },
-      { new: true }
+      { new: true },
     );
 
   if (!updatedProfile)
-    throw new AppError("Unable to update profile picture.", 500, true);
+    throw new AppError(
+      ErrorCodes.PROFILE_UPDATE_ERROR,
+      "Unable to update profile picture.",
+      500,
+      true,
+      null,
+    );
 
   // delete old picture
   console.log({ oldPicturePath, publicUrl });

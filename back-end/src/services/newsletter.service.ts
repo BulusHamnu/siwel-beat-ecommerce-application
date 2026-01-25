@@ -1,7 +1,7 @@
 import Newsletter, {
   type NewsletterInterface,
 } from "../models/newsletter.schema.js";
-import AppError from "../errors/appError.js";
+import AppError, { ErrorCodes } from "../errors/appError.js";
 import sendEmail from "./sendEmail.js";
 import Template from "../utils/emailTemplate.js";
 import crypto from "crypto";
@@ -9,7 +9,7 @@ import * as NotificationService from "./notification.service.js";
 
 /* Subcribe to news letter */
 async function addToList(
-  email: string
+  email: string,
 ): Promise<{ token: string; sub: NewsletterInterface }> {
   let sub: NewsletterInterface | null = null;
   const subExist: NewsletterInterface | null = await Newsletter.findOne({
@@ -18,7 +18,13 @@ async function addToList(
 
   let token: string = "";
   if (subExist && subExist.subscribed) {
-    throw new AppError("Email is already subscribed.", 409, true);
+    throw new AppError(
+      ErrorCodes.EMAIL_ALREADY_SUBSCRIBED,
+      "Email is already subscribed.",
+      409,
+      true,
+      { email },
+    );
   } else if (subExist && !subExist.subscribed) {
     token = crypto.randomBytes(24).toString("hex");
     subExist.subscribed = true;
@@ -37,33 +43,39 @@ export const subscribeToNewsletter = async (email: string): Promise<void> => {
   await sendEmail(
     email,
     "You're Now on the List 🎉",
-    Template.newsletterSubscriptionNotification(email, token)
+    Template.newsletterSubscriptionNotification(email, token),
   );
 
   await NotificationService.notifyAdmins(
     "Hurray! Someone just join the newsletter.",
     "NEWSLETTER_SUBSCRIBED",
-    sub._id as string
+    sub._id as string,
   );
 };
 
 /*  Unsubscribe from news letter */
 export const unsubscribeFromNewsletter = async (
   email: string,
-  token: string
+  token: string,
 ): Promise<void> => {
   const unsubscribed = await Newsletter.findOneAndUpdate(
     { email, token, subscribed: true },
     { $set: { subscribed: false, token: null } },
-    { new: true }
+    { new: true },
   );
 
   if (!unsubscribed)
-    throw new AppError("Unable to unsubscribe user", 500, false);
+    throw new AppError(
+      ErrorCodes.NEWSLETTER_SUBSCRIPTION_ERROR,
+      "Unable to unsubscribe user",
+      500,
+      false,
+      null,
+    );
 
   await sendEmail(
     email,
     "You’re Off the List",
-    Template.newsletterUnsubscriptionNotification()
+    Template.newsletterUnsubscriptionNotification(),
   );
 };

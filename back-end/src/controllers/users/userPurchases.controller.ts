@@ -4,7 +4,7 @@ import {
   getAllPurchases,
   type PurchasesResult,
 } from "../../services/users/userPurchases.service.js";
-import AppError from "../../errors/appError.js";
+import AppError, { ErrorCodes } from "../../errors/appError.js";
 import Purchase, {
   type PurchaseInterface,
 } from "../../models/purchase.schema.js";
@@ -15,20 +15,20 @@ import * as userValidator from "../../utils/validators/user.validator.js";
 export const getAllPurchase = async (
   req: Request<{}, ApiResponse<PurchasesResult>, {}, {}>,
   res: Response<ApiResponse<PurchasesResult>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
     const { page, limit, type } = validateAndSanitizeBody(
       req.query,
-      userValidator.getPurchaseQuerySchema
+      userValidator.getPurchaseQuerySchema,
     );
 
     const purchases = await getAllPurchases(
       user.id,
       type,
       Number(page || 1),
-      Number(limit || 10)
+      Number(limit || 10),
     );
     const response: ApiResponse<PurchasesResult> = {
       status: true,
@@ -46,14 +46,21 @@ export const getAllPurchase = async (
 export const getPurchase = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<PurchaseInterface>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
     const { id } = req.params;
 
     const purchase = await Purchase.findOne({ userId: user.id, _id: id });
-    if (!purchase) throw new AppError("Purchase not found", 404, true);
+    if (!purchase)
+      throw new AppError(
+        ErrorCodes.PURCHASE_NOT_FOUND,
+        "Purchase not found",
+        404,
+        true,
+        null,
+      );
 
     const response: ApiResponse<PurchaseInterface> = {
       status: true,

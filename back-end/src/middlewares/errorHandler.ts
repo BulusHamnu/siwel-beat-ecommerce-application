@@ -13,35 +13,39 @@ const errorHandler: ErrorRequestHandler = (
   err: customAppError,
   req: Request<{}, ApiResponse<void | customAppError>, {}, {}>,
   res: Response<ApiResponse<void | customAppError>>,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   logger.error("An error occur: ", err);
   if (err instanceof AppError) {
-    if (err.message.includes("ValidationError")) {
-      return res.status(400).json({
-        status: false,
-        message: err.message,
-        error: err.body,
-      });
-    }
-
     return res.status(err.status).json({
       status: false,
       message: err.isOperational
         ? err.message
         : "An unexepected error occured, please try again later",
+      error: {
+        code: err.code,
+        details: err.details,
+      },
     });
   } else {
     if (err.stack?.includes("File too large")) {
       return res.status(400).json({
         status: false,
         message: "File is too large!",
+        error: {
+          code: "FILE_TOO_LARGE",
+          details: null,
+        },
       });
     }
     //
     res.status(500).json({
       status: false,
       message: "An unexepected error occured, please try again later.",
+      error: {
+        code: "UNEXEPECTED_ERROR",
+        details: null,
+      },
     });
   }
 };

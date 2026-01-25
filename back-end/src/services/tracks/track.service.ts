@@ -1,5 +1,5 @@
 import type { FilterQuery, ObjectId } from "mongoose";
-import AppError from "../../errors/appError.js";
+import AppError, { ErrorCodes } from "../../errors/appError.js";
 import Track, {
   type FileUrlInterface,
   type LicenseInterface,
@@ -37,14 +37,14 @@ async function retriveRelatedTracks({
     .limit(5)
     .sort({ createdAt: -1 });
   const relatedTrack: ObjectId[] = tracks.map(
-    (track): ObjectId => track._id as ObjectId
+    (track): ObjectId => track._id as ObjectId,
   );
 
   return relatedTrack;
 }
 
 export const createNewTrack = async (
-  trackbody: createTrackInput
+  trackbody: createTrackInput,
 ): Promise<TrackInterface> => {
   const { type, tags, genre } = trackbody;
   const relatedTrack = await retriveRelatedTracks({ type, genre, tags });
@@ -67,7 +67,7 @@ function buildTrackQueries(
   genre: string,
   search: string,
   type: string,
-  tags: string[] | string
+  tags: string[] | string,
 ): unknown {
   // Filter should match request
   const matches: {
@@ -107,7 +107,7 @@ function buildTrackQueries(
 async function getTracksAndTrackCount(
   queries: any,
   skip: number,
-  limit: number
+  limit: number,
 ) {
   const countsQuery = Track.find(queries).countDocuments();
   let tracksQuery = Track.find(queries)
@@ -148,7 +148,7 @@ export const getTracks = async ({
   const { totalTracksCount, tracksWithExtra } = await getTracksAndTrackCount(
     queries,
     skip,
-    limit
+    limit,
   );
 
   const totalPage = Math.ceil(totalTracksCount / limit);
@@ -179,7 +179,7 @@ export interface TrackUpdates extends createTrackInput {
 function filterUpdatesAndFiles(
   trackUpdates: TrackUpdates,
   files: uploadedTrackFiles,
-  track: TrackInterface
+  track: TrackInterface,
 ): { cleanUpdateData: TrackUpdates; oldFilesPaths: string[] } {
   const oldFilesPaths: string[] = [];
   const updates: any = {};
@@ -228,23 +228,37 @@ function filterUpdatesAndFiles(
 export const updateTrack = async (
   trackId: string,
   trackUpdates: TrackUpdates,
-  files: uploadedTrackFiles
+  files: uploadedTrackFiles,
 ): Promise<TrackInterface> => {
   const track: TrackInterface | null = await Track.findOne({ _id: trackId });
-  if (!track) throw new AppError("Track not found.", 404, true);
+  if (!track)
+    throw new AppError(
+      ErrorCodes.TRACK_NOT_FOUND,
+      "Track not found.",
+      404,
+      true,
+      null,
+    );
 
   const { cleanUpdateData, oldFilesPaths } = filterUpdatesAndFiles(
     trackUpdates,
     files,
-    track
+    track,
   );
 
   const updatedTrack = await Track.findOneAndUpdate(
     { _id: trackId },
     { $set: { ...cleanUpdateData } },
-    { new: true }
+    { new: true },
   );
-  if (!updatedTrack) throw new AppError("Unable to update track.", 500, true);
+  if (!updatedTrack)
+    throw new AppError(
+      ErrorCodes.TRACK_UPDATE_ERROR,
+      "Unable to update track.",
+      500,
+      true,
+      null,
+    );
 
   if (oldFilesPaths.length > 0)
     await supabase.safeRemoveTrackFiles(oldFilesPaths);

@@ -1,4 +1,4 @@
-import AppError from "../errors/appError.js";
+import AppError, { ErrorCodes } from "../errors/appError.js";
 import Notification, {
   type notification,
 } from "../models/notification.schema.js";
@@ -9,7 +9,7 @@ export const postNewNotification = async (
   userId: string,
   message: string,
   type: string,
-  entityId: string | null
+  entityId: string | null,
 ) => {
   const newNotification: notification = await Notification.create({
     userId,
@@ -24,7 +24,7 @@ export const postNewNotification = async (
 /* Get all notifications */
 function buildQueries(
   userId: string,
-  status: string = ""
+  status: string = "",
 ): { status?: string; userId: string } {
   const queries: { read?: Boolean; userId: string } = { userId };
   if (status && status !== "all")
@@ -34,7 +34,7 @@ function buildQueries(
 
 export const getAllNotifications = async (
   userId: string,
-  read: string
+  read: string,
 ): Promise<notification[]> => {
   const queries = buildQueries(userId, read);
   const notifications = Notification.find(queries).sort({ date: -1 });
@@ -44,7 +44,7 @@ export const getAllNotifications = async (
 /* Get a notification */
 export const getNotification = async (
   userId: string,
-  notificationId: string
+  notificationId: string,
 ): Promise<notification> => {
   // Users can only retrive their notification
   const notification = await Notification.findOne({
@@ -52,7 +52,14 @@ export const getNotification = async (
     userId,
   });
 
-  if (!notification) throw new AppError("Notification not found", 404, true);
+  if (!notification)
+    throw new AppError(
+      ErrorCodes.NOTIFICATION_NOT_FOUND,
+      "Notification not found",
+      404,
+      true,
+      null,
+    );
   return notification;
 };
 
@@ -60,17 +67,23 @@ export const getNotification = async (
 export const updateNotificationStatus = async (
   userId: string,
   notificationId: string,
-  read: boolean
+  read: boolean,
 ): Promise<notification> => {
   const updatedNotification: notification | null =
     await Notification.findOneAndUpdate(
       { _id: notificationId, userId },
       { $set: { read } },
-      { new: true }
+      { new: true },
     );
 
   if (!updatedNotification)
-    throw new AppError("Notification not found", 404, true);
+    throw new AppError(
+      ErrorCodes.NOTIFICATION_NOT_FOUND,
+      "Notification not found",
+      404,
+      true,
+      null,
+    );
 
   return updatedNotification;
 };
@@ -78,7 +91,7 @@ export const updateNotificationStatus = async (
 /* Delete notification */
 export const deleteNotification = async (
   userId: string,
-  notificationId: string
+  notificationId: string,
 ): Promise<void> => {
   const notificationDeleted = await Notification.findOneAndDelete({
     _id: notificationId,
@@ -86,14 +99,20 @@ export const deleteNotification = async (
   });
 
   if (!notificationDeleted)
-    throw new AppError("Notification not found", 404, true);
+    throw new AppError(
+      ErrorCodes.NOTIFICATION_NOT_FOUND,
+      "Notification not found",
+      404,
+      true,
+      null,
+    );
 };
 
 /* Notify admins for event */
 export async function notifyAdmins(
   message: string,
   type: string,
-  entityId: string | null = null
+  entityId: string | null = null,
 ) {
   // There is not specify admin, all active admins will be notify
   const admins: UserInterface[] = await User.find({

@@ -1,5 +1,5 @@
 import Track, { type TrackInterface } from "../../models/track.schema.js";
-import AppError from "../../errors/appError.js";
+import AppError, { ErrorCodes } from "../../errors/appError.js";
 import Cart, {
   type CartItem,
   ItemStatus,
@@ -13,20 +13,33 @@ import { getCart } from "../shared/getUserCartAndTracks.js";
 export const addToCart = async (
   trackId: string,
   license: string,
-  userId: string
+  userId: string,
 ): Promise<void> => {
   const userCart = await getCart(userId);
 
   const track: TrackInterface | null = await Track.findOne({ _id: trackId });
-  if (!track) throw new AppError("Track not found", 404, true);
+  if (!track)
+    throw new AppError(
+      ErrorCodes.TRACK_NOT_FOUND,
+      "Track not found",
+      404,
+      true,
+      null,
+    );
 
   // check if product is already in cart to avoid duplicate
   const productExist = userCart.items.find(
     (track) =>
-      String(track.productId) === String(trackId) && license === track.license
+      String(track.productId) === String(trackId) && license === track.license,
   );
   if (productExist)
-    throw new AppError("Product already exist in cart.", 400, true);
+    throw new AppError(
+      ErrorCodes.PRODUCT_ALREADY_EXISTS,
+      "Product already exist in cart.",
+      400,
+      true,
+      null,
+    );
 
   const productSnapShop: CartItem = {
     name: track.title,
@@ -44,12 +57,12 @@ export const addToCart = async (
 export const removeFromCart = async (
   trackId: string,
   license: string,
-  userId: string
+  userId: string,
 ): Promise<void> => {
   await Cart.findOneAndUpdate(
     { userId },
     { $pull: { items: { productId: trackId, license } } },
-    { new: true }
+    { new: true },
   );
 };
 
@@ -61,7 +74,7 @@ interface CartItemUpdated extends CartItem {
 
 function validateProductsStatus(
   cartItems: CartItem[],
-  trackMap: Map<string, any>
+  trackMap: Map<string, any>,
 ): void {
   cartItems.forEach((product: CartItemUpdated) => {
     const track = trackMap.get(String(product.productId));
@@ -97,7 +110,7 @@ export const getUserCart = async (userId: string): Promise<CartInterface> => {
   validateProductsStatus(userCartObj.items, trackMap); // User should know if product status or price has changed
   const subTotal = userCartObj.items.reduce(
     (sum, item) => sum + Number(item.price),
-    0
+    0,
   );
 
   userCartObj.subTotal = subTotal;

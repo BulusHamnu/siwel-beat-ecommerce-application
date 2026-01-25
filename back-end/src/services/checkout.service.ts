@@ -1,4 +1,4 @@
-import AppError from "../errors/appError.js";
+import AppError, { ErrorCodes } from "../errors/appError.js";
 import { type CartItem, type CartInterface } from "../models/cart.schema.js";
 import getUserCartandTracks from "./shared/getUserCartAndTracks.js";
 
@@ -13,18 +13,22 @@ function verifyItemsStatus(trackMap: Map<string, any>, cartItems: CartItem[]) {
     const track = trackMap.get(String(item.productId));
     if (!track || track.status !== "active") {
       throw new AppError(
+        ErrorCodes.CART_INVALID,
         "Some items in your cart are invalid, please confirm and update cart.",
         400,
-        true
+        true,
+        null,
       );
     } else if (
       (item.license === "basic" && track.basicPrice !== item.price) ||
       (item.license === "premium" && track.premiumPrice !== item.price)
     ) {
       throw new AppError(
-        `Price for ${item.name} has changed. Update your cart.`,
+        ErrorCodes.CART_INVALID,
+        `An item price in your cart has changed. Update your cart.`,
         400,
-        true
+        true,
+        { item: item.name },
       );
     }
   });
@@ -32,14 +36,14 @@ function verifyItemsStatus(trackMap: Map<string, any>, cartItems: CartItem[]) {
 
 export const getCheckoutSummary = async (
   userId: string,
-  items: string[]
+  items: string[],
 ): Promise<checkoutSummary> => {
   const { userCart, tracks } = await getUserCartandTracks(userId);
   const userCartObj: CartInterface = userCart.toObject();
 
   // Filter selected items
   const selectedItems = userCartObj.items.filter((item) =>
-    items.includes(String(item.productId))
+    items.includes(String(item.productId)),
   );
 
   const trackMap = new Map<string, any>();
@@ -50,7 +54,7 @@ export const getCheckoutSummary = async (
 
   const totalAmount = selectedItems.reduce(
     (sum, item) => sum + Number(item.price),
-    0
+    0,
   );
 
   return { items: selectedItems, total: totalAmount };

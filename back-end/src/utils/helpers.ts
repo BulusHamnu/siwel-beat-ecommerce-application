@@ -1,5 +1,5 @@
 import { imageSize } from "image-size";
-import AppError from "../errors/appError.js";
+import AppError, { ErrorCodes } from "../errors/appError.js";
 import sharp from "sharp";
 
 /* Generate random code */
@@ -16,10 +16,10 @@ export function getDateRange(date: string) {
   const [year, month, day] = date.split("-");
 
   const start = new Date(
-    Date.UTC(Number(year), Number(month) - 1, Number(day), 0, 0, 0)
+    Date.UTC(Number(year), Number(month) - 1, Number(day), 0, 0, 0),
   );
   const end = new Date(
-    Date.UTC(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999)
+    Date.UTC(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999),
   );
 
   return { start, end };
@@ -28,14 +28,20 @@ export function getDateRange(date: string) {
 /* Check for image ratio and rezise if needed */
 export async function checkAndResizeImgRatio(
   imageBuffer: Buffer,
-  type: string
+  type: string,
 ): Promise<Buffer> {
   const { height, width } = imageSize(imageBuffer);
 
   // Resize banner
   if (type === "banner") {
     if (width < 1920 || height < 600) {
-      throw new AppError("Image must be 1920 * 600.", 400, true);
+      throw new AppError(
+        ErrorCodes.IMAGE_SIZE_INVALID,
+        "Image must be 1920 * 600.",
+        400,
+        true,
+        null,
+      );
     }
     // Banner need to be a perfect 1920 × 600
     if (width !== 1920 || height !== 600) {
@@ -52,7 +58,13 @@ export async function checkAndResizeImgRatio(
   // Any other image should be square
   // A perfect square image will be good on any display
   if (height !== width) {
-    throw new AppError("Image width and height must be the same.", 400, true);
+    throw new AppError(
+      ErrorCodes.IMAGE_SIZE_INVALID,
+      "Image width and height must be the same.",
+      400,
+      true,
+      null,
+    );
   }
 
   // Resize avatar

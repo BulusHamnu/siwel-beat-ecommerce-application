@@ -6,19 +6,19 @@ import type { ApiResponse } from "../responseInterface.js";
 import env from "../../configs/env.js";
 import * as authValidator from "../../utils/validators/auth.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
-import AppError from "../../errors/appError.js";
+import AppError, { ErrorCodes } from "../../errors/appError.js";
 import User from "../../models/user.schema.js";
 
 /* Sign up new user */
 export const signUp = async (
   req: Request<{}, {}, CreateUserBody, {}>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const cleanSignupBody: CreateUserBody = validateAndSanitizeBody(
       req.body,
-      authValidator.signupBodySchema
+      authValidator.signupBodySchema,
     );
 
     const newUser = await authService.createNewUser(cleanSignupBody);
@@ -49,19 +49,19 @@ interface LoginReturnType {
 export const logIn = async (
   req: Request<{}, ApiResponse<LoginReturnType>, loginBody, {}>,
   res: Response<ApiResponse<LoginReturnType>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { email, password }: loginBody = validateAndSanitizeBody(
       req.body,
-      authValidator.loginBodySchema
+      authValidator.loginBodySchema,
     );
 
     const deviceInfo = req.headers["user-agent"] || "Unidentified";
     const { accessToken, user, refreshToken } = await authService.loginUser(
       password.normalize("NFC"),
       email,
-      deviceInfo
+      deviceInfo,
     );
 
     res.cookie("refreshToken", refreshToken, env.LOGIN_COOKIE_OPTS);
@@ -80,11 +80,18 @@ export const logIn = async (
 export const refreshToken = async (
   req: Request<{}, ApiResponse<{ accessToken: string }>, {}, {}>,
   res: Response<ApiResponse<{ accessToken: string }>>,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) throw new AppError("Missing refresh token.", 401, true);
+    if (!refreshToken)
+      throw new AppError(
+        ErrorCodes.AUTH_TOKEN_REQUIRED,
+        "Missing refresh token.",
+        401,
+        true,
+        null,
+      );
 
     const accessToken = await authService.refreshToken(refreshToken);
 
@@ -108,12 +115,12 @@ interface emailVerificationBody {
 export const verifyEmail = async (
   req: Request<{}, ApiResponse<void>, { email: string; code: string }, {}>,
   res: Response<ApiResponse<void>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { email, code }: emailVerificationBody = validateAndSanitizeBody(
       req.body,
-      authValidator.emailAndCodeBodySchema
+      authValidator.emailAndCodeBodySchema,
     );
 
     await authService.verifyEmail(email, code);
@@ -132,7 +139,7 @@ export const verifyEmail = async (
 export const resendVeficationEmail = async (
   req: Request<{}, { status: boolean; message: string }, {}, {}>,
   res: Response<{ status: boolean; message: string }>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const email: string | undefined = req.user?.email;
@@ -154,7 +161,7 @@ export const resendVeficationEmail = async (
 export const forgetPassword = async (
   req: Request<{}, { status: false; message: string }, { email: string }, {}>,
   res: Response<{ status: boolean; message: string }>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const email = req.body.email;
@@ -162,7 +169,7 @@ export const forgetPassword = async (
 
     const userEmail: string = validateAndSanitizeBody(
       email,
-      authValidator.validateEmail
+      authValidator.validateEmail,
     );
 
     await authService.forgetPassword(userEmail);
@@ -186,12 +193,12 @@ export const verifyResetCode = async (
     {}
   >,
   res: Response<ApiResponse<{ resetToken: string }>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { email, code } = validateAndSanitizeBody(
       req.body,
-      authValidator.emailAndCodeBodySchema
+      authValidator.emailAndCodeBodySchema,
     );
 
     const { resetToken } = await authService.verifyResetCode(email, code);
@@ -216,7 +223,7 @@ interface resetPasswordBody {
 export const resetpassword = async (
   req: Request<{}, ApiResponse<void>, resetPasswordBody, {}>,
   res: Response<ApiResponse<void>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { email, password, resetToken }: resetPasswordBody =
@@ -239,14 +246,14 @@ export const resetpassword = async (
 export const logout = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const refreshToken = req.cookies.refreshToken;
 
     await User.updateOne(
       { "sessions.refreshToken": refreshToken },
-      { $pull: { sessions: { refreshToken } } }
+      { $pull: { sessions: { refreshToken } } },
     );
 
     res.clearCookie("refreshToken", env.LOGIN_COOKIE_OPTS);
