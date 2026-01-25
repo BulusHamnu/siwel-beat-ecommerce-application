@@ -37,7 +37,11 @@ router.use(allowRole("admin"));
 router.post("/", creationApiLimiter(), upload, trackController.postTrack);
 router.patch("/:id", creationApiLimiter(), upload, trackController.updateTrack);
 
-router.post("/:id/activate", creationApiLimiter(), trackController.activateTrack);
+router.post(
+  "/:id/activate",
+  creationApiLimiter(),
+  trackController.activateTrack,
+);
 router.post(
   "/:id/deactivate",
   creationApiLimiter(),

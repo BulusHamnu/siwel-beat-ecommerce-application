@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { contactme } from "../controllers/public.apis.controller.js";
+import { contactme } from "../controllers/contactme.controller.js";
 import rateLimiter from "../middlewares/rateLimiter.js";
 
 const router = Router();
