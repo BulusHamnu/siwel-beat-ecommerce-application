@@ -17,7 +17,7 @@ interface loginCookieOpts {
 interface Env {
   MONGO_URI: string;
   PORT: number | string;
-  NODE_ENV: string | boolean;
+  NODE_ENV: string;
   EMAIL_PASSWORD: string;
   EMAIL_USER: string;
   ADMIN_EMAIL: string;
@@ -40,20 +40,14 @@ interface Env {
   DOCUMENT_FILES_BUCKET: string;
   IMAGE_FILES_BUCKET: string;
   GOOGLE_OAUTH2_URL: string;
-  TAGGED_AUDIO_FOLDER: string;
-  UNTAGGED_AUDIO_FOLDER: string;
-  BASIC_LICENSE_FOLDER: string;
-  PREMIUM_LICENSE_FOLDER: string;
   HASH_SALT_NUMBER: number;
-  TRACK_COVER_IMAGE_FOLDER: string;
-  USER_AVATAR_FOLDER: string;
   GOOGLE_REDIRECT_URL: string;
 }
 
 const env: Env = {
   MONGO_URI: process.env.MONGO_URI || "",
   PORT: process.env.PORT || 3000,
-  NODE_ENV: process.env.NODE_ENV || false,
+  NODE_ENV: process.env.NODE_ENV || "development",
   EMAIL_USER: process.env.EMAIL_USER || "",
   EMAIL_PASSWORD: process.env.EMAIL_PASSWORD || "",
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || "",
@@ -85,15 +79,7 @@ const env: Env = {
   GOOGLE_OAUTH2_URL:
     process.env.GOOGLE_OAUTH2_URL ||
     "https://accounts.google.com/o/oauth2/v2/auth",
-  TAGGED_AUDIO_FOLDER: process.env.TAGGED_AUDIO_FOLDER || "taggedBeat/",
-  UNTAGGED_AUDIO_FOLDER: process.env.UNTAGGED_AUDIO_FOLDER || "untaggedBeat/",
-  BASIC_LICENSE_FOLDER: process.env.BASIC_LICENSE_FOLDER || "basicLicense/",
-  PREMIUM_LICENSE_FOLDER:
-    process.env.PREMIUM_LICENSE_FOLDER || "premiumLicense/",
   HASH_SALT_NUMBER: 10,
-  TRACK_COVER_IMAGE_FOLDER:
-    process.env.TRACK_COVER_IMAGE_FOLDER || "coverImages/",
-  USER_AVATAR_FOLDER: process.env.USER_AVATAR_FOLDER || "userAvatars/",
   GOOGLE_REDIRECT_URL: process.env.GOOGLE_REDIRECT_URL || "",
 };
 

@@ -57,7 +57,8 @@ app.use("/api/v1/admin", adminRoutes);
 // error handler
 app.use(errorHandler);
 
+await connectDb();
+
 app.listen(env.PORT, async (): Promise<void> => {
-  await connectDb();
   logger.info(`Server started on: http://localhost:${env.PORT}`);
 });
