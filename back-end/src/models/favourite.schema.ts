@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 export interface Favourite extends Document {
   userId: ObjectId;
   trackId: ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const favourite = new mongoose.Schema<Favourite>(

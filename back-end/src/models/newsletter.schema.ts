@@ -5,6 +5,7 @@ export interface NewsletterInterface extends Document {
   subscribed: boolean;
   token: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 const newsletter = new Schema<NewsletterInterface>(
@@ -13,7 +14,7 @@ const newsletter = new Schema<NewsletterInterface>(
     subscribed: { type: Boolean, default: true },
     token: { type: String, required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* indexes */

@@ -7,6 +7,8 @@ export interface CommentInterface extends Document {
   content: string;
   userId: ObjectId;
   parentId: null | ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const comment = new mongoose.Schema<CommentInterface>(

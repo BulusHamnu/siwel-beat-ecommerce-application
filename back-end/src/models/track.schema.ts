@@ -26,6 +26,8 @@ export interface TrackInterface extends Document {
   premiumPrice: number;
   genre: string;
   relatedTrack: string[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const trackSchema = new mongoose.Schema<TrackInterface>(

@@ -9,18 +9,23 @@ export interface License extends Document {
   trackId: ObjectId;
   basic: string;
   premium: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /* License schema */
-const licenseSchema = new Schema<License>({
-  trackId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Track",
-    required: true,
+const licenseSchema = new Schema<License>(
+  {
+    trackId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Track",
+      required: true,
+    },
+    basic: { type: String, required: true },
+    premium: { type: String, required: true },
   },
-  basic: { type: String, required: true },
-  premium: { type: String, required: true },
-});
+  { timestamps: true },
+);
 
 const License = model<License>("License", licenseSchema);
 export default License;

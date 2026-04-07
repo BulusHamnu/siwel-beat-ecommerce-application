@@ -8,6 +8,8 @@ export interface notification extends Document {
   read: boolean;
   type: string;
   entityId: ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const notification = new mongoose.Schema<notification>(

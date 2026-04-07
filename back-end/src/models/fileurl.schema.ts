@@ -4,18 +4,23 @@ export interface FileUrl extends Document {
   trackId: ObjectId;
   tagged: string;
   untagged: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /* FileUrl schema */
-const fileUrlSchema = new Schema<FileUrl>({
-  trackId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Track",
-    required: true,
+const fileUrlSchema = new Schema<FileUrl>(
+  {
+    trackId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Track",
+      required: true,
+    },
+    tagged: { type: String, required: true },
+    untagged: { type: String, required: true },
   },
-  tagged: { type: String, required: true },
-  untagged: { type: String, required: true },
-});
+  { timestamps: true },
+);
 
 const FileUrl = model<FileUrl>("FileUrl", fileUrlSchema);
 export default FileUrl;

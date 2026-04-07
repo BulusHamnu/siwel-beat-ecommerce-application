@@ -8,6 +8,8 @@ export interface OrderItemInterface extends CartItem, Document {
   orderId: ObjectId;
   status: Status;
   refundedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const orderItem = new mongoose.Schema<OrderItemInterface>(

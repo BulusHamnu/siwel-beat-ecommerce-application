@@ -7,6 +7,8 @@ export interface Session extends Document {
   expiresAt: Date;
   deviceInfo: string;
   lastUsed: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const sessionSchema = new Schema<Session>(

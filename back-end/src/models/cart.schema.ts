@@ -19,6 +19,8 @@ export interface CartInterface extends Document {
   userId: string | ObjectId;
   items: CartItem[];
   subTotal?: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const cartSchema = new Schema<CartInterface>(

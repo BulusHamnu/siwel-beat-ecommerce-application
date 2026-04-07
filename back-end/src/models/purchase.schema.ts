@@ -8,6 +8,8 @@ export interface PurchaseInterface extends Document {
   type: string;
   orderId: ObjectId;
   amount: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const purchase = new mongoose.Schema<PurchaseInterface>(
