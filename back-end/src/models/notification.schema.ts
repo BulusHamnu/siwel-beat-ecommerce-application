@@ -21,7 +21,10 @@ const notification = new mongoose.Schema<notification>(
       type: Date,
       default: Date.now,
     },
-    type: String,
+    type: {
+      type: String,
+      required: true,
+    },
     message: {
       type: String,
       required: true,
@@ -35,7 +38,7 @@ const notification = new mongoose.Schema<notification>(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* Indexes */

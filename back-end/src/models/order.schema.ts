@@ -43,11 +43,12 @@ const order = new mongoose.Schema<OrderInterface>(
     },
     paymentMethod: {
       type: String,
+      required: true,
       default: "card",
     },
     paymentProvider: {
       type: String,
-      default: "stripe",
+      default: "lemonSqueezy",
     },
     userId: {
       type: mongoose.Schema.ObjectId,
@@ -60,10 +61,14 @@ const order = new mongoose.Schema<OrderInterface>(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* Indexes */
+order.index(
+  { transactionId: 1 },
+  { unique: true, partialFilterExpression: { $exists: true } },
+);
 order.index({ userId: 1, createdAt: -1 });
 order.index({ userId: 1, createdAt: -1, status: 1 });
 

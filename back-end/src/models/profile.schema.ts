@@ -32,12 +32,12 @@ const profileSchema = new Schema<ProfileInterface>(
     firstName: {
       type: String,
       min: 3,
-      default: "",
+      default: null,
     },
     lastName: {
       type: String,
       min: 3,
-      default: "",
+      default: null,
     },
     gender: {
       type: String,
@@ -46,7 +46,6 @@ const profileSchema = new Schema<ProfileInterface>(
     },
     lemonSqueezyId: {
       type: String,
-      default: "",
     },
     bio: {
       type: String,
@@ -69,11 +68,15 @@ const profileSchema = new Schema<ProfileInterface>(
       },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* Index */
 profileSchema.index({ userId: 1 }, { unique: true });
+profileSchema.index(
+  { lemonSqueezyId: 1 },
+  { unique: true, partialFilterExpression: { $exists: true } },
+);
 
 // user model
 const profileModel = model<ProfileInterface>("Profile", profileSchema);
