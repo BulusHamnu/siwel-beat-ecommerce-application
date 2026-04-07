@@ -2,32 +2,34 @@ import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 
 export interface CommentInterface extends Document {
-  trackId: string | ObjectId;
+  trackId: ObjectId;
+  likes: number;
   content: string;
-  userId: string | ObjectId;
+  userId: ObjectId;
   parentId: null | ObjectId;
 }
 
 const comment = new mongoose.Schema<CommentInterface>(
   {
     trackId: {
-      type: mongoose.Schema.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Track",
       required: true,
     },
+    likes: { type: Number, default: 0 },
     content: { type: String, required: true },
     userId: {
-      type: mongoose.Schema.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "User",
     },
     parentId: {
-      type: mongoose.Schema.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       default: null,
       ref: "Comment",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* Indexes */
