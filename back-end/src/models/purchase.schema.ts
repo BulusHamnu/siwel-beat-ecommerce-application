@@ -1,6 +1,6 @@
 import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
-import { LicenseType } from "./track.schema.js";
+import { LicenseType } from "./license.schema.js";
 
 export interface PurchaseInterface extends Document {
   userId: ObjectId;
@@ -37,7 +37,7 @@ const purchase = new mongoose.Schema<PurchaseInterface>(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* Indexes */

@@ -11,7 +11,11 @@ export interface Session extends Document {
 
 const sessionSchema = new Schema<Session>(
   {
-    userId: { type: mongoose.Types.ObjectId, ref: "User" },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     refreshToken: {
       type: String,
       required: true,

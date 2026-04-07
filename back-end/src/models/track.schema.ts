@@ -7,24 +7,9 @@ export enum BeatType {
   album = "album",
 }
 
-export enum LicenseType {
-  basic = "basic",
-  premium = "premium",
-}
-
 export enum StatusType {
   active = "active",
   inactive = "inactive",
-}
-
-export interface FileUrlInterface {
-  tagged: string;
-  untagged: string;
-}
-
-export interface LicenseInterface {
-  basic: string;
-  premium: string;
 }
 
 export interface TrackInterface extends Document {
@@ -36,16 +21,11 @@ export interface TrackInterface extends Document {
   key: string;
   status: StatusType;
   bpm: number;
-  license: LicenseInterface;
   tags: string[];
   basicPrice: number;
   premiumPrice: number;
   genre: string;
-  fileUrl: FileUrlInterface;
   relatedTrack: string[];
-
-  // methods
-  removeUnwantedFields(): TrackInterface;
 }
 
 const trackSchema = new mongoose.Schema<TrackInterface>(
@@ -89,37 +69,15 @@ const trackSchema = new mongoose.Schema<TrackInterface>(
       type: Number,
       required: true,
     },
-    license: {
-      basic: { type: String, required: true },
-      premium: { type: String, required: true },
-    },
     tags: [String],
     genre: {
       type: String,
       required: true,
     },
-    fileUrl: {
-      tagged: {
-        type: String,
-        required: true,
-      },
-      untagged: {
-        type: String,
-        required: true,
-      },
-    },
     relatedTrack: [{ type: mongoose.Types.ObjectId, ref: "Track" }],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
-
-trackSchema.methods.removeUnwantedFields = function (): TrackInterface {
-  const obj = this.toObject();
-  delete obj.fileUrl;
-  delete obj.license;
-  delete obj.coverImagePath;
-  return obj;
-};
 
 /* Indexes */
 trackSchema.index({

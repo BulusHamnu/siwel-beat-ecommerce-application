@@ -2,7 +2,7 @@ import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 import { type CartItem } from "./cart.schema.js";
 import { Status } from "./order.schema.js";
-import { LicenseType } from "./track.schema.js";
+import { LicenseType } from "./license.schema.js";
 
 export interface OrderItemInterface extends CartItem, Document {
   orderId: ObjectId;
@@ -49,7 +49,7 @@ export const orderItem = new mongoose.Schema<OrderItemInterface>(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* Indexes */
