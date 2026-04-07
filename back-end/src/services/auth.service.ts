@@ -1,14 +1,18 @@
 import User from "../models/user.schema.js";
 import type { CreateUserBody } from "../controllers/userTypes.js";
-import type { Session, UserInterface } from "../models/user.schema.js";
+import type { UserInterface } from "../models/user.schema.js";
+import Session, { type SessionInterface } from "../models/session.schema.js";
 import AppError, { ErrorCodes } from "../errors/appError.js";
-import { createHashpasswordAndEmailVerification } from "./shared/authShared.service.js";
+import {
+  createEmailVerificationCode,
+  hashPassword,
+} from "./shared/authShared.service.js";
 import Profile from "../models/profile.schema.js";
-import { generateRandCode } from "../utils/helpers.js";
+import { generateHashValue, generateRandCode } from "../utils/helpers.js";
 import sendEmail from "./sendEmail.js";
 import Template from "../utils/emailTemplate.js";
-import bcrypt from "bcrypt";
 import crypto from "crypto";
+import mongoose from "mongoose";
 
 /* Create new user */
 export const createNewUser = async ({
@@ -19,61 +23,70 @@ export const createNewUser = async ({
   password,
   gender,
   provider = "local",
-  picture = "",
+  avatar = "",
   accessToken,
-  idToken,
   googleId,
 }: CreateUserBody): Promise<UserInterface> => {
-  const emailExist = await User.findOne({ email: email });
-  if (emailExist) {
-    throw new AppError(
-      ErrorCodes.USER_ALREADY_EXISTS,
-      "User already exist.",
-      409,
-      true,
-      { email },
-    );
-  }
+  const hashedPassword = await hashPassword(password);
+  const { hashedCode, code, expiresAt } = await createEmailVerificationCode(15);
 
-  const { hashPassword, emailVerification } =
-    await createHashpasswordAndEmailVerification(password, 15);
-
-  const isVerified = provider === "google" ? true : false;
   const role = "user";
-  const user = await User.create({
-    emailVerification: isVerified == true ? {} : emailVerification,
-    username,
-    email,
-    provider,
-    role,
-    isVerified,
-    gender,
-    password: hashPassword,
-    google: {
-      googleId,
-      idToken,
-      accessToken,
-    },
-  });
+  const isVerified = provider === "google" ? true : false;
+  const emailVerification =
+    isVerified == true ? {} : { code: hashedCode, expiresAt };
 
-  await Profile.create({
-    userId: user._id,
-    firstName,
-    lastName,
-    profilePic: picture,
-  });
+  const session = await mongoose.startSession();
+  let newUser: UserInterface | undefined = undefined;
+
+  try {
+    await session.withTransaction(async () => {
+      newUser = new User({
+        username,
+        email,
+        provider,
+        role,
+        isVerified,
+        password: hashedPassword,
+        google: {
+          googleId,
+          accessToken,
+        },
+        emailVerification,
+      });
+
+      await newUser.save({ session });
+
+      const newProfile = new Profile({
+        userId: newUser._id,
+        firstName,
+        lastName,
+        avatar,
+        gender,
+      });
+
+      await newProfile.save({ session });
+    });
+  } catch (error: any) {
+    if (error.code === 11000) {
+      throw new AppError(
+        ErrorCodes.USER_ALREADY_EXISTS,
+        "User already exist.",
+        409,
+        true,
+        { email },
+      );
+    }
+    throw error;
+  }
 
   if (!isVerified)
     await sendEmail(
-      user.email,
-      "Please verify you email.",
-      Template.emailVerificationTemplate(
-        user.username,
-        user.emailVerification.code,
-      ),
+      newUser!.email,
+      "Please verify your email.",
+      Template.emailVerificationTemplate(newUser!.username, code),
     );
 
-  return user;
+  return newUser!;
 };
 
 /* Login user */
@@ -96,7 +109,7 @@ async function getUserAndValidatePassword(
     throw new AppError(
       ErrorCodes.PASSWORD_INCORRECT,
       "Incorrect Password, reset your password or sign in with google.",
-      400,
+      401,
       true,
       null,
     );
@@ -105,7 +118,7 @@ async function getUserAndValidatePassword(
     throw new AppError(
       ErrorCodes.PASSWORD_INCORRECT,
       "Incorrect Password.",
-      400,
+      401,
       true,
       null,
     );
@@ -121,15 +134,7 @@ export interface UserLoginSnaphot {
   isActive: boolean;
 }
 
-function removeOldSessions(sessions: Session[]): Session[] {
-  const thirtyDaysAgo = Date.now() - 1000 * 60 * 60 * 24 * 30;
-  return sessions.filter((session) => {
-    const expiredAt = new Date(session.expiredAt).getTime();
-    return expiredAt > thirtyDaysAgo;
-  });
-}
-
-export const loginUser = async (
+export const validatePasswordAndSignTokens = async (
   password: string,
   email: string,
   deviceInfo: string,
@@ -142,18 +147,13 @@ export const loginUser = async (
   const accessToken = user.signToken("accessToken", "24h");
   const refreshToken = user.signToken("refreshToken", "7d");
 
-  const session: Session = {
+  const newSession = await Session.create({
+    userId: user._id as string,
     refreshToken,
-    expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     lastUsed: new Date(),
     deviceInfo,
-  };
-
-  // Remove expired session that were not log out.
-  const userFilteredSessions = removeOldSessions(user.sessions);
-  userFilteredSessions.push(session);
-  user.sessions = userFilteredSessions;
-  await user.save();
+  });
 
   return {
     user: {
@@ -166,6 +166,108 @@ export const loginUser = async (
     accessToken,
     refreshToken,
   };
+};
+
+/* Resend verification email */
+export const resendVerificationEmail = async (email: string): Promise<void> => {
+  const user: UserInterface | null = await User.findOne({ email });
+  if (!user)
+    throw new AppError(
+      ErrorCodes.USER_NOT_FOUND,
+      "User not found.",
+      404,
+      true,
+      { email },
+    );
+
+  if (user.isVerified)
+    throw new AppError(
+      ErrorCodes.EMAIL_ALREADY_VERIFIED,
+      "User is already verified.",
+      400,
+      true,
+      { identifier: email },
+    );
+
+  const { code, hashedCode, expiresAt } = await createEmailVerificationCode(15);
+
+  user.emailVerification.code = hashedCode;
+  user.emailVerification.expiresAt = expiresAt;
+  await user.save();
+
+  await sendEmail(
+    user.email,
+    "Email Verification Code",
+    Template.emailVerificationTemplate(user.username, code),
+  );
+};
+
+/* Verify email */
+export const verifyEmail = async (
+  email: string,
+  code: string,
+): Promise<boolean> => {
+  const user: UserInterface | null = await User.findOne({ email: email });
+  if (!user)
+    throw new AppError(
+      ErrorCodes.USER_NOT_FOUND,
+      "User not found.",
+      404,
+      true,
+      { email },
+    );
+
+  // can't verify already verified users
+  if (user.isVerified)
+    throw new AppError(
+      ErrorCodes.EMAIL_ALREADY_VERIFIED,
+      "User is already verified.",
+      400,
+      true,
+      { identifier: email },
+    );
+
+  if (!user.emailVerification?.expiresAt) {
+    throw new AppError(
+      ErrorCodes.VERIFICATION_CODE_EXPIRED,
+      "Verification code has expired.",
+      400,
+      true,
+      null,
+    );
+  }
+
+  const storedHashedCode = user.emailVerification.code;
+  const hashedCode = generateHashValue(code);
+  const expiredAt = new Date(user.emailVerification.expiresAt).getTime();
+  const currentTimeStamp = Date.now();
+
+  if (expiredAt < currentTimeStamp) {
+    throw new AppError(
+      ErrorCodes.VERIFICATION_CODE_EXPIRED,
+      "Verification code has expired.",
+      400,
+      true,
+      null,
+    );
+  }
+
+  if (storedHashedCode !== hashedCode) {
+    throw new AppError(
+      ErrorCodes.VERIFICATION_CODE_INVALID,
+      "Verification code is invalid.",
+      400,
+      true,
+      null,
+    );
+  }
+
+  user.isVerified = true;
+  user.emailVerification.code = null;
+  user.emailVerification.expiresAt = null;
+  await user.save();
+
+  return true;
 };
 
 /* Forget password */
@@ -181,13 +283,13 @@ export const forgetPassword = async (email: string): Promise<void> => {
     );
 
   const otpCode = generateRandCode(6);
-  user.resetPasswordVerification.otpCode = otpCode;
-  user.resetPasswordVerification.otpExpiredAt = new Date(
+  const codeHashedValue = generateHashValue(otpCode);
+  user.resetPasswordVerification.otpCode = codeHashedValue;
+  user.resetPasswordVerification.otpExpiresAt = new Date(
     Date.now() + 15 * 60 * 1000,
   );
   await user.save();
 
-  // user get reset code
   await sendEmail(
     user.email,
     "Reset Password Code",
@@ -195,52 +297,15 @@ export const forgetPassword = async (email: string): Promise<void> => {
   );
 };
 
-/* Reset Password */
-export const resetPassword = async (
-  email: string,
-  password: string,
-  resetToken: string,
-): Promise<void> => {
-  const user: UserInterface | null = await User.findOne({
-    email,
-    "resetPasswordVerification.resetToken": resetToken,
-    "resetPasswordVerification.resetTokenExpiredAt": { $gt: new Date() },
-  });
-
-  if (!user)
-    throw new AppError(
-      ErrorCodes.RESET_TOKEN_EXPIRED,
-      "Reset token has expired.",
-      400,
-      true,
-      null,
-    );
-
-  const hashPassword: string = await bcrypt.hash(password, 10);
-  user.password = hashPassword;
-  user.resetPasswordVerification.resetToken = null;
-  user.resetPasswordVerification.resetTokenExpiredAt = null;
-  await user.save();
-
-  // send email
-  await sendEmail(
-    user.email,
-    "Password Reset Successfully.",
-    Template.resetSuccessfulTemplate(user.username),
-  );
-};
-
-/* Resend verification email */
-function generateEmailVerificationToken(): {
-  verificationCode: string | number;
-  expiredAt: Date;
-} {
-  const verificationCode: string | number | null = generateRandCode(6);
-  const expiredAt = new Date(Date.now() + 15 * 60 * 1000);
-  return { verificationCode, expiredAt };
+/* Verify reset password code */
+function generateResetToken(): string {
+  return crypto.randomBytes(16).toString("hex");
 }
 
-export const resendVerificationEmail = async (email: string): Promise<void> => {
+export const verifyResetPasswordOtp = async (
+  email: string,
+  code: string,
+): Promise<{ resetToken: string }> => {
   const user: UserInterface | null = await User.findOne({ email });
   if (!user)
     throw new AppError(
@@ -250,36 +315,65 @@ export const resendVerificationEmail = async (email: string): Promise<void> => {
       true,
       { email },
     );
-  if (user.isVerified)
+
+  if (!user.resetPasswordVerification?.otpExpiresAt) {
     throw new AppError(
-      ErrorCodes.EMAIL_ALREADY_VERIFIED,
-      "User is already verified.",
+      ErrorCodes.RESET_OTP_INVALID,
+      "Otp code is invalid.",
       400,
       true,
-      { identifier: email },
+      null,
     );
+  }
 
-  const { verificationCode, expiredAt } = generateEmailVerificationToken();
+  const storedHashedCode = user.resetPasswordVerification.otpCode;
+  const hashedCode = generateHashValue(code);
+  const expiredAt = new Date(
+    user.resetPasswordVerification.otpExpiresAt,
+  ).getTime();
+  const currentTimeStamp = Date.now();
 
-  // save and send code to user through email
-  user.emailVerification.code = verificationCode;
-  user.emailVerification.expiredAt = expiredAt;
+  if (expiredAt < currentTimeStamp) {
+    throw new AppError(
+      ErrorCodes.RESET_OTP_EXPIRED,
+      "Otp code has expired.",
+      400,
+      true,
+      null,
+    );
+  }
+
+  if (storedHashedCode !== hashedCode) {
+    throw new AppError(
+      ErrorCodes.RESET_OTP_INVALID,
+      "Otp code is invalid.",
+      400,
+      true,
+      null,
+    );
+  }
+
+  const resetToken = generateResetToken();
+  const hashedValue = generateHashValue(resetToken);
+
+  user.resetPasswordVerification.otpCode = null;
+  user.resetPasswordVerification.otpExpiresAt = null;
+  user.resetPasswordVerification.resetToken = hashedValue;
+  user.resetPasswordVerification.resetTokenExpiresAt = new Date(
+    Date.now() + 10 * 60 * 1000,
+  );
   await user.save();
 
-  await sendEmail(
-    user.email,
-    "Email Verification Code",
-    Template.emailVerificationTemplate(user.username, verificationCode),
-  );
+  return { resetToken };
 };
 
-/* Verify email */
-export const verifyEmail = async (
+/* Reset Password */
+export const resetPassword = async (
   email: string,
-  code: string,
-): Promise<boolean> => {
-  const user: UserInterface | null = await User.findOne({ email: email });
-
+  password: string,
+  resetToken: string,
+): Promise<void> => {
+  const user: UserInterface | null = await User.findOne({ email });
   if (!user)
     throw new AppError(
       ErrorCodes.USER_NOT_FOUND,
@@ -288,133 +382,101 @@ export const verifyEmail = async (
       true,
       { email },
     );
-  // can't verify already verified users
-  if (user.isVerified)
-    throw new AppError(
-      ErrorCodes.EMAIL_ALREADY_VERIFIED,
-      "User is already verified.",
-      400,
-      true,
-      { identifier: email },
-    );
 
-  if (!user.emailVerification?.expiredAt) {
+  if (!user.resetPasswordVerification?.resetTokenExpiresAt) {
     throw new AppError(
-      ErrorCodes.VERIFICATION_CODE_EXPIRED,
-      "Verification code has expired.",
+      ErrorCodes.RESET_TOKEN_EXPIRED,
+      "Reset token has expired.",
       400,
       true,
       null,
     );
   }
 
-  const storedCode = user.emailVerification.code;
-  const expiredAt = new Date(user.emailVerification.expiredAt).getTime();
+  const storedHashedToken = user.resetPasswordVerification.resetToken;
+  const hashedToken = generateHashValue(resetToken);
+  console.log({ storedHashedToken, hashedToken, resetToken });
+
+  const expiredAt = new Date(
+    user.resetPasswordVerification.resetTokenExpiresAt,
+  ).getTime();
   const currentTimeStamp = Date.now();
 
   if (expiredAt < currentTimeStamp) {
     throw new AppError(
-      ErrorCodes.VERIFICATION_CODE_EXPIRED,
-      "Verification code has expired.",
-      400,
-      true,
-      null,
-    );
-  }
-  if (storedCode !== code) {
-    throw new AppError(
-      ErrorCodes.VERIFICATION_CODE_INVALID,
-      "Verification code is invalid.",
-      400,
-      true,
-      null,
-    );
-  }
-
-  user.isVerified = true;
-  user.emailVerification.code = null;
-  user.emailVerification.expiredAt = null;
-  await user.save();
-
-  return true;
-};
-
-/* Verify reset password code */
-function generateResetToken(): string {
-  return crypto.randomBytes(16).toString("hex");
-}
-export const verifyResetCode = async (
-  email: string,
-  code: string,
-): Promise<{ resetToken: string }> => {
-  const user: UserInterface | null = await User.findOne({
-    email,
-    "resetPasswordVerification.otpCode": code,
-    "resetPasswordVerification.otpExpiredAt": { $gt: new Date() },
-  });
-
-  if (!user)
-    throw new AppError(
       ErrorCodes.RESET_TOKEN_EXPIRED,
-      "Code is invalid or Code has expired.",
+      "Reset token has expired.",
       400,
       true,
       null,
     );
+  }
 
-  const resetToken = generateResetToken();
-  user.resetPasswordVerification.otpCode = null;
-  user.resetPasswordVerification.otpExpiredAt = null;
-  user.resetPasswordVerification.resetToken = resetToken;
-  user.resetPasswordVerification.resetTokenExpiredAt = new Date(
-    Date.now() + 15 * 60 * 1000,
-  );
+  if (storedHashedToken !== hashedToken) {
+    throw new AppError(
+      ErrorCodes.RESET_TOKEN_INVALID,
+      "Reset token is invalid.",
+      400,
+      true,
+      null,
+    );
+  }
+
+  const hashedPassword = await hashPassword(password);
+  user.password = hashedPassword;
+  user.resetPasswordVerification.resetToken = null;
+  user.resetPasswordVerification.resetTokenExpiresAt = null;
   await user.save();
 
-  return { resetToken };
+  await sendEmail(
+    user.email,
+    "Password Reset Successfully.",
+    Template.resetSuccessfulTemplate(user.username),
+  );
 };
 
 /* Refresh token */
 export const refreshToken = async (refreshToken: string) => {
-  const user: UserInterface | null = await User.findOne({
-    "sessions.refreshToken": refreshToken,
+  const session: SessionInterface | null = await Session.findOne({
+    refreshToken,
   });
-  if (!user)
-    throw new AppError(
-      ErrorCodes.REFRESH_TOKEN_EXPIRED,
-      "Unauthorized.",
-      401,
-      true,
-      null,
-    );
 
-  const session = user.sessions.find(
-    (session) => session.refreshToken === refreshToken,
-  );
   if (!session)
     throw new AppError(
-      ErrorCodes.REFRESH_TOKEN_EXPIRED,
-      "Unauthorized.",
-      401,
+      ErrorCodes.SESSION_NOT_FOUND,
+      "Session not found.",
+      404,
       true,
       null,
     );
 
   const currentTime = Date.now();
-  const expiredAt = new Date(session.expiredAt).getTime();
+  const expiredAt = new Date(session.expiresAt).getTime();
 
   if (expiredAt < currentTime)
     throw new AppError(
-      ErrorCodes.REFRESH_TOKEN_EXPIRED,
-      "Expired refresh token, Unauthorized.",
+      ErrorCodes.SESSION_EXPIRED,
+      "Session has expired, Unauthorized.",
       401,
+      false,
+      null,
+    );
+
+  const user: UserInterface | null = await User.findOne({
+    _id: session.userId,
+  });
+  if (!user)
+    throw new AppError(
+      ErrorCodes.USER_NOT_FOUND,
+      "User not found.",
+      404,
       true,
       null,
     );
 
   const accessToken = user.signToken("accessToken", "24h");
   session.lastUsed = new Date();
-  await user.save();
+  await session.save();
 
   return accessToken;
 };

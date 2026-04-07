@@ -12,7 +12,7 @@ export interface CreateUserBody {
   googleId: string;
   idToken: string;
   accessToken: string;
-  picture: string;
+  avatar: string;
 }
 
 export interface UserProfile {

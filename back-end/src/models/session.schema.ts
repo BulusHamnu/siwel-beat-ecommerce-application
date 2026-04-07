@@ -1,7 +1,7 @@
 import mongoose, { Schema, model, Document, type ObjectId } from "mongoose";
 
 /* Session type */
-export interface Session extends Document {
+export interface SessionInterface extends Document {
   userId: String | ObjectId;
   refreshToken: string;
   expiresAt: Date;
@@ -11,7 +11,7 @@ export interface Session extends Document {
   updatedAt: Date;
 }
 
-const sessionSchema = new Schema<Session>(
+const sessionSchema = new Schema<SessionInterface>(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -29,5 +29,5 @@ const sessionSchema = new Schema<Session>(
   { timestamps: true },
 );
 
-const Session = model<Session>("Session", sessionSchema);
+const Session = model<SessionInterface>("Session", sessionSchema);
 export default Session;

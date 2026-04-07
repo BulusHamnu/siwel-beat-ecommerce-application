@@ -8,6 +8,7 @@ import * as authValidator from "../../utils/validators/auth.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
 import User from "../../models/user.schema.js";
+import Session from "../../models/session.schema.js";
 
 /* Sign up new user */
 export const signUp = async (
@@ -58,11 +59,13 @@ export const logIn = async (
     );
 
     const deviceInfo = req.headers["user-agent"] || "Unidentified";
-    const { accessToken, user, refreshToken } = await authService.loginUser(
-      password.normalize("NFC"),
-      email,
-      deviceInfo,
-    );
+
+    const { accessToken, user, refreshToken } =
+      await authService.validatePasswordAndSignTokens(
+        password.normalize("NFC"),
+        email,
+        deviceInfo,
+      );
 
     res.cookie("refreshToken", refreshToken, env.LOGIN_COOKIE_OPTS);
     const response: ApiResponse<LoginReturnType> = {
@@ -142,9 +145,9 @@ export const resendVeficationEmail = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const email: string | undefined = req.user?.email;
+    const email: string | undefined = req.user!.email;
 
-    await authService.resendVerificationEmail(email || "");
+    await authService.resendVerificationEmail(email);
     logger.info("Email verification code sent to: ", { email: email || "" });
 
     const response: ApiResponse<void> = {
@@ -185,7 +188,7 @@ export const forgetPassword = async (
 };
 
 /* Verify password reset code  */
-export const verifyResetCode = async (
+export const verifyResetPasswordOtp = async (
   req: Request<
     {},
     ApiResponse<{ resetToken: string }>,
@@ -201,7 +204,11 @@ export const verifyResetCode = async (
       authValidator.emailAndCodeBodySchema,
     );
 
-    const { resetToken } = await authService.verifyResetCode(email, code);
+    const { resetToken } = await authService.verifyResetPasswordOtp(
+      email,
+      code,
+    );
+
     const response: ApiResponse<{ resetToken: string }> = {
       status: true,
       message: "Code is valid.",
@@ -251,10 +258,7 @@ export const logout = async (
   try {
     const refreshToken = req.cookies.refreshToken;
 
-    await User.updateOne(
-      { "sessions.refreshToken": refreshToken },
-      { $pull: { sessions: { refreshToken } } },
-    );
+    await Session.deleteOne({ refreshToken });
 
     res.clearCookie("refreshToken", env.LOGIN_COOKIE_OPTS);
     const response: ApiResponse<void> = {

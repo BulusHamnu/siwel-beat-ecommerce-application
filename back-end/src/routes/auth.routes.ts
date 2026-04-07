@@ -25,7 +25,7 @@ router.post(
   authController.resendVeficationEmail,
 );
 router.post("/forget-password", authController.forgetPassword);
-router.post("/verify-reset-code", authController.verifyResetCode);
+router.post("/verify-password-otp-code", authController.verifyResetPasswordOtp);
 router.post("/reset-password", authController.resetpassword);
 
 /* Google 0auth2 endpoints */

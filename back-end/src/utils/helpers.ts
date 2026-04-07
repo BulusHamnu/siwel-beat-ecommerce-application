@@ -1,6 +1,7 @@
 import { imageSize } from "image-size";
 import AppError, { ErrorCodes } from "../errors/appError.js";
 import sharp from "sharp";
+import crypto from "crypto";
 
 /* Generate random code */
 export const generateRandCode = (length: number = 6): number | string => {
@@ -86,4 +87,12 @@ export async function checkAndResizeImgRatio(
   }
 
   return imageBuffer;
+}
+
+/* Generate code hash value function */
+export function generateHashValue(code: string | number) {
+  return crypto
+    .createHash("sha256")
+    .update(code as any)
+    .digest("hex");
 }
