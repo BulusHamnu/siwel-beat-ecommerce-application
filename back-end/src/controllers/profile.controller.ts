@@ -90,17 +90,16 @@ export const updateUserAvatar = async (
         true,
         null,
       );
-    const imageBuffer = await checkAndResizeImgRatio(image.buffer, "avatar");
 
-    // upload picture
+    const imageBuffer = await checkAndResizeImgRatio(image.buffer, "avatar");
     pictureUrl = await supabase.uploadFile(
       env.IMAGE_FILES_BUCKET,
       image.originalname,
-      env.USER_AVATAR_FOLDER,
+      "avatars/",
       imageBuffer,
     );
 
-    const avatar = await userService.updateUserAvatar(userId!, pictureUrl);
+    const avatar = await userService.updateUserAvatar(userId, pictureUrl);
 
     const response: ApiResponse<{ avatar: string }> = {
       status: true,

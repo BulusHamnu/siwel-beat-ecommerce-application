@@ -22,7 +22,7 @@ router.use(allowRole("user"));
 router.get("/me", generalApiLimiter(), profileController.getProfile);
 router.patch("/me", creationApiLimiter(), profileController.updateProfile);
 router.patch(
-  "/me/picture",
+  "/me/avatar",
   rateLimiter(20, 10 * 60 * 1000),
   uploadPicture,
   profileController.updateUserAvatar,

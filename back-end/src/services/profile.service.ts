@@ -1,12 +1,10 @@
-import User, {
-  type Session,
-  type UserInterface,
-} from "../models/user.schema.js";
+import User, { type UserInterface } from "../models/user.schema.js";
 import Profile, { type ProfileInterface } from "../models/profile.schema.js";
 import type { UserProfile } from "../controllers/userTypes.js";
 import AppError, { ErrorCodes } from "../errors/appError.js";
 import supabase from "./supabase.js";
 import env from "../configs/env.js";
+import mongoose from "mongoose";
 
 /* Get profile */
 export const getProfile = async (id: string): Promise<UserProfile> => {
@@ -23,15 +21,9 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
   const profile: ProfileInterface | null = await Profile.findOne({
     userId: user._id,
   });
+
   const profileObj = profile?.toObject();
   delete profileObj.avatarPath;
-
-  const sessions = user.sessions.map((session: Session) => {
-    return {
-      deviceInfo: session.deviceInfo,
-      lastSessionRefreshAt: session.lastUsed,
-    };
-  });
 
   return {
     username: user.username,
@@ -40,7 +32,6 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
     role: user.role,
     isActive: user.isActive,
     ...profileObj,
-    sessions,
   };
 };
 
@@ -101,19 +92,20 @@ export const updateProfile = async (
     );
 
   filterProfileUpdates(updates);
+
+  const session = await mongoose.startSession();
   const profile: ProfileInterface | null = await Profile.findOneAndUpdate(
     { userId: user._id },
     { $set: updates },
-    { new: true },
+    { new: true, session },
   );
 
   if (updates["username"]) {
-    user.username = updates["username"];
-    await user.save();
+    user.username = updates["username"].toLowerCase().replace(" ", "_");
+    await user.save({ session });
   }
 
   const profileObj = profile?.toObject();
-  delete profileObj.cart;
 
   return {
     username: user.username,
@@ -124,7 +116,7 @@ export const updateProfile = async (
   };
 };
 
-/* Update profile picture */
+/* Update user avatar */
 export const updateUserAvatar = async (
   userId: string,
   pictureUrl: string,
@@ -133,16 +125,14 @@ export const updateUserAvatar = async (
   const imgBucket = env.IMAGE_FILES_BUCKET;
   const oldPicturePath = profile?.avatarPath;
 
-  const publicUrl = await supabase.getPublicUrl(imgBucket, pictureUrl); // saved in db so it can be access anywhere
+  const publicUrl = await supabase.getPublicUrl(imgBucket, pictureUrl); // need public url for avatar because it's public.
 
-  const updatedProfile: ProfileInterface | null =
-    await Profile.findOneAndUpdate(
-      { userId },
-      { $set: { avatar: publicUrl, avatarPath: pictureUrl } },
-      { new: true },
-    );
+  const updated = await Profile.updateOne(
+    { userId },
+    { $set: { avatar: publicUrl, avatarPath: pictureUrl } },
+  );
 
-  if (!updatedProfile)
+  if (updated.modifiedCount !== 1)
     throw new AppError(
       ErrorCodes.PROFILE_UPDATE_ERROR,
       "Unable to update profile picture.",
@@ -152,7 +142,6 @@ export const updateUserAvatar = async (
     );
 
   // delete old picture
-  console.log({ oldPicturePath, publicUrl });
   if (oldPicturePath) await supabase.deleteFiles("images", [oldPicturePath]);
   return publicUrl;
 };

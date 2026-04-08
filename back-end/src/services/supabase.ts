@@ -39,7 +39,7 @@ class Supabase {
     const randString = crypto.randomBytes(8).toString("hex");
 
     newFileName = newFileName.replace(/[^\w.-]/g, "-");
-    newFileName = Date.now() + "-" + newFileName + randString;
+    newFileName = Date.now() + "-" + newFileName + "-" + randString;
 
     return newFileName;
   };
