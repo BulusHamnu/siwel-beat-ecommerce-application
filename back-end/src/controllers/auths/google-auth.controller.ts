@@ -10,6 +10,7 @@ import { createNewUser } from "../../services/auth.service.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
 import Joi from "joi";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
+import Session from "../../models/session.schema.js";
 
 /* Get google Oauth url */
 function validateQueryBody(data: { state: string }) {
@@ -147,8 +148,17 @@ export const googleCallback = async (
 
     const accessToken = user.signToken("accessToken", "24h");
     const refreshToken = user.signToken("refreshToken", "7d");
-    res.cookie("refreshToken", refreshToken, env.LOGIN_COOKIE_OPTS);
 
+    const deviceInfo = req.headers["user-agent"] || "Unidentified";
+    await Session.create({
+      userId: user._id as string,
+      refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      lastUsed: new Date(),
+      deviceInfo,
+    });
+
+    res.cookie("refreshToken", refreshToken, env.LOGIN_COOKIE_OPTS);
     res
       .status(302)
       .redirect(
