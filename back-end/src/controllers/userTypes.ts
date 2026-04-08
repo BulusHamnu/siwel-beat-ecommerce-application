@@ -10,7 +10,6 @@ export interface CreateUserBody {
   role: string;
   isVerified: boolean;
   googleId: string;
-  idToken: string;
   accessToken: string;
   avatar: string;
 }

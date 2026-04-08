@@ -4,7 +4,7 @@ import { type ApiResponse } from "../responseInterface.js";
 import logger from "../../utils/logger.js";
 import retriveGoogleUserPayload, {
   type userGooglePayload,
-} from "../../services/retriveGoogleIdToken.js";
+} from "../../services/retriveGoogleUserPayload.js";
 import User, { type UserInterface } from "../../models/user.schema.js";
 import { createNewUser } from "../../services/auth.service.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
@@ -79,6 +79,7 @@ function validateCodeAndState(
       true,
       null,
     );
+
   if (state !== "login" && state !== "signup")
     throw new AppError(
       ErrorCodes.OAUTH_STATE_INVALID,
@@ -87,6 +88,7 @@ function validateCodeAndState(
       true,
       { state },
     );
+
   return;
 }
 
@@ -106,13 +108,11 @@ export const googleCallback = async (
 
     let user: UserInterface | null = null;
     if (state === "signup") {
-      user = await createNewUser({
-        ...verifiedUserPayload,
-        provider: "google",
-      });
+      user = await createNewUser(verifiedUserPayload);
+
       logger.info("User created successully.", { userId: user._id });
       //
-    } else {
+    } else if (state === "login") {
       user = await User.findOne({
         email: verifiedUserPayload.email,
       });
@@ -125,6 +125,7 @@ export const googleCallback = async (
           true,
           null,
         );
+
       if (user && user.provider !== "google")
         throw new AppError(
           ErrorCodes.GOOGLE_NOT_LINKED,
@@ -133,24 +134,34 @@ export const googleCallback = async (
           true,
           null,
         );
+      //
+    } else {
+      throw new AppError(
+        ErrorCodes.OAUTH_STATE_INVALID,
+        "Oauth state is invalid.",
+        400,
+        true,
+        null,
+      );
     }
 
+    const accessToken = user.signToken("accessToken", "24h");
     const refreshToken = user.signToken("refreshToken", "7d");
     res.cookie("refreshToken", refreshToken, env.LOGIN_COOKIE_OPTS);
 
     res
       .status(302)
-      .redirect(`${env.FRONTEND_URL}/oauth/callback?state=${state}`);
+      .redirect(
+        `${env.FRONTEND_URL}/oauth/callback?state=${state}&access_token=${accessToken}`,
+      );
   } catch (error: any) {
     logger.error("An error occured in google oauth2 callback.", error);
 
-    // For unexpected error.
+    const errCode = error.code || "UNEXPECTED_ERROR";
     return res
       .status(302)
       .redirect(
-        `${env.FRONTEND_URL}/oauth/callback?state=${authFlow}&error=${
-          error.code || "UNEXPECTED_ERROR"
-        }`,
+        `${env.FRONTEND_URL}/oauth/callback?state=${authFlow}&error=${errCode.toLowerCase()}`,
       );
   }
 };
