@@ -203,6 +203,30 @@ export const resendVerificationEmail = async (email: string): Promise<void> => {
 };
 
 /* Verify email */
+function verifyCodeAndExpiresAt({
+  code,
+  storedHashedCode,
+  expiresAt,
+  invalidError,
+  expiresAtError,
+}: {
+  code: string | number;
+  storedHashedCode: string;
+  expiresAt: Date;
+  invalidError: Error;
+  expiresAtError: Error;
+}) {
+  if (!storedHashedCode) throw invalidError;
+
+  const expirationTime = new Date(expiresAt).getTime();
+  const currentTimeStamp = Date.now();
+
+  const hashedCode = generateHashValue(code);
+  if (storedHashedCode !== hashedCode) throw invalidError;
+
+  if (expirationTime < currentTimeStamp) throw expiresAtError;
+}
+
 export const verifyEmail = async (
   email: string,
   code: string,
@@ -227,40 +251,28 @@ export const verifyEmail = async (
       { identifier: email },
     );
 
-  if (!user.emailVerification?.expiresAt) {
-    throw new AppError(
+  const storedHashedCode = user.emailVerification.code as string;
+  const expiresAt = user.emailVerification.expiresAt as Date;
+
+  verifyCodeAndExpiresAt({
+    code,
+    storedHashedCode,
+    expiresAt,
+    expiresAtError: new AppError(
       ErrorCodes.VERIFICATION_CODE_EXPIRED,
       "Verification code has expired.",
       400,
       true,
       null,
-    );
-  }
-
-  const storedHashedCode = user.emailVerification.code;
-  const hashedCode = generateHashValue(code);
-  const expiredAt = new Date(user.emailVerification.expiresAt).getTime();
-  const currentTimeStamp = Date.now();
-
-  if (expiredAt < currentTimeStamp) {
-    throw new AppError(
-      ErrorCodes.VERIFICATION_CODE_EXPIRED,
-      "Verification code has expired.",
-      400,
-      true,
-      null,
-    );
-  }
-
-  if (storedHashedCode !== hashedCode) {
-    throw new AppError(
+    ),
+    invalidError: new AppError(
       ErrorCodes.VERIFICATION_CODE_INVALID,
       "Verification code is invalid.",
       400,
       true,
       null,
-    );
-  }
+    ),
+  });
 
   user.isVerified = true;
   user.emailVerification.code = null;
@@ -316,42 +328,28 @@ export const verifyResetPasswordOtp = async (
       { email },
     );
 
-  if (!user.resetPasswordVerification?.otpExpiresAt) {
-    throw new AppError(
-      ErrorCodes.RESET_OTP_INVALID,
-      "Otp code is invalid.",
-      400,
-      true,
-      null,
-    );
-  }
+  const storedHashedCode = user.resetPasswordVerification.otpCode as string;
+  const expiresAt = user.resetPasswordVerification.otpExpiresAt as Date;
 
-  const storedHashedCode = user.resetPasswordVerification.otpCode;
-  const hashedCode = generateHashValue(code);
-  const expiredAt = new Date(
-    user.resetPasswordVerification.otpExpiresAt,
-  ).getTime();
-  const currentTimeStamp = Date.now();
-
-  if (expiredAt < currentTimeStamp) {
-    throw new AppError(
+  verifyCodeAndExpiresAt({
+    code,
+    storedHashedCode,
+    expiresAt,
+    expiresAtError: new AppError(
       ErrorCodes.RESET_OTP_EXPIRED,
       "Otp code has expired.",
       400,
       true,
       null,
-    );
-  }
-
-  if (storedHashedCode !== hashedCode) {
-    throw new AppError(
+    ),
+    invalidError: new AppError(
       ErrorCodes.RESET_OTP_INVALID,
       "Otp code is invalid.",
       400,
       true,
       null,
-    );
-  }
+    ),
+  });
 
   const resetToken = generateResetToken();
   const hashedValue = generateHashValue(resetToken);
@@ -383,44 +381,28 @@ export const resetPassword = async (
       { email },
     );
 
-  if (!user.resetPasswordVerification?.resetTokenExpiresAt) {
-    throw new AppError(
+  const storedHashedToken = user.resetPasswordVerification.resetToken as string;
+  const expiresAt = user.resetPasswordVerification.resetTokenExpiresAt as Date;
+
+  verifyCodeAndExpiresAt({
+    code: resetToken,
+    storedHashedCode: storedHashedToken,
+    expiresAt,
+    expiresAtError: new AppError(
       ErrorCodes.RESET_TOKEN_EXPIRED,
       "Reset token has expired.",
       400,
       true,
       null,
-    );
-  }
-
-  const storedHashedToken = user.resetPasswordVerification.resetToken;
-  const hashedToken = generateHashValue(resetToken);
-  console.log({ storedHashedToken, hashedToken, resetToken });
-
-  const expiredAt = new Date(
-    user.resetPasswordVerification.resetTokenExpiresAt,
-  ).getTime();
-  const currentTimeStamp = Date.now();
-
-  if (expiredAt < currentTimeStamp) {
-    throw new AppError(
-      ErrorCodes.RESET_TOKEN_EXPIRED,
-      "Reset token has expired.",
-      400,
-      true,
-      null,
-    );
-  }
-
-  if (storedHashedToken !== hashedToken) {
-    throw new AppError(
+    ),
+    invalidError: new AppError(
       ErrorCodes.RESET_TOKEN_INVALID,
       "Reset token is invalid.",
       400,
       true,
       null,
-    );
-  }
+    ),
+  });
 
   const hashedPassword = await hashPassword(password);
   user.password = hashedPassword;
