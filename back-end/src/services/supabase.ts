@@ -2,19 +2,23 @@ import AppError, { ErrorCodes } from "../errors/appError.js";
 import logger from "../utils/logger.js";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import env from "../configs/env.js";
-import type {
-  FileUrlInterface,
-  LicenseInterface,
-} from "../models/track.schema.js";
 import { fileTypeFromBuffer } from "file-type";
 import { type MulterTrackFiles } from "../middlewares/upload.js";
+import crypto from "crypto";
 
-type UndefinedFields<T> = {
-  [K in keyof T]: T[K] | undefined;
-};
+interface FileUrlInput {
+  tagged?: string | undefined;
+  untagged?: string | undefined;
+}
+
+interface LicenseInput {
+  basic?: string | undefined;
+  premium?: string | undefined;
+}
+
 export interface uploadedTrackFiles {
-  fileUrl?: UndefinedFields<FileUrlInterface>;
-  license?: UndefinedFields<LicenseInterface>;
+  fileUrl?: FileUrlInput;
+  license?: LicenseInput;
   coverImageUrl?: string | undefined;
   coverImagePath?: string | undefined;
 }
@@ -32,8 +36,11 @@ class Supabase {
   // methods
   getFileName = (originalname: string): string => {
     let newFileName = originalname.split(".")[0]!;
+    const randString = crypto.randomBytes(8).toString("hex");
+
     newFileName = newFileName.replace(/[^\w.-]/g, "-");
-    newFileName = Date.now() + "-" + newFileName;
+    newFileName = Date.now() + "-" + newFileName + randString;
+
     return newFileName;
   };
 
@@ -94,6 +101,7 @@ class Supabase {
         null,
       );
     }
+
     // change file blob to buffer so we can save to disk
     const buffer = Buffer.from(new Uint8Array(await data.arrayBuffer()));
     logger.info("File downloaded sucessfully.");
@@ -116,6 +124,7 @@ class Supabase {
         null,
       );
     }
+
     logger.info("Files deleted successfully.");
     return true;
   };
@@ -135,7 +144,7 @@ class Supabase {
           ? this.uploadFile(
               env.IMAGE_FILES_BUCKET,
               files.coverImage[0]!.originalname,
-              env.TRACK_COVER_IMAGE_FOLDER, //
+              "coverImages/", //
               files.coverImage[0]!.buffer,
             )
           : Promise.resolve(undefined),
@@ -144,7 +153,7 @@ class Supabase {
           ? this.uploadFile(
               env.AUDIO_FILES_BUCKET,
               files.taggedAudio[0]!.originalname,
-              env.TAGGED_AUDIO_FOLDER, //
+              "taggedAudios/", //
               files.taggedAudio[0]!.buffer,
             )
           : Promise.resolve(undefined),
@@ -153,7 +162,7 @@ class Supabase {
           ? this.uploadFile(
               env.AUDIO_FILES_BUCKET,
               files.untaggedAudio[0]!.originalname,
-              env.UNTAGGED_AUDIO_FOLDER,
+              "untaggedAudios/",
               files.untaggedAudio[0]!.buffer,
             )
           : Promise.resolve(undefined),
@@ -162,7 +171,7 @@ class Supabase {
           ? this.uploadFile(
               env.DOCUMENT_FILES_BUCKET,
               files.basicLicense[0]!.originalname,
-              env.BASIC_LICENSE_FOLDER,
+              "basicLicenses/",
               files.basicLicense[0]!.buffer,
             )
           : Promise.resolve(undefined),
@@ -171,7 +180,7 @@ class Supabase {
           ? this.uploadFile(
               env.DOCUMENT_FILES_BUCKET,
               files.premiumLicense[0]!.originalname,
-              env.PREMIUM_LICENSE_FOLDER,
+              "premiumLicenses/",
               files.premiumLicense[0]!.buffer,
             )
           : Promise.resolve(undefined),
@@ -212,16 +221,17 @@ class Supabase {
   safeRemoveTrackFiles = async (paths: string[]): Promise<void> => {
     const audioPaths = paths.filter(
       (path) =>
-        path.startsWith(env.TAGGED_AUDIO_FOLDER) ||
-        path.startsWith(env.UNTAGGED_AUDIO_FOLDER),
+        path.startsWith("taggedAudios/") || path.startsWith("untaggedAudios/"),
     );
+
     const licensePaths = paths.filter(
       (path) =>
-        path.startsWith(env.BASIC_LICENSE_FOLDER) ||
-        path.startsWith(env.PREMIUM_LICENSE_FOLDER),
+        path.startsWith("basicLicenses/") ||
+        path.startsWith("premiumLicenses/"),
     );
+
     const coverImagePaths = paths.filter((path) =>
-      path.startsWith(env.TRACK_COVER_IMAGE_FOLDER),
+      path.startsWith("coverImages/"),
     );
 
     const requests: Promise<boolean>[] = [];

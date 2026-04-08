@@ -172,6 +172,6 @@ export const uploadPicture = multer({
       );
     }
   },
-}).single("picture");
+}).single("avatar");
 
 export default upload;
