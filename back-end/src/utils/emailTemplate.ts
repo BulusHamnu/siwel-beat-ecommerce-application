@@ -257,7 +257,7 @@ const Template: emailTemplate = {
           <p style="font-family: Helvetica, Arial, sans-serif">
             <small
               >If you didn't perform this action and believe this is a mistake, you
-              can click on this to <a href="${env.BACKEND_URL}/api/news-letter/unsubscribe?email=${email}&token=${token}">unsubscribe</a>.</small
+              can click on this to <a href="${env.BACKEND_URL}/api/v1/news-letter/unsubscribe?email=${email}&token=${token}">unsubscribe</a>.</small
             >
           </p>
         </body>

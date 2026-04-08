@@ -42,6 +42,7 @@ export interface NewsletterQuery {
   email: string;
   token: string;
 }
+
 export const unsubscribeToNewletter = async (
   req: Request<{}, ApiResponse<void>, {}, any>,
   res: Response<ApiResponse<void>>,
