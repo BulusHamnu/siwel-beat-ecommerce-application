@@ -1,13 +1,19 @@
 import type { FilterQuery, ObjectId } from "mongoose";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
 import Track, {
-  type FileUrlInterface,
-  type LicenseInterface,
   type TrackInterface,
   type BeatType,
 } from "../../models/track.schema.js";
+import type { LicenseInput, AudioInput } from "../supabase.js";
 import supabase, { type uploadedTrackFiles } from "../supabase.js";
 import { type Pagination } from "../../controllers/responseInterface.js";
+import logger from "../../utils/logger.js";
+import Audio, { type AudioInterface } from "../../models/audio.schema.js";
+import License, {
+  LicenseType,
+  type LicenseInterface,
+} from "../../models/license.schema.js";
+import mongoose from "mongoose";
 
 /* Create new track */
 export interface createTrackInput {
@@ -20,8 +26,6 @@ export interface createTrackInput {
   basicPrice: number;
   premiumPrice: number;
   genre: string;
-  license: LicenseInterface;
-  fileUrl: FileUrlInterface;
 }
 
 async function retriveRelatedTracks({
@@ -44,17 +48,42 @@ async function retriveRelatedTracks({
 }
 
 export const createNewTrack = async (
-  trackbody: createTrackInput,
+  trackData: createTrackInput,
+  trackFiles: uploadedTrackFiles,
 ): Promise<TrackInterface> => {
-  const { type, tags, genre } = trackbody;
+  const { type, tags, genre } = trackData;
   const relatedTrack = await retriveRelatedTracks({ type, genre, tags });
 
-  const newTrack: TrackInterface = await Track.create({
-    ...trackbody,
-    status: "active",
-    relatedTrack,
+  const { audioUrl, licenseUrl, coverImagePath, coverImageUrl } = trackFiles;
+
+  const session = await mongoose.startSession();
+
+  let newTrack: TrackInterface | null = null;
+  await session.withTransaction(async () => {
+    newTrack = new Track({
+      ...trackData,
+      status: "active",
+      relatedTrack,
+      coverImagePath,
+      coverImageUrl,
+    });
+    await newTrack.save({ session });
+
+    const newTrackAudios = new Audio({
+      trackId: newTrack._id,
+      ...audioUrl,
+    });
+    await newTrackAudios.save({ session });
+
+    const newTrackLicenses = new License({
+      trackId: newTrack._id,
+      ...licenseUrl,
+    });
+    await newTrackLicenses.save({ session });
   });
-  return newTrack;
+
+  logger.info("New track created succefully.", { trackId: newTrack!._id });
+  return newTrack!;
 };
 
 /* Get all tracks */
@@ -154,9 +183,7 @@ export const getTracks = async ({
   const totalPage = Math.ceil(totalTracksCount / limit);
   const hasNext = tracksWithExtra.length > limit;
 
-  // Prevent exposing files urls
-  let tracks: TrackInterface[] = tracksWithExtra.slice(0, limit);
-  tracks = tracks.map((track) => track.removeUnwantedFields());
+  const tracks: TrackInterface[] = tracksWithExtra.slice(0, limit);
 
   const pagination: Pagination = {
     totalPage,
@@ -168,69 +195,15 @@ export const getTracks = async ({
   return { tracks, pagination };
 };
 
-/* Update track */
-export interface TrackUpdates extends createTrackInput {
-  "fileUrl.tagged"?: string;
-  "fileUrl.untagged"?: string;
-  "license.basic"?: string;
-  "license.premium"?: string;
-}
+/* Get a single track */
+export async function getSingleTrack(trackId: string): Promise<TrackInterface> {
+  const track: TrackInterface | null = await Track.findOne({
+    _id: trackId,
+  }).populate(
+    "relatedTrack",
+    "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre",
+  );
 
-function filterUpdatesAndFiles(
-  trackUpdates: TrackUpdates,
-  files: uploadedTrackFiles,
-  track: TrackInterface,
-): { cleanUpdateData: TrackUpdates; oldFilesPaths: string[] } {
-  const oldFilesPaths: string[] = [];
-  const updates: any = {};
-
-  for (const key of Object.keys(trackUpdates) as (keyof createTrackInput)[]) {
-    if (Array.isArray(trackUpdates[key]) && trackUpdates[key].length > 0) {
-      // This will replace the old Array if the Array in the trackUpdates is not empty
-      updates[key] = trackUpdates[key];
-    } else if (
-      (typeof trackUpdates[key] === "string" && trackUpdates[key] === "") ||
-      (typeof trackUpdates[key] === "number" && trackUpdates[key] <= 0)
-    ) {
-      continue;
-    } else {
-      updates[key] = trackUpdates[key];
-    }
-  }
-
-  // Filter file and push old file so they can be deleted after replacing them
-  if (Object.keys(files).length > 0) {
-    if (files.fileUrl?.tagged) {
-      updates["fileUrl.tagged"] = files.fileUrl.tagged;
-      oldFilesPaths.push(track.fileUrl.tagged);
-    }
-    if (files.fileUrl?.untagged) {
-      updates["fileUrl.untagged"] = files.fileUrl.untagged;
-      oldFilesPaths.push(track.fileUrl.untagged);
-    }
-    if (files.license?.basic) {
-      updates["license.basic"] = files.license.basic;
-      oldFilesPaths.push(track.license.basic);
-    }
-    if (files.license?.premium) {
-      updates["license.premium"] = files.license.premium;
-      oldFilesPaths.push(track.license.premium);
-    }
-    if (files.coverImageUrl) {
-      updates["coverImageUrl"] = files.coverImageUrl;
-      oldFilesPaths.push(track.coverImagePath);
-    }
-  }
-
-  return { cleanUpdateData: updates, oldFilesPaths };
-}
-
-export const updateTrack = async (
-  trackId: string,
-  trackUpdates: TrackUpdates,
-  files: uploadedTrackFiles,
-): Promise<TrackInterface> => {
-  const track: TrackInterface | null = await Track.findOne({ _id: trackId });
   if (!track)
     throw new AppError(
       ErrorCodes.TRACK_NOT_FOUND,
@@ -240,27 +213,183 @@ export const updateTrack = async (
       null,
     );
 
-  const { cleanUpdateData, oldFilesPaths } = filterUpdatesAndFiles(
-    trackUpdates,
-    files,
-    track,
-  );
+  return track;
+}
 
-  const updatedTrack = await Track.findOneAndUpdate(
+/* Deactivate track */
+export async function deactivateTrack(
+  trackId: string,
+): Promise<TrackInterface> {
+  const track: TrackInterface | null = await Track.findOneAndUpdate(
     { _id: trackId },
-    { $set: { ...cleanUpdateData } },
+    { $set: { status: "inactive" } },
     { new: true },
   );
-  if (!updatedTrack)
+
+  if (!track)
     throw new AppError(
-      ErrorCodes.TRACK_UPDATE_ERROR,
-      "Unable to update track.",
-      500,
+      ErrorCodes.TRACK_NOT_FOUND,
+      "Track not found.",
+      404,
       true,
       null,
     );
 
-  if (oldFilesPaths.length > 0)
-    await supabase.safeRemoveTrackFiles(oldFilesPaths);
-  return updatedTrack.removeUnwantedFields();
+  logger.info("Track status was update to: inactive.", {
+    trackId: track._id,
+  });
+
+  return track;
+}
+
+/* Activate track */
+export async function activateTrack(trackId: string): Promise<TrackInterface> {
+  const track: TrackInterface | null = await Track.findOneAndUpdate(
+    { _id: trackId },
+    { $set: { status: "active" } },
+    { new: true },
+  );
+
+  if (!track)
+    throw new AppError(
+      ErrorCodes.TRACK_NOT_FOUND,
+      "Track not found.",
+      404,
+      true,
+      null,
+    );
+
+  logger.info("Track status was update to: active.", { trackId: track._id });
+
+  return track;
+}
+
+/* Update track */
+interface trackUpdateInput extends createTrackInput {
+  coverImageUrl?: string | undefined;
+  coverImagePath?: string | undefined;
+}
+
+function filterTrackUpdates(trackUpdates: trackUpdateInput): trackUpdateInput {
+  const updates: any = {};
+
+  for (const key of Object.keys(trackUpdates) as (keyof createTrackInput)[]) {
+    const invalidField =
+      !trackUpdates[key] ||
+      (typeof trackUpdates[key] === "string" && trackUpdates[key] === "") ||
+      (typeof trackUpdates[key] === "number" && trackUpdates[key] <= 0);
+
+    if (invalidField) {
+      continue;
+    } else if (
+      Array.isArray(trackUpdates[key]) &&
+      trackUpdates[key].length > 0
+    ) {
+      // This will replace the old Array if the Array in the trackUpdates is not empty
+      updates[key] = trackUpdates[key];
+    } else {
+      updates[key] = trackUpdates[key];
+    }
+  }
+
+  return updates;
+}
+
+async function prepareFileUpdatesAndOldPaths(
+  trackId: string,
+  licenseUrl: LicenseInput | undefined,
+  audioUrl: AudioInput | undefined,
+) {
+  const oldFilesPath: string[] = [];
+
+  const licenseUpdate: Partial<LicenseInterface> = {};
+  if (licenseUrl && Object.keys(licenseUrl)?.length > 0) {
+    const licenseFiles = await License.findOne({
+      trackId,
+    }).lean<LicenseInterface>();
+
+    if (licenseUrl.basic) {
+      licenseUpdate["basic"] = licenseUrl.basic;
+      if (licenseFiles?.basic) oldFilesPath.push(licenseFiles.basic);
+    }
+
+    if (licenseUrl.premium) {
+      licenseUpdate["premium"] = licenseUrl.premium;
+      if (licenseFiles?.premium) oldFilesPath.push(licenseFiles?.premium);
+    }
+  }
+
+  const audioUpdate: Partial<AudioInterface> = {};
+  if (audioUrl && Object.keys(audioUrl!)?.length > 0) {
+    const audioFiles = await Audio.findOne({ trackId }).lean<AudioInterface>();
+
+    if (audioUrl.tagged) {
+      audioUpdate["tagged"] = audioUrl.tagged;
+      if (audioFiles?.tagged) oldFilesPath.push(audioFiles?.tagged);
+    }
+
+    if (audioUrl.untagged) {
+      audioUpdate["untagged"] = audioUrl.untagged;
+      if (audioFiles?.untagged) oldFilesPath.push(audioFiles?.untagged);
+    }
+  }
+
+  return { oldFilesPath, licenseUpdate, audioUpdate };
+}
+
+export const updateTrack = async (
+  trackId: string,
+  trackUpdates: createTrackInput,
+  files: uploadedTrackFiles,
+): Promise<TrackInterface> => {
+  const track = await Track.findOne({ _id: trackId }).lean<TrackInterface>();
+  if (!track)
+    throw new AppError(
+      ErrorCodes.TRACK_NOT_FOUND,
+      "Track not found.",
+      404,
+      true,
+      null,
+    );
+
+  const { audioUrl, licenseUrl, coverImagePath, coverImageUrl } = files;
+  const updates = filterTrackUpdates({
+    ...trackUpdates,
+    coverImagePath,
+    coverImageUrl,
+  });
+
+  const { oldFilesPath, licenseUpdate, audioUpdate } =
+    await prepareFileUpdatesAndOldPaths(trackId, licenseUrl, audioUrl);
+
+  if (coverImagePath) oldFilesPath.push(track.coverImagePath);
+
+  let updatedTrack: TrackInterface | null = null;
+  const session = await mongoose.startSession();
+
+  await session.withTransaction(async () => {
+    updatedTrack = await Track.findOneAndUpdate(
+      { _id: trackId },
+      { $set: { ...updates } },
+      { new: true, session },
+    );
+
+    await Audio.updateOne(
+      { trackId: track._id },
+      { $set: { ...audioUpdate } },
+      { session },
+    );
+
+    await License.updateOne(
+      { trackId: track._id },
+      { $set: { ...licenseUpdate } },
+      { session },
+    );
+
+    if (oldFilesPath.length > 0)
+      await supabase.safeRemoveTrackFiles(oldFilesPath);
+  });
+
+  logger.info(`Track was updated succesfully id: ${updatedTrack!._id}`);
+  return updatedTrack!;
 };

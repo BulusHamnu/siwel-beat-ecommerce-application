@@ -1,6 +1,6 @@
 import mongoose, { Schema, model, Document, type ObjectId } from "mongoose";
 
-export interface Audio extends Document {
+export interface AudioInterface extends Document {
   trackId: ObjectId;
   tagged: string;
   untagged: string;
@@ -9,11 +9,12 @@ export interface Audio extends Document {
 }
 
 /* audioSchema */
-const audioSchema = new Schema<Audio>(
+const audioSchema = new Schema<AudioInterface>(
   {
     trackId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Track",
+      unique: true,
       required: true,
     },
     tagged: { type: String, required: true },
@@ -22,5 +23,5 @@ const audioSchema = new Schema<Audio>(
   { timestamps: true },
 );
 
-const Audio = model<Audio>("Audio", audioSchema);
+const Audio = model<AudioInterface>("Audio", audioSchema);
 export default Audio;

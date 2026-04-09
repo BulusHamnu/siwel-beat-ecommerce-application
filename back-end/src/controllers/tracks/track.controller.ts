@@ -1,11 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ApiResponse } from "../responseInterface.js";
 import Track, { type TrackInterface } from "../../models/track.schema.js";
-import type {
-  TrackUpdates,
-  Queries,
-  tracksResults,
-} from "../../services/tracks/track.service.js";
+import type { tracksResults } from "../../services/tracks/track.service.js";
 import * as trackService from "../../services/tracks/track.service.js";
 import { retriveTrackFilePaths } from "../../services/tracks/trackDownloadFile.service.js";
 import { type Pagination } from "../responseInterface.js";
@@ -22,15 +18,15 @@ import { type createTrackInput } from "../../services/tracks/track.service.js";
 import { validateTrackidParam } from "../../utils/validators/track.validator.js";
 import type { MulterTrackFiles } from "../../middlewares/upload.js";
 
-/* Post new track controller */
+/* Post new track  */
 const bundleTrackFilesPath = (files: uploadedTrackFiles): string[] => {
   if (!files || Object.keys(files).length <= 0) return [];
 
   const paths: string[] = [];
-  if (files.fileUrl?.tagged) paths.push(files.fileUrl.tagged);
-  if (files.fileUrl?.untagged) paths.push(files.fileUrl.untagged);
-  if (files.license?.basic) paths.push(files.license.basic);
-  if (files.license?.premium) paths.push(files.license.premium);
+  if (files.audioUrl?.tagged) paths.push(files.audioUrl.tagged);
+  if (files.audioUrl?.untagged) paths.push(files.audioUrl.untagged);
+  if (files.licenseUrl?.basic) paths.push(files.licenseUrl.basic);
+  if (files.licenseUrl?.premium) paths.push(files.licenseUrl.premium);
   if (files.coverImagePath) paths.push(files.coverImagePath);
 
   return paths;
@@ -46,23 +42,17 @@ export const postTrack = async (
   try {
     const files = req.files as MulterTrackFiles;
 
-    // check for files
     trackValidator.validateTrackFiles(files);
-    const trackBody = validateAndSanitizeBody(
+    const trackData = validateAndSanitizeBody(
       req.body,
       trackValidator.trackBodySchema,
     );
 
-    // upload files
     const trackFiles = await supabase.uploadTrackFiles(files);
     paths = bundleTrackFilesPath(trackFiles); // Save track files path for rollback incase of an error
 
-    const newTrack = await trackService.createNewTrack({
-      ...trackBody,
-      ...trackFiles,
-    });
+    const newTrack = await trackService.createNewTrack(trackData, trackFiles);
 
-    logger.info("New track created succefully.", { trackId: newTrack._id });
     const response: ApiResponse<TrackInterface> = {
       status: true,
       message: "New track created successfully.",
@@ -80,7 +70,7 @@ export const postTrack = async (
   }
 };
 
-/* Get all tracks controller */
+/* Get all tracks */
 interface response extends ApiResponse<TrackInterface[]> {
   pagination: Pagination;
 }
@@ -112,7 +102,7 @@ export const getTracks = async (
   }
 };
 
-/* Get track controller */
+/* Get track handler */
 export const getTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
@@ -121,25 +111,12 @@ export const getTrack = async (
   try {
     const trackId = validateTrackidParam(req.params.id);
 
-    const track: TrackInterface | null = await Track.findOne({
-      _id: trackId,
-    }).populate(
-      "relatedTrack",
-      "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre",
-    );
-    if (!track)
-      throw new AppError(
-        ErrorCodes.TRACK_NOT_FOUND,
-        "Track not found.",
-        404,
-        true,
-        null,
-      );
+    const track = await trackService.getSingleTrack(trackId);
 
     const response: ApiResponse<TrackInterface> = {
       status: true,
-      message: "Track retrive sucessfully.",
-      data: track.removeUnwantedFields(),
+      message: "Track retrived sucessfully.",
+      data: track,
     };
 
     res.status(200).json(response);
@@ -148,7 +125,7 @@ export const getTrack = async (
   }
 };
 
-/* Deactivate track controller */
+/* Deactivate track handler */
 export const deactivateTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
@@ -157,27 +134,12 @@ export const deactivateTrack = async (
   try {
     const trackId = validateTrackidParam(req.params.id);
 
-    const track: TrackInterface | null = await Track.findOneAndUpdate(
-      { _id: trackId },
-      { $set: { status: "inactive" } },
-      { new: true },
-    );
-    if (!track)
-      throw new AppError(
-        ErrorCodes.TRACK_NOT_FOUND,
-        "Track not found.",
-        404,
-        true,
-        null,
-      );
-    logger.info("Track status was update to: inactive.", {
-      trackId: track._id,
-    });
+    const track = await trackService.deactivateTrack(trackId);
 
     const response: ApiResponse<TrackInterface> = {
       status: true,
       message: "Track deactivated sucessfully.",
-      data: track.removeUnwantedFields(),
+      data: track,
     };
 
     res.status(200).json(response);
@@ -195,25 +157,12 @@ export const activateTrack = async (
   try {
     const trackId = validateTrackidParam(req.params.id);
 
-    const track: TrackInterface | null = await Track.findOneAndUpdate(
-      { _id: trackId },
-      { $set: { status: "active" } },
-      { new: true },
-    );
-    if (!track)
-      throw new AppError(
-        ErrorCodes.TRACK_NOT_FOUND,
-        "Track not found.",
-        404,
-        true,
-        null,
-      );
-    logger.info("Track status was update to: active.", { trackId: track._id });
+    const track = await trackService.activateTrack(trackId);
 
     const response: ApiResponse<TrackInterface> = {
       status: true,
       message: "Track activated sucessfully.",
-      data: track.removeUnwantedFields(),
+      data: track,
     };
 
     res.status(200).json(response);
@@ -222,9 +171,14 @@ export const activateTrack = async (
   }
 };
 
-/* Update track controler */
+/* Update track */
 export const updateTrack = async (
-  req: Request<{ id: string }, ApiResponse<TrackInterface>, TrackUpdates, {}>,
+  req: Request<
+    { id: string },
+    ApiResponse<TrackInterface>,
+    createTrackInput,
+    {}
+  >,
   res: Response<ApiResponse<TrackInterface>>,
   next: NextFunction,
 ): Promise<void> => {
@@ -234,30 +188,27 @@ export const updateTrack = async (
     const trackId = validateTrackidParam(req.params.id);
     const files = req.files as MulterTrackFiles;
 
-    const trackBody = validateAndSanitizeBody(
+    const trackData = validateAndSanitizeBody(
       req.body,
       trackValidator.trackUpdateBodySchema,
     );
 
     // upload files if any
     const trackFiles = await supabase.uploadTrackFiles(files);
-    paths = bundleTrackFilesPath(trackFiles); // Save track files path for rollback incase of an error
+    paths = bundleTrackFilesPath(trackFiles);
 
     const updatedTrack = await trackService.updateTrack(
       trackId,
-      trackBody,
+      trackData,
       trackFiles,
     );
 
     const response: ApiResponse<TrackInterface> = {
       status: true,
-      message: "Track was updated sucessfully.",
+      message: "Track updated sucessfully.",
       data: updatedTrack,
     };
 
-    logger.info("Track was updated succesfully.", {
-      id: updatedTrack._id,
-    });
     res.status(200).json(response);
   } catch (error) {
     // clean files

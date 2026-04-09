@@ -5,7 +5,7 @@ export enum LicenseType {
   premium = "premium",
 }
 
-export interface License extends Document {
+export interface LicenseInterface extends Document {
   trackId: ObjectId;
   basic: string;
   premium: string;
@@ -14,11 +14,12 @@ export interface License extends Document {
 }
 
 /* License schema */
-const licenseSchema = new Schema<License>(
+const licenseSchema = new Schema<LicenseInterface>(
   {
     trackId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Track",
+      unique: true,
       required: true,
     },
     basic: { type: String, required: true },
@@ -27,5 +28,5 @@ const licenseSchema = new Schema<License>(
   { timestamps: true },
 );
 
-const License = model<License>("License", licenseSchema);
+const License = model<LicenseInterface>("License", licenseSchema);
 export default License;
