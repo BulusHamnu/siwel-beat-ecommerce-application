@@ -77,6 +77,8 @@ export const createNewUser = async ({
       );
     }
     throw error;
+  } finally {
+    session.endSession();
   }
 
   if (!isVerified)
@@ -147,7 +149,7 @@ export const validatePasswordAndSignTokens = async (
   const accessToken = user.signToken("accessToken", "24h");
   const refreshToken = user.signToken("refreshToken", "7d");
 
-  const newSession = await Session.create({
+  await Session.create({
     userId: user._id as string,
     refreshToken,
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),

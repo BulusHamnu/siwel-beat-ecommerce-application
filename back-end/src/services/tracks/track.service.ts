@@ -10,7 +10,7 @@ import { type Pagination } from "../../controllers/responseInterface.js";
 import logger from "../../utils/logger.js";
 import Audio, { type AudioInterface } from "../../models/audio.schema.js";
 import License, { type LicenseInterface } from "../../models/license.schema.js";
-import mongoose, { type FlattenMaps } from "mongoose";
+import mongoose, { type FlattenMaps, type ClientSession } from "mongoose";
 
 /* Create new track */
 export interface createTrackInput {
@@ -29,14 +29,17 @@ async function retriveRelatedTracks({
   type,
   genre,
   tags,
+  session,
 }: {
   type: string;
   genre: string;
   tags: string[];
+  session: ClientSession;
 }) {
   const tracks = await Track.find({ type, genre, tags: { $in: tags } })
     .limit(5)
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .session(session);
   const relatedTrack: ObjectId[] = tracks.map(
     (track): ObjectId => track._id as ObjectId,
   );
@@ -48,39 +51,51 @@ export const createNewTrack = async (
   trackData: createTrackInput,
   trackFiles: uploadedTrackFiles,
 ): Promise<TrackInterface> => {
-  const { type, tags, genre } = trackData;
-  const relatedTrack = await retriveRelatedTracks({ type, genre, tags });
-
-  const { audioUrl, licenseUrl, coverImagePath, coverImageUrl } = trackFiles;
-
   const session = await mongoose.startSession();
 
-  let newTrack: TrackInterface | null = null;
-  await session.withTransaction(async () => {
-    newTrack = new Track({
-      ...trackData,
-      status: "active",
-      relatedTrack,
-      coverImagePath,
-      coverImageUrl,
+  try {
+    const { type, tags, genre } = trackData;
+    const relatedTrack = await retriveRelatedTracks({
+      type,
+      genre,
+      tags,
+      session,
     });
-    await newTrack.save({ session });
 
-    const newTrackAudios = new Audio({
-      trackId: newTrack._id,
-      ...audioUrl,
+    const { audioUrl, licenseUrl, coverImagePath, coverImageUrl } = trackFiles;
+
+    let newTrack: TrackInterface | null = null;
+    await session.withTransaction(async () => {
+      newTrack = new Track({
+        ...trackData,
+        status: "active",
+        relatedTrack,
+        coverImagePath,
+        coverImageUrl,
+      });
+
+      await newTrack.save({ session });
+
+      const newTrackAudios = new Audio({
+        trackId: newTrack._id,
+        ...audioUrl,
+      });
+
+      await newTrackAudios.save({ session });
+
+      const newTrackLicenses = new License({
+        trackId: newTrack._id,
+        ...licenseUrl,
+      });
+
+      await newTrackLicenses.save({ session });
     });
-    await newTrackAudios.save({ session });
 
-    const newTrackLicenses = new License({
-      trackId: newTrack._id,
-      ...licenseUrl,
-    });
-    await newTrackLicenses.save({ session });
-  });
-
-  logger.info("New track created succefully.", { trackId: newTrack!._id });
-  return newTrack!;
+    logger.info("New track created succefully.", { trackId: newTrack!._id });
+    return newTrack!;
+  } finally {
+    session.endSession();
+  }
 };
 
 /* Get all tracks */
@@ -328,6 +343,7 @@ async function prepareFileUpdatesAndOldPaths(
   trackId: string,
   licenseUrl: LicenseInput | undefined,
   audioUrl: AudioInput | undefined,
+  session: ClientSession,
 ) {
   const oldFilesPath: string[] = [];
 
@@ -335,7 +351,9 @@ async function prepareFileUpdatesAndOldPaths(
   if (licenseUrl && Object.keys(licenseUrl)?.length > 0) {
     const licenseFiles = await License.findOne({
       trackId,
-    }).lean<LicenseInterface>();
+    })
+      .session(session)
+      .lean<LicenseInterface>();
 
     if (licenseUrl.basic) {
       licenseUpdate["basic"] = licenseUrl.basic;
@@ -350,7 +368,9 @@ async function prepareFileUpdatesAndOldPaths(
 
   const audioUpdate: Partial<AudioInterface> = {};
   if (audioUrl && Object.keys(audioUrl!)?.length > 0) {
-    const audioFiles = await Audio.findOne({ trackId }).lean<AudioInterface>();
+    const audioFiles = await Audio.findOne({ trackId })
+      .session(session)
+      .lean<AudioInterface>();
 
     if (audioUrl.tagged) {
       audioUpdate["tagged"] = audioUrl.tagged;
@@ -371,54 +391,67 @@ export const updateTrack = async (
   trackUpdates: createTrackInput,
   files: uploadedTrackFiles,
 ): Promise<TrackInterface> => {
-  const track = await Track.findOne({ _id: trackId }).lean<TrackInterface>();
-  if (!track)
-    throw new AppError(
-      ErrorCodes.TRACK_NOT_FOUND,
-      "Track not found.",
-      404,
-      true,
-      null,
-    );
-
-  const { audioUrl, licenseUrl, coverImagePath, coverImageUrl } = files;
-  const updates = filterTrackUpdates({
-    ...trackUpdates,
-    coverImagePath,
-    coverImageUrl,
-  });
-
-  const { oldFilesPath, licenseUpdate, audioUpdate } =
-    await prepareFileUpdatesAndOldPaths(trackId, licenseUrl, audioUrl);
-
-  if (coverImagePath) oldFilesPath.push(track.coverImagePath);
-
-  let updatedTrack: TrackInterface | null = null;
   const session = await mongoose.startSession();
 
-  await session.withTransaction(async () => {
-    updatedTrack = await Track.findOneAndUpdate(
-      { _id: trackId },
-      { $set: { ...updates } },
-      { new: true, session },
-    );
+  try {
+    const track = await Track.findOne({ _id: trackId })
+      .session(session)
+      .lean<TrackInterface>();
+    if (!track)
+      throw new AppError(
+        ErrorCodes.TRACK_NOT_FOUND,
+        "Track not found.",
+        404,
+        true,
+        null,
+      );
 
-    await Audio.updateOne(
-      { trackId: track._id },
-      { $set: { ...audioUpdate } },
-      { session },
-    );
+    const { audioUrl, licenseUrl, coverImagePath, coverImageUrl } = files;
+    const updates = filterTrackUpdates({
+      ...trackUpdates,
+      coverImagePath,
+      coverImageUrl,
+    });
 
-    await License.updateOne(
-      { trackId: track._id },
-      { $set: { ...licenseUpdate } },
-      { session },
-    );
+    const { oldFilesPath, licenseUpdate, audioUpdate } =
+      await prepareFileUpdatesAndOldPaths(
+        trackId,
+        licenseUrl,
+        audioUrl,
+        session,
+      );
 
-    if (oldFilesPath.length > 0)
-      await supabase.safeRemoveTrackFiles(oldFilesPath);
-  });
+    if (coverImagePath) oldFilesPath.push(track.coverImagePath);
 
-  logger.info(`Track was updated succesfully id: ${updatedTrack!._id}`);
-  return updatedTrack!;
+    let updatedTrack: TrackInterface | null = null;
+
+    await session.withTransaction(async () => {
+      updatedTrack = await Track.findOneAndUpdate(
+        { _id: trackId },
+        { $set: { ...updates } },
+        { new: true, session },
+      );
+
+      await Audio.updateOne(
+        { trackId: track._id },
+        { $set: { ...audioUpdate } },
+        { session },
+      );
+
+      await License.updateOne(
+        { trackId: track._id },
+        { $set: { ...licenseUpdate } },
+        { session },
+      );
+
+      if (oldFilesPath.length > 0)
+        await supabase.safeRemoveTrackFiles(oldFilesPath);
+    });
+
+    logger.info(`Track was updated succesfully id: ${updatedTrack!._id}`);
+    return updatedTrack!;
+    //
+  } finally {
+    session.endSession();
+  }
 };
