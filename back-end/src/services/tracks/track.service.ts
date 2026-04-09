@@ -9,11 +9,8 @@ import supabase, { type uploadedTrackFiles } from "../supabase.js";
 import { type Pagination } from "../../controllers/responseInterface.js";
 import logger from "../../utils/logger.js";
 import Audio, { type AudioInterface } from "../../models/audio.schema.js";
-import License, {
-  LicenseType,
-  type LicenseInterface,
-} from "../../models/license.schema.js";
-import mongoose from "mongoose";
+import License, { type LicenseInterface } from "../../models/license.schema.js";
+import mongoose, { type FlattenMaps } from "mongoose";
 
 /* Create new track */
 export interface createTrackInput {
@@ -216,50 +213,82 @@ export async function getSingleTrack(trackId: string): Promise<TrackInterface> {
   return track;
 }
 
-/* Deactivate track */
-export async function deactivateTrack(
-  trackId: string,
-): Promise<TrackInterface> {
-  const track: TrackInterface | null = await Track.findOneAndUpdate(
-    { _id: trackId },
-    { $set: { status: "inactive" } },
-    { new: true },
-  );
+/* Publish Track */
+export async function publishTrack(trackId: string): Promise<TrackInterface> {
+  const session = await mongoose.startSession();
 
-  if (!track)
-    throw new AppError(
-      ErrorCodes.TRACK_NOT_FOUND,
-      "Track not found.",
-      404,
-      true,
-      null,
-    );
+  try {
+    let publishedTrack: TrackInterface | null = null;
+    //
+    await session.withTransaction(async () => {
+      const audioQuery = Audio.findOne({ trackId }).session(session).lean();
+      const licenseQuery = License.findOne({
+        trackId,
+      })
+        .session(session)
+        .lean();
 
-  logger.info("Track status was update to: inactive.", {
-    trackId: track._id,
-  });
+      const [audioFiles, licenseFiles]: [
+        FlattenMaps<AudioInterface> | null,
+        FlattenMaps<LicenseInterface> | null,
+      ] = await Promise.all([audioQuery, licenseQuery]);
 
-  return track;
+      if (!licenseFiles || !audioFiles) {
+        throw new AppError(
+          ErrorCodes.PUBLISH_ERROR,
+          "Cannot publish track. All required files must be uploaded and completed.",
+          400,
+          true,
+          null,
+        );
+      }
+
+      publishedTrack = await Track.findOneAndUpdate(
+        { _id: trackId, status: { $ne: "published" } },
+        { $set: { status: "published" } },
+        { new: true, session },
+      );
+
+      if (!publishedTrack)
+        throw new AppError(
+          ErrorCodes.PUBLISH_ERROR,
+          "Track not found or already published.",
+          400,
+          true,
+          null,
+        );
+    });
+
+    logger.info("Track was published successfully.", {
+      trackId: publishedTrack!._id,
+    });
+
+    return publishedTrack!;
+  } finally {
+    session.endSession();
+  }
 }
 
-/* Activate track */
-export async function activateTrack(trackId: string): Promise<TrackInterface> {
+/* Unpublished track */
+export async function unpublishTrack(trackId: string): Promise<TrackInterface> {
   const track: TrackInterface | null = await Track.findOneAndUpdate(
-    { _id: trackId },
-    { $set: { status: "active" } },
+    { _id: trackId, status: { $ne: "unpublished" } },
+    { $set: { status: "unpublished" } },
     { new: true },
   );
 
   if (!track)
     throw new AppError(
-      ErrorCodes.TRACK_NOT_FOUND,
-      "Track not found.",
-      404,
+      ErrorCodes.UNPUBLISH_ERROR,
+      "Track not found or already unpublished.",
+      400,
       true,
       null,
     );
 
-  logger.info("Track status was update to: active.", { trackId: track._id });
+  logger.info("Track unpublished successfully.", {
+    trackId: track._id,
+  });
 
   return track;
 }

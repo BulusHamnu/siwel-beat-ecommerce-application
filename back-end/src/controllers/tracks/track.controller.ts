@@ -125,8 +125,8 @@ export const getTrack = async (
   }
 };
 
-/* Deactivate track handler */
-export const deactivateTrack = async (
+/* Publish Track handler */
+export const publishTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
   next: NextFunction,
@@ -134,11 +134,11 @@ export const deactivateTrack = async (
   try {
     const trackId = validateTrackidParam(req.params.id);
 
-    const track = await trackService.deactivateTrack(trackId);
+    const track = await trackService.publishTrack(trackId);
 
     const response: ApiResponse<TrackInterface> = {
       status: true,
-      message: "Track deactivated sucessfully.",
+      message: "Track published sucessfully.",
       data: track,
     };
 
@@ -148,8 +148,8 @@ export const deactivateTrack = async (
   }
 };
 
-/* Activate track controller */
-export const activateTrack = async (
+/* Unpublished track handler */
+export const unpublishTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,
   next: NextFunction,
@@ -157,11 +157,11 @@ export const activateTrack = async (
   try {
     const trackId = validateTrackidParam(req.params.id);
 
-    const track = await trackService.activateTrack(trackId);
+    const track = await trackService.unpublishTrack(trackId);
 
     const response: ApiResponse<TrackInterface> = {
       status: true,
-      message: "Track activated sucessfully.",
+      message: "Track was unpublished sucessfully.",
       data: track,
     };
 
