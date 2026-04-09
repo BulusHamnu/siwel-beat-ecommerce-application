@@ -1,6 +1,6 @@
 import mongoose, { Schema, model, Document, type ObjectId } from "mongoose";
 
-export interface FileUrl extends Document {
+export interface Audio extends Document {
   trackId: ObjectId;
   tagged: string;
   untagged: string;
@@ -8,8 +8,8 @@ export interface FileUrl extends Document {
   updatedAt: Date;
 }
 
-/* FileUrl schema */
-const fileUrlSchema = new Schema<FileUrl>(
+/* audioSchema */
+const audioSchema = new Schema<Audio>(
   {
     trackId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -22,5 +22,5 @@ const fileUrlSchema = new Schema<FileUrl>(
   { timestamps: true },
 );
 
-const FileUrl = model<FileUrl>("FileUrl", fileUrlSchema);
-export default FileUrl;
+const Audio = model<Audio>("Audio", audioSchema);
+export default Audio;

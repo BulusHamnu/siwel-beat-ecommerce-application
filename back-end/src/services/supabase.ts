@@ -6,19 +6,19 @@ import { fileTypeFromBuffer } from "file-type";
 import { type MulterTrackFiles } from "../middlewares/upload.js";
 import crypto from "crypto";
 
-interface FileUrlInput {
+export interface AudioInput {
   tagged?: string | undefined;
   untagged?: string | undefined;
 }
 
-interface LicenseInput {
+export interface LicenseInput {
   basic?: string | undefined;
   premium?: string | undefined;
 }
 
 export interface uploadedTrackFiles {
-  fileUrl?: FileUrlInput;
-  license?: LicenseInput;
+  audioUrl?: AudioInput;
+  licenseUrl?: LicenseInput;
   coverImageUrl?: string | undefined;
   coverImagePath?: string | undefined;
 }
@@ -36,10 +36,10 @@ class Supabase {
   // methods
   getFileName = (originalname: string): string => {
     let newFileName = originalname.split(".")[0]!;
-    const randString = crypto.randomBytes(8).toString("hex");
+    const randString = crypto.randomBytes(16).toString("hex");
 
     newFileName = newFileName.replace(/[^\w.-]/g, "-");
-    newFileName = Date.now() + "-" + newFileName + "-" + randString;
+    newFileName = randString + "-" + newFileName;
 
     return newFileName;
   };
@@ -77,6 +77,7 @@ class Supabase {
         throw error;
       }
     }
+
     logger.info("File uploaded successfully.");
     return data.path;
   };
@@ -144,7 +145,7 @@ class Supabase {
           ? this.uploadFile(
               env.IMAGE_FILES_BUCKET,
               files.coverImage[0]!.originalname,
-              "coverImages/", //
+              "cover-images/", //
               files.coverImage[0]!.buffer,
             )
           : Promise.resolve(undefined),
@@ -153,7 +154,7 @@ class Supabase {
           ? this.uploadFile(
               env.AUDIO_FILES_BUCKET,
               files.taggedAudio[0]!.originalname,
-              "taggedAudios/", //
+              "tagged-audios/", //
               files.taggedAudio[0]!.buffer,
             )
           : Promise.resolve(undefined),
@@ -162,7 +163,7 @@ class Supabase {
           ? this.uploadFile(
               env.AUDIO_FILES_BUCKET,
               files.untaggedAudio[0]!.originalname,
-              "untaggedAudios/",
+              "untagged-audios/",
               files.untaggedAudio[0]!.buffer,
             )
           : Promise.resolve(undefined),
@@ -171,7 +172,7 @@ class Supabase {
           ? this.uploadFile(
               env.DOCUMENT_FILES_BUCKET,
               files.basicLicense[0]!.originalname,
-              "basicLicenses/",
+              "basic-licenses/",
               files.basicLicense[0]!.buffer,
             )
           : Promise.resolve(undefined),
@@ -180,7 +181,7 @@ class Supabase {
           ? this.uploadFile(
               env.DOCUMENT_FILES_BUCKET,
               files.premiumLicense[0]!.originalname,
-              "premiumLicenses/",
+              "premium-licenses/",
               files.premiumLicense[0]!.buffer,
             )
           : Promise.resolve(undefined),
@@ -202,11 +203,11 @@ class Supabase {
       return {
         coverImageUrl: coverImgPublicUrl,
         coverImagePath: coverImage,
-        fileUrl: {
+        audioUrl: {
           tagged,
           untagged,
         },
-        license: {
+        licenseUrl: {
           basic,
           premium,
         },
@@ -221,17 +222,18 @@ class Supabase {
   safeRemoveTrackFiles = async (paths: string[]): Promise<void> => {
     const audioPaths = paths.filter(
       (path) =>
-        path.startsWith("taggedAudios/") || path.startsWith("untaggedAudios/"),
+        path.startsWith("tagged-audios/") ||
+        path.startsWith("untagged-audios/"),
     );
 
     const licensePaths = paths.filter(
       (path) =>
-        path.startsWith("basicLicenses/") ||
-        path.startsWith("premiumLicenses/"),
+        path.startsWith("basic-licenses/") ||
+        path.startsWith("premium-licenses/"),
     );
 
     const coverImagePaths = paths.filter((path) =>
-      path.startsWith("coverImages/"),
+      path.startsWith("cover-images/"),
     );
 
     const requests: Promise<boolean>[] = [];
