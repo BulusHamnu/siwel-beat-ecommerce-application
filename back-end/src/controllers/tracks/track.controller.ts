@@ -3,15 +3,13 @@ import type { ApiResponse } from "../responseInterface.js";
 import Track, { type TrackInterface } from "../../models/track.schema.js";
 import type { tracksResults } from "../../services/tracks/track.service.js";
 import * as trackService from "../../services/tracks/track.service.js";
-import { retriveTrackFilePaths } from "../../services/tracks/trackDownloadFile.service.js";
+import { retrieveTrackFileForDownload } from "../../services/tracks/downloadTrackFile.service.js";
 import { type Pagination } from "../responseInterface.js";
 import logger from "../../utils/logger.js";
-import AppError, { ErrorCodes } from "../../errors/appError.js";
 import supabase, { type uploadedTrackFiles } from "../../services/supabase.js";
 import { Readable } from "stream";
 import { fileTypeFromBlob } from "file-type";
 import * as notificationService from "../../services/notification.service.js";
-import env from "../../configs/env.js";
 import * as trackValidator from "../../utils/validators/track.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import {
@@ -245,33 +243,6 @@ export async function retrieveTrackMedia(
 }
 
 /* Download track files */
-async function retrieveTrackFile(type: string, filePath: string): Promise<any> {
-  // Get bucket name: so item can be retrive from the right bucket
-  let bucket = "";
-  switch (type) {
-    case "audio":
-      bucket = env.AUDIO_FILES_BUCKET;
-      break;
-    case "license":
-      bucket = env.DOCUMENT_FILES_BUCKET;
-      break;
-  }
-
-  const { data, error } = await supabase.client.from(bucket).download(filePath);
-  if (error) {
-    logger.error("An error occur while downloading file.", error);
-    throw new AppError(
-      ErrorCodes.TRACK_DOWNLOAD_ERROR,
-      "Download error.",
-      500,
-      true,
-      null,
-    );
-  }
-
-  return data;
-}
-
 export const downloadTrackFile = async (
   req: Request<{ id: string }, {}, {}, { type: string; license: string }>,
   res: Response,
@@ -279,39 +250,27 @@ export const downloadTrackFile = async (
 ): Promise<void> => {
   try {
     const user = req.user!;
-    const id = validateTrackidParam(req.params.id);
+    const trackId = validateTrackidParam(req.params.id);
     const { type, license } = validateAndSanitizeBody(
       req.query,
       trackValidator.downloadQuerySchema,
     );
 
-    const { fileName, filePath } = await retriveTrackFilePaths(
+    const { downloadUrl } = await retrieveTrackFileForDownload({
       user,
-      id,
-      license,
-      type,
+      trackId,
+      licenseType: license,
+      requestedFile: type,
+    });
+
+    await notificationService.postNewNotification(
+      user.id,
+      "Your download is ready.",
+      "DOWNLOAD_COMPLETED",
+      trackId,
     );
 
-    const data = await retrieveTrackFile(type, filePath);
-    const readable = Readable.fromWeb(data.stream()); // Stream for fast download
-
-    // set headers
-    const fileTYpe = await fileTypeFromBlob(data);
-    const contentType: string = fileTYpe?.mime || "application/octet-stream";
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}";`);
-    res.setHeader("Content-Type", contentType!);
-
-    readable.pipe(res);
-    res.on("close", async () => {
-      if (!res.writableEnded) return;
-      // Notify user: so user will know the file was download
-      await notificationService.postNewNotification(
-        user.id,
-        "File downloaded sucessfully.",
-        "DOWNLOAD_COMPLETED",
-        id,
-      );
-    });
+    res.status(200).json({ downloadUrl });
   } catch (error) {
     next(error);
   }
