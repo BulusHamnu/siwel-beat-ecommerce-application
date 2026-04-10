@@ -18,6 +18,7 @@ import {
 } from "../../services/tracks/track.service.js";
 import { validateTrackidParam } from "../../utils/validators/track.validator.js";
 import type { MulterTrackFiles } from "../../middlewares/upload.js";
+import Audio from "../../models/audio.schema.js";
 
 /* Post new track  */
 const bundleTrackFilesPath = (files: uploadedTrackFiles): string[] => {
@@ -276,28 +277,29 @@ export const downloadTrackFile = async (
   }
 };
 
-/* Play track controller */
-export const playTrack = async (
+/* Stream track handler */
+export const streamTrackAudio = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response,
   next: NextFunction,
 ): Promise<any> => {
   try {
     const { id } = req.params;
+
     const range = req.headers["range"]; //?.split("=")[1];
+    if (!range) return res.status(500);
 
-    const track = await Track.findOne({ _id: id });
-    if (!track) return res.status(404);
+    const audio = await Audio.findOne({ trackId: id });
+    const filePath = audio?.untagged;
 
-    const filePath = track?.fileUrl.untagged;
+    if (!filePath) return res.status(404);
 
     const { data, error } = await supabase.client
       .from("audios")
       .createSignedUrl(filePath, 60);
 
-    // send 500
     if (error) {
-      logger.error("An error occur while while streaming audio file.", error);
+      logger.error("An error occurred while streaming the audio file.", error);
       return res.status(500);
     }
 
@@ -305,7 +307,7 @@ export const playTrack = async (
     const response = await fetch(url, {
       method: "GET",
       headers: {
-        Range: range!,
+        Range: range,
       },
     });
 
@@ -318,6 +320,7 @@ export const playTrack = async (
     res.setHeader("Content-Length", contentLength!);
     res.setHeader("Accept-Ranges", "bytes");
     res.setHeader("Content-Range", contentRange!);
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
 
     const stream = Readable.fromWeb(response.body as any); // change res web buffer to node streamable
     res.status(response.status);

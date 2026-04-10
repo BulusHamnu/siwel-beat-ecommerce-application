@@ -15,7 +15,7 @@ const router = Router();
 router.get("/", generalApiLimiter(), trackController.getTracks);
 router.get("/:id", generalApiLimiter(), trackController.getTrack);
 /* Play track */
-router.get("/:id/play", trackController.playTrack);
+router.get("/:id/stream", trackController.streamTrackAudio);
 
 /* Comment routes  */
 router.use("/", commentRoutes);
