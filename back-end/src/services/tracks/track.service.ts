@@ -11,6 +11,7 @@ import logger from "../../utils/logger.js";
 import Audio, { type AudioInterface } from "../../models/audio.schema.js";
 import License, { type LicenseInterface } from "../../models/license.schema.js";
 import mongoose, { type FlattenMaps, type ClientSession } from "mongoose";
+import env from "../../configs/env.js";
 
 /* Create new track */
 export interface createTrackInput {
@@ -456,3 +457,97 @@ export const updateTrack = async (
     session.endSession();
   }
 };
+
+/* Retrieve track files */
+export interface TrackMedia {
+  audio: {
+    tagged: string | null;
+    untagged: string | null;
+  };
+  license: {
+    basic: string | null;
+    premium: string | null;
+  };
+}
+
+export async function retrieveTrackMedia(trackId: string): Promise<TrackMedia> {
+  const audioQuery = Audio.findOne({ trackId }).lean();
+  const licenseQuery = License.findOne({
+    trackId,
+  }).lean();
+
+  const [audioFiles, licenseFiles]: [
+    FlattenMaps<AudioInterface> | null,
+    FlattenMaps<LicenseInterface> | null,
+  ] = await Promise.all([audioQuery, licenseQuery]);
+
+  if (!licenseFiles && !audioFiles) {
+    throw new AppError(
+      ErrorCodes.MEDIA_NOT_FOUND,
+      "Track media has not been uploaded yet.",
+      404,
+      true,
+      null,
+    );
+  }
+
+  let [tagged, untagged, basic, premium] = await Promise.all([
+    audioFiles?.tagged
+      ? supabase.client
+          .from(env.AUDIO_FILES_BUCKET)
+          .createSignedUrl(audioFiles.tagged, env.SIGNED_URL_TTL)
+      : Promise.resolve(null),
+    //
+    audioFiles?.untagged
+      ? supabase.client
+          .from(env.AUDIO_FILES_BUCKET)
+          .createSignedUrl(audioFiles.untagged, env.SIGNED_URL_TTL)
+      : Promise.resolve(null),
+    //
+    licenseFiles?.basic
+      ? supabase.client
+          .from(env.DOCUMENT_FILES_BUCKET)
+          .createSignedUrl(licenseFiles.basic, env.SIGNED_URL_TTL)
+      : Promise.resolve(null),
+    //
+    licenseFiles?.premium
+      ? supabase.client
+          .from(env.DOCUMENT_FILES_BUCKET)
+          .createSignedUrl(licenseFiles.premium, env.SIGNED_URL_TTL)
+      : Promise.resolve(null),
+  ]);
+
+  if (tagged?.error) {
+    logger.error("Tagged audio URL failed", tagged.error);
+  }
+
+  if (untagged?.error) {
+    logger.error("Tagged audio URL failed", untagged.error);
+  }
+
+  if (basic?.error) {
+    logger.error("Tagged audio URL failed", basic.error);
+  }
+
+  if (premium?.error) {
+    logger.error("Tagged audio URL failed", premium.error);
+  }
+
+  const taggedAudio = tagged?.data?.signedUrl || null;
+  const untaggedAudio = untagged?.data?.signedUrl || null;
+  const basicLicense = basic?.data?.signedUrl || null;
+  const premiumLicense = premium?.data?.signedUrl || null;
+
+  const trackMedia: TrackMedia = {
+    audio: {
+      tagged: taggedAudio,
+      untagged: untaggedAudio,
+    },
+    license: {
+      basic: basicLicense,
+      premium: premiumLicense,
+    },
+  };
+
+  return trackMedia;
+}

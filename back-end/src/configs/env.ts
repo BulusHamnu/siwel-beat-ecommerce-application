@@ -42,6 +42,7 @@ interface Env {
   GOOGLE_OAUTH2_URL: string;
   HASH_SALT_NUMBER: number;
   GOOGLE_REDIRECT_URL: string;
+  SIGNED_URL_TTL: number;
 }
 
 const env: Env = {
@@ -81,6 +82,8 @@ const env: Env = {
     "https://accounts.google.com/o/oauth2/v2/auth",
   HASH_SALT_NUMBER: 10,
   GOOGLE_REDIRECT_URL: process.env.GOOGLE_REDIRECT_URL || "",
+
+  SIGNED_URL_TTL: Number(process.env.SIGNED_URL_TTL) || 120,
 };
 
 export default env;

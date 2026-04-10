@@ -14,7 +14,10 @@ import * as notificationService from "../../services/notification.service.js";
 import env from "../../configs/env.js";
 import * as trackValidator from "../../utils/validators/track.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
-import { type createTrackInput } from "../../services/tracks/track.service.js";
+import {
+  type createTrackInput,
+  type TrackMedia,
+} from "../../services/tracks/track.service.js";
 import { validateTrackidParam } from "../../utils/validators/track.validator.js";
 import type { MulterTrackFiles } from "../../middlewares/upload.js";
 
@@ -219,8 +222,30 @@ export const updateTrack = async (
   }
 };
 
-/* Download track files controllers */
-async function retriveTrackFile(type: string, filePath: string): Promise<any> {
+/* Retrieve track files */
+export async function retrieveTrackMedia(
+  req: Request<{ id: string }, {}, {}, {}>,
+  res: Response<ApiResponse<TrackMedia>>,
+  next: NextFunction,
+) {
+  try {
+    const trackId = req.params.id;
+
+    const data = await trackService.retrieveTrackMedia(trackId);
+    const response: ApiResponse<trackService.TrackMedia> = {
+      status: true,
+      message: "Track files retrieved successfully.",
+      data: data,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* Download track files */
+async function retrieveTrackFile(type: string, filePath: string): Promise<any> {
   // Get bucket name: so item can be retrive from the right bucket
   let bucket = "";
   switch (type) {
@@ -267,7 +292,7 @@ export const downloadTrackFile = async (
       type,
     );
 
-    const data = await retriveTrackFile(type, filePath);
+    const data = await retrieveTrackFile(type, filePath);
     const readable = Readable.fromWeb(data.stream()); // Stream for fast download
 
     // set headers

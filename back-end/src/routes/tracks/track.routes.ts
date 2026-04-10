@@ -44,4 +44,6 @@ router.post(
   trackController.unpublishTrack,
 );
 
+router.get("/:id/media", trackController.retrieveTrackMedia);
+
 export default router;
