@@ -40,6 +40,7 @@ async function retriveRelatedTracks({
     .limit(5)
     .sort({ createdAt: -1 })
     .session(session);
+
   const relatedTrack: ObjectId[] = tracks.map(
     (track): ObjectId => track._id as ObjectId,
   );
@@ -68,7 +69,7 @@ export const createNewTrack = async (
     await session.withTransaction(async () => {
       newTrack = new Track({
         ...trackData,
-        status: "active",
+        status: "unpublished",
         relatedTrack,
         coverImagePath,
         coverImageUrl,
@@ -120,7 +121,7 @@ function buildTrackQueries(
 
   if (genre) matches.genre = genre.toLowerCase();
   if (type) matches.type = type.toLowerCase();
-  matches.status = "active"; // users should not get inactive track
+  matches.status = "published";
 
   if (tags) {
     tags?.length > 0 && Array.isArray(tags)

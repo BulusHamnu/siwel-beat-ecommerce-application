@@ -64,7 +64,7 @@ const retriveGoogleUserPayload = async (
   });
 
   const payload = ticket.getPayload()!;
-  if (!payload) throw new Error("No google payload found.");
+  if (!payload) throw new Error("Failed to retrive google payload.");
 
   logger.info("Google idToken verify successfully: ", {
     email: payload.email,

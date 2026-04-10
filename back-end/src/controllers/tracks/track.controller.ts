@@ -148,7 +148,7 @@ export const publishTrack = async (
   }
 };
 
-/* Unpublished track handler */
+/* Unpublish track handler */
 export const unpublishTrack = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<TrackInterface>>,

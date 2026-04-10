@@ -81,39 +81,46 @@ export const updateProfile = async (
   id: string | undefined,
   updates: ProfileUpdates,
 ): Promise<UserProfile> => {
-  const user: UserInterface | null = await User.findOne({ _id: id });
-  if (!user)
-    throw new AppError(
-      ErrorCodes.USER_NOT_FOUND,
-      "User not found.",
-      404,
-      true,
-      null,
+  const session = await mongoose.startSession();
+  try {
+    const user: UserInterface | null = await User.findOne({ _id: id }).session(
+      session,
+    );
+    if (!user)
+      throw new AppError(
+        ErrorCodes.USER_NOT_FOUND,
+        "User not found.",
+        404,
+        true,
+        null,
+      );
+
+    filterProfileUpdates(updates);
+
+    const profile: ProfileInterface | null = await Profile.findOneAndUpdate(
+      { userId: user._id },
+      { $set: updates },
+      { new: true, session },
     );
 
-  filterProfileUpdates(updates);
+    if (updates["username"]) {
+      user.username = updates["username"].toLowerCase().replace(" ", "_");
+      await user.save({ session });
+    }
 
-  const session = await mongoose.startSession();
-  const profile: ProfileInterface | null = await Profile.findOneAndUpdate(
-    { userId: user._id },
-    { $set: updates },
-    { new: true, session },
-  );
+    const profileObj = profile?.toObject();
+    delete profileObj.avatarPath;
 
-  if (updates["username"]) {
-    user.username = updates["username"].toLowerCase().replace(" ", "_");
-    await user.save({ session });
+    return {
+      username: user.username,
+      isVerified: user.isVerified,
+      email: user.email,
+      role: user.role,
+      ...profileObj,
+    };
+  } finally {
+    session.endSession();
   }
-
-  const profileObj = profile?.toObject();
-
-  return {
-    username: user.username,
-    isVerified: user.isVerified,
-    email: user.email,
-    role: user.role,
-    ...profileObj,
-  };
 };
 
 /* Update user avatar */

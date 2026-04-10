@@ -96,7 +96,7 @@ async function getUserAndValidatePassword(
   email: string,
   password: string,
 ): Promise<UserInterface> {
-  const user = await User.findOne({ email: email });
+  const user = await User.findOne({ email });
   if (!user)
     throw new AppError(
       ErrorCodes.USER_NOT_FOUND,
@@ -250,7 +250,7 @@ export const verifyEmail = async (
       "User is already verified.",
       400,
       true,
-      { identifier: email },
+      { email },
     );
 
   const storedHashedCode = user.emailVerification.code as string;
