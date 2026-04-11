@@ -132,7 +132,7 @@ export const getTrack = async (
 
     const response: ApiResponse<TrackInterface> = {
       status: true,
-      message: "Track retrived sucessfully.",
+      message: "Track retrieved sucessfully.",
       data: track,
     };
 
@@ -282,7 +282,7 @@ export const downloadTrackFile = async (
     await notificationService.postNewNotification(
       user.id,
       "Your download is ready.",
-      "DOWNLOAD_COMPLETED",
+      "DOWNLOAD_STARTED",
       trackId,
     );
 

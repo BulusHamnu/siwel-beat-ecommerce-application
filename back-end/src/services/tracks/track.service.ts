@@ -26,7 +26,7 @@ export interface createTrackInput {
   genre: string;
 }
 
-async function retriveRelatedTracks({
+async function retrieveRelatedTracks({
   type,
   genre,
   tags,
@@ -57,7 +57,7 @@ export const createNewTrack = async (
 
   try {
     const { type, tags, genre } = trackData;
-    const relatedTrack = await retriveRelatedTracks({
+    const relatedTrack = await retrieveRelatedTracks({
       type,
       genre,
       tags,
