@@ -344,3 +344,25 @@ export const streamTrackAudio = async (
     next(error);
   }
 };
+
+/* Delete a track */
+export async function deleteTrack(
+  req: Request<{ id: string }, {}, {}, {}>,
+  res: Response<ApiResponse<null>>,
+  next: NextFunction,
+) {
+  try {
+    const trackId = req.params.id;
+
+    await trackService.deleteTrackAndFiles(trackId);
+
+    const response: ApiResponse<null> = {
+      status: true,
+      message: "Track deleted successfully.",
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+}

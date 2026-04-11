@@ -46,5 +46,6 @@ router.post(
 );
 
 router.get("/:id/media", trackController.retrieveTrackMedia);
+router.delete("/:id", trackController.deleteTrack);
 
 export default router;

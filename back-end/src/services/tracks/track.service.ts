@@ -70,7 +70,7 @@ export const createNewTrack = async (
     await session.withTransaction(async () => {
       newTrack = new Track({
         ...trackData,
-        status: "unpublished",
+        status: "draft",
         relatedTrack,
         coverImagePath,
         coverImageUrl,
@@ -565,4 +565,60 @@ export async function retrieveTrackMedia(trackId: string): Promise<TrackMedia> {
   };
 
   return trackMedia;
+}
+
+/* Delete track and files */
+export async function deleteTrackAndFiles(trackId: string) {
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      //
+      const filesPath: string[] = [];
+      const [track, trackAudio, trackLicense] = await Promise.all([
+        Track.findOne({ _id: trackId }).lean<TrackInterface>().session(session),
+        Audio.findOne({ trackId }).session(session),
+        License.findOne({ trackId }).session(session),
+      ]);
+
+      if (!track)
+        throw new AppError(
+          ErrorCodes.TRACK_NOT_FOUND,
+          "Track not found.",
+          404,
+          true,
+          null,
+        );
+
+      filesPath.push(track.coverImagePath);
+      if (trackAudio) {
+        filesPath.push(trackAudio.tagged);
+        filesPath.push(trackAudio.untagged);
+      }
+
+      if (trackLicense) {
+        filesPath.push(trackLicense.basic);
+        filesPath.push(trackLicense.premium);
+      }
+
+      const deletedTrack = await Track.deleteOne({ _id: trackId }).session(
+        session,
+      );
+
+      if (!deletedTrack.acknowledged || deletedTrack.deletedCount <= 0)
+        throw new AppError(
+          ErrorCodes.UNEXPECTED_ERROR,
+          "Unable to delete track.",
+          500,
+          true,
+          null,
+        );
+
+      await Audio.deleteMany({ trackId }).session(session);
+      await License.deleteMany({ trackId }).session(session);
+
+      await supabase.safeRemoveTrackFiles(filesPath);
+    });
+  } finally {
+    session.endSession();
+  }
 }
