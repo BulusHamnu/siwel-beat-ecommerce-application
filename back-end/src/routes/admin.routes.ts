@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getDashboard } from "../controllers/admin.controller.js";
-import withAuth from "../middlewares/withAuth.js";
+import requiredAuth from "../middlewares/requiredAuth.js";
 import allowRole from "../middlewares/allowRole.js";
 import * as ordersController from "../controllers/shared/orders.shared.controller.js";
 import * as notificationController from "../controllers/shared/notification.controller.js";
@@ -13,7 +13,7 @@ import rateLimiter, {
 
 const router = Router();
 
-router.use(withAuth);
+router.use(requiredAuth);
 router.use(allowRole("admin"));
 
 /* Admin profile */

@@ -2,7 +2,7 @@ import { getDateRange } from "../../utils/helpers.js";
 import Order, { type OrderInterface } from "../../models/order.schema.js";
 import { type Pagination } from "../../controllers/responseInterface.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
-import type { userPayload } from "../../middlewares/withAuth.js";
+import type { userPayload } from "../../middlewares/requiredAuth.js";
 import OrderItem, {
   type OrderItemInterface,
 } from "../../models/orderItem.schema.js";

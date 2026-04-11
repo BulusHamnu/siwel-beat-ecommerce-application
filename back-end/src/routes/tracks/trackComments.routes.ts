@@ -1,5 +1,5 @@
 import { Router } from "express";
-import withAuth from "../../middlewares/withAuth.js";
+import requiredAuth from "../../middlewares/requiredAuth.js";
 import allowRole from "../../middlewares/allowRole.js";
 import * as commentController from "../../controllers/tracks/trackComments.controller.js";
 import requiredVerifiedEmail from "../../middlewares/requiredVerifiedEmail.js";
@@ -23,7 +23,7 @@ router.get(
 );
 
 /* Only autheticated users can post, update and delete comment */
-router.use(withAuth);
+router.use(requiredAuth);
 router.use(requiredVerifiedEmail);
 router.use(allowRole("user", "admin"));
 

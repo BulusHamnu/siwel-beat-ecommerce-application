@@ -70,7 +70,7 @@ export async function verifyAuthAndAttachUser(
   }
 }
 
-const withAuth = async (
+const requiredAuth = async (
   req: Request<{}, {}, {}, {}>,
   res: Response<{}>,
   next: NextFunction,
@@ -95,4 +95,4 @@ const withAuth = async (
   }
 };
 
-export default withAuth;
+export default requiredAuth;

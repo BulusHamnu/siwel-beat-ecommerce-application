@@ -1,5 +1,5 @@
 import { Router } from "express";
-import withAuth from "../middlewares/withAuth.js";
+import requiredAuth from "../middlewares/requiredAuth.js";
 import * as authController from "../controllers/auths/auth.controller.js";
 import * as googleAuthController from "../controllers/auths/google-auth.controller.js";
 import rateLimiter from "../middlewares/rateLimiter.js";
@@ -21,7 +21,7 @@ router.post("/login", authController.logIn);
 router.post("/verify-email", authController.verifyEmail);
 router.post(
   "/resend-verification-email",
-  withAuth,
+  requiredAuth,
   authController.resendVeficationEmail,
 );
 router.post("/forget-password", authController.forgetPassword);

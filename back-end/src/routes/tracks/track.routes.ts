@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as trackController from "../../controllers/tracks/track.controller.js";
-import withAuth from "../../middlewares/withAuth.js";
+import requiredAuth from "../../middlewares/requiredAuth.js";
 import allowRole from "../../middlewares/allowRole.js";
 import upload from "../../middlewares/upload.js";
 import commentRoutes from "./trackComments.routes.js";
@@ -22,7 +22,7 @@ router.get("/:id/stream", trackController.streamTrackAudio);
 router.use("/", commentRoutes);
 
 // middlewares
-router.use(withAuth);
+router.use(requiredAuth);
 router.use(requiredVerifiedEmail);
 router.use(allowRole("user", "admin"));
 

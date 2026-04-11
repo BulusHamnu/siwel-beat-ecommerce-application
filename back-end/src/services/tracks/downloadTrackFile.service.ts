@@ -3,7 +3,7 @@ import Purchase, {
   type PurchaseInterface,
 } from "../../models/purchase.schema.js";
 import Track, { type TrackInterface } from "../../models/track.schema.js";
-import { type userPayload } from "../../middlewares/withAuth.js";
+import { type userPayload } from "../../middlewares/requiredAuth.js";
 import path from "path";
 import Audio, { type AudioInterface } from "../../models/audio.schema.js";
 import License, { type LicenseInterface } from "../../models/license.schema.js";

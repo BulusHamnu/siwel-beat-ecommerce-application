@@ -1,5 +1,5 @@
 import { Router } from "express";
-import withAuth from "../../middlewares/withAuth.js";
+import requiredAuth from "../../middlewares/requiredAuth.js";
 import allowRole from "../../middlewares/allowRole.js";
 import { uploadPicture } from "../../middlewares/upload.js";
 import * as orderController from "../../controllers/shared/orders.shared.controller.js";
@@ -16,7 +16,7 @@ import * as sessionController from "../../controllers/users/userSession.controll
 
 const router = Router();
 
-router.use(withAuth);
+router.use(requiredAuth);
 router.use(allowRole("user"));
 
 /* Profile */

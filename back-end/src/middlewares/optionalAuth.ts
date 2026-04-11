@@ -1,4 +1,4 @@
-import { verifyAuthAndAttachUser } from "./withAuth.js";
+import { verifyAuthAndAttachUser } from "./requiredAuth.js";
 import type { Response, Request, NextFunction } from "express";
 import AppError, { ErrorCodes } from "../errors/appError.js";
 
