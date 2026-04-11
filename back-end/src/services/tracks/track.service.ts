@@ -226,10 +226,12 @@ export async function getSingleTrack(
   const track: TrackInterface | null = await Track.findOne({
     _id: trackId,
     status,
-  }).populate(
-    "relatedTrack",
-    "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre",
-  );
+  }).populate({
+    path: "relatedTrack",
+    select:
+      "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre",
+    match: { status: "published" },
+  });
 
   if (!track)
     throw new AppError(
