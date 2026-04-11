@@ -9,11 +9,12 @@ import rateLimiter, {
   generalApiLimiter,
   creationApiLimiter,
 } from "../../middlewares/rateLimiter.js";
+import optionalAuth from "../../middlewares/optionalAuth.js";
 
 const router = Router();
 
-router.get("/", generalApiLimiter(), trackController.getTracks);
-router.get("/:id", generalApiLimiter(), trackController.getTrack);
+router.get("/", generalApiLimiter(), optionalAuth, trackController.getTracks);
+router.get("/:id", generalApiLimiter(), optionalAuth, trackController.getTrack);
 /* Play track */
 router.get("/:id/stream", trackController.streamTrackAudio);
 

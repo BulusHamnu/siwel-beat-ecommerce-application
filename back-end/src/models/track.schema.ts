@@ -8,8 +8,9 @@ export enum BeatType {
 }
 
 export enum StatusType {
+  draft = "draft",
   published = "published",
-  unpublish = "unpublished",
+  unpublished = "unpublished",
 }
 
 export interface TrackInterface extends Document {
@@ -65,7 +66,7 @@ const trackSchema = new mongoose.Schema<TrackInterface>(
     status: {
       type: String,
       enum: Object.values(StatusType),
-      default: StatusType.published,
+      default: StatusType.draft,
     },
     bpm: {
       type: Number,

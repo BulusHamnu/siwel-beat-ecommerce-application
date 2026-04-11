@@ -7,23 +7,12 @@ import User from "../models/user.schema.js";
 
 export interface userPayload extends JwtPayload, Payload {}
 
-const withAuth = async (
-  req: Request<{}, {}, {}, {}>,
-  res: Response<{}>,
-  next: NextFunction,
-): Promise<any> => {
+export async function verifyAuthAndAttachUser(
+  accessToken: string,
+): Promise<userPayload> {
   try {
-    const accessToken = req.headers["authorization"]?.split(" ")[1];
-    if (!accessToken)
-      throw new AppError(
-        ErrorCodes.AUTH_TOKEN_REQUIRED,
-        "Missing authorization token",
-        401,
-        true,
-        null,
-      );
-
     const payload = jwt.verify(accessToken, env.TOKEN_SECRET) as userPayload;
+
     if (payload.type !== "accessToken")
       throw new AppError(
         ErrorCodes.AUTH_TOKEN_INVALID,
@@ -44,37 +33,64 @@ const withAuth = async (
       );
 
     // Re-assign isActive and inVerified because they can change at any time.
-    req.user = {
+    return {
       ...payload,
       isVerified: user.isVerified,
       isActive: user.isActive,
     };
-
-    next();
   } catch (error) {
-    // check if error is from json-web-token
+    //
     if (error instanceof Error && error.name.includes("TokenExpiredError")) {
-      return res.status(401).json({
-        status: false,
-        message: "Expired token, Unauthorized.",
-        error: {
+      throw new AppError(
+        ErrorCodes.UNAUTHORIZED,
+        "Expired token, Unauthorized.",
+        401,
+        true,
+        {
           code: ErrorCodes.UNAUTHORIZED,
           details: null,
         },
-      });
+      );
     }
     //
     if (error instanceof Error && error.name.includes("JsonWebTokenError")) {
-      return res.status(401).json({
-        status: false,
-        message: "Invalid token, Unauthorized.",
-        error: {
+      throw new AppError(
+        ErrorCodes.UNAUTHORIZED,
+        "Invalid token, Unauthorized.",
+        401,
+        true,
+        {
           code: ErrorCodes.UNAUTHORIZED,
           details: null,
         },
-      });
+      );
     }
 
+    throw error;
+  }
+}
+
+const withAuth = async (
+  req: Request<{}, {}, {}, {}>,
+  res: Response<{}>,
+  next: NextFunction,
+): Promise<any> => {
+  try {
+    const accessToken = req.headers["authorization"]?.split(" ")[1];
+    if (!accessToken)
+      throw new AppError(
+        ErrorCodes.AUTH_TOKEN_REQUIRED,
+        "Missing authorization token",
+        401,
+        true,
+        null,
+      );
+
+    const user = await verifyAuthAndAttachUser(accessToken);
+    req.user = user;
+
+    next();
+  } catch (error) {
     next(error);
   }
 };

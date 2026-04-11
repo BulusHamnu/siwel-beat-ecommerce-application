@@ -106,12 +106,19 @@ export interface tracksResults {
   pagination: Pagination;
 }
 
-function buildTrackQueries(
-  genre: string,
-  search: string,
-  type: string,
-  tags: string[] | string,
-): unknown {
+function buildTrackQueries({
+  genre,
+  search,
+  type,
+  tags,
+  status,
+}: {
+  genre: string;
+  search: string;
+  type: string;
+  tags: string[] | string;
+  status: string;
+}): unknown {
   // Filter should match request
   const matches: {
     genre?: string;
@@ -122,7 +129,7 @@ function buildTrackQueries(
 
   if (genre) matches.genre = genre.toLowerCase();
   if (type) matches.type = type.toLowerCase();
-  matches.status = "published";
+  matches.status = status;
 
   if (tags) {
     tags?.length > 0 && Array.isArray(tags)
@@ -173,6 +180,7 @@ export interface Queries {
   search: string;
   type: string;
   tags: string[] | string;
+  status: string;
 }
 
 export const getTracks = async ({
@@ -182,12 +190,13 @@ export const getTracks = async ({
   search,
   type,
   tags,
+  status,
 }: Queries): Promise<tracksResults> => {
   limit = Number(limit);
   page = Number(page);
   const skip = (page - 1) * limit; // calculate skip
 
-  const queries = buildTrackQueries(genre, search, type, tags);
+  const queries = buildTrackQueries({ genre, search, type, tags, status });
   const { totalTracksCount, tracksWithExtra } = await getTracksAndTrackCount(
     queries,
     skip,
@@ -210,9 +219,13 @@ export const getTracks = async ({
 };
 
 /* Get a single track */
-export async function getSingleTrack(trackId: string): Promise<TrackInterface> {
+export async function getSingleTrack(
+  trackId: string,
+  status: { $in: string[] },
+): Promise<TrackInterface> {
   const track: TrackInterface | null = await Track.findOne({
     _id: trackId,
+    status,
   }).populate(
     "relatedTrack",
     "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre",

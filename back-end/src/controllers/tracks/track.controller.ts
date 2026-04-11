@@ -77,23 +77,36 @@ interface response extends ApiResponse<TrackInterface[]> {
   pagination: Pagination;
 }
 
+function getStatusQueryCondition(userRole: string | undefined) {
+  if (userRole && userRole === "admin") {
+    return { $in: ["published", "draft", "unpublished"] };
+  } else {
+    return { $in: ["published"] };
+  }
+}
+
 export const getTracks = async (
   req: Request<{}, ApiResponse<TrackInterface[]>, {}>,
   res: Response<response>,
   next: NextFunction,
 ): Promise<void> => {
   try {
+    const userRole = req.user?.role;
+
     const queries = validateAndSanitizeBody(
       req.query,
       trackValidator.trackQueriesSchema,
     );
 
-    const { tracks, pagination }: tracksResults =
-      await trackService.getTracks(queries);
+    const status = getStatusQueryCondition(userRole);
+    const { tracks, pagination }: tracksResults = await trackService.getTracks({
+      ...queries,
+      status,
+    });
 
     const response: response = {
       status: true,
-      message: "Tracks retrived sucessfully.",
+      message: "Tracks retrieved sucessfully.",
       data: tracks,
       pagination,
     };
@@ -111,9 +124,11 @@ export const getTrack = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
+    const userRole = req.user?.role;
     const trackId = validateTrackidParam(req.params.id);
 
-    const track = await trackService.getSingleTrack(trackId);
+    const status = getStatusQueryCondition(userRole);
+    const track = await trackService.getSingleTrack(trackId, status);
 
     const response: ApiResponse<TrackInterface> = {
       status: true,
