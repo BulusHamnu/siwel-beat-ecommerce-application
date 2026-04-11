@@ -35,10 +35,9 @@ class Supabase {
 
   // methods
   getFileName = (originalname: string): string => {
-    let newFileName = originalname.split(".")[0]!;
     const randString = crypto.randomBytes(16).toString("hex");
 
-    newFileName = newFileName.replace(/[^\w.-]/g, "-");
+    let newFileName = originalname.replace(/[^\w.-]/g, "-");
     newFileName = randString + "-" + newFileName;
 
     return newFileName;
