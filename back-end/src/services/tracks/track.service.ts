@@ -93,7 +93,7 @@ export const createNewTrack = async (
       await newTrackLicenses.save({ session });
     });
 
-    logger.info("New track created succefully.", { trackId: newTrack!._id });
+    logger.info("New track created successfully.", { trackId: newTrack!._id });
     return newTrack!;
   } finally {
     session.endSession();
@@ -537,15 +537,15 @@ export async function retrieveTrackMedia(trackId: string): Promise<TrackMedia> {
   }
 
   if (untagged?.error) {
-    logger.error("Tagged audio URL failed", untagged.error);
+    logger.error("Untagged audio URL failed", untagged.error);
   }
 
   if (basic?.error) {
-    logger.error("Tagged audio URL failed", basic.error);
+    logger.error("Basic license URL failed", basic.error);
   }
 
   if (premium?.error) {
-    logger.error("Tagged audio URL failed", premium.error);
+    logger.error("Preminum license URL failed", premium.error);
   }
 
   const taggedAudio = tagged?.data?.signedUrl || null;

@@ -22,6 +22,15 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
     userId: user._id,
   });
 
+  if (!profile)
+    throw new AppError(
+      ErrorCodes.PROFILE_NOT_FOUND,
+      "Profile not found.",
+      404,
+      true,
+      null,
+    );
+
   const profileObj = profile?.toObject();
   delete profileObj.avatarPath;
 

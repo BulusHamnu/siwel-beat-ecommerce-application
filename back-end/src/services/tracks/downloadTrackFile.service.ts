@@ -17,8 +17,8 @@ export async function checkForPurchase(
   userId: string,
   licenseType: string,
   trackId: string,
-): Promise<boolean> {
-  if (role === "admin") return true;
+): Promise<void> {
+  if (role === "admin") return;
   let purchasedTrack: PurchaseInterface | null = await Purchase.findOne({
     trackId,
     userId,
@@ -33,8 +33,6 @@ export async function checkForPurchase(
       true,
       null,
     );
-
-  return true;
 }
 
 async function transformNameAndRetrieveFilePath(

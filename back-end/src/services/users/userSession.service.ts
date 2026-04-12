@@ -12,7 +12,7 @@ export async function removeUserSession(userId: string, id: string) {
   const sessionId = new mongoose.Types.ObjectId(id);
 
   const deleted = await Session.deleteOne({ _id: sessionId, userId });
-  console.log(deleted);
+
   if (!deleted.acknowledged || deleted.deletedCount <= 0) {
     throw new AppError(
       ErrorCodes.SESSION_NOT_FOUND,
