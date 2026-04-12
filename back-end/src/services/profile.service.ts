@@ -188,3 +188,37 @@ export const updateUserAvatar = async (
   if (oldPicturePath) await supabase.deleteFiles("images", [oldPicturePath]);
   return publicUrl;
 };
+
+/* Remove user profile avatar */
+export async function removeUserAvatar(userId: string) {
+  const profile: ProfileInterface | null = await Profile.findOne({ userId });
+  if (!profile) {
+    throw new AppError(
+      ErrorCodes.PROFILE_NOT_FOUND,
+      "Profile not found.",
+      404,
+      true,
+      null,
+    );
+  }
+
+  const updatedProfile = await Profile.updateOne(
+    { userId },
+    { $set: { avatar: "", avatarPath: "" } },
+  );
+
+  if (updatedProfile.matchedCount <= 0 || updatedProfile.modifiedCount <= 0) {
+    throw new AppError(
+      ErrorCodes.UNEXPECTED_ERROR,
+      "Unable to remove user avatar.",
+      500,
+      true,
+      null,
+    );
+  }
+
+  const avatarPath = profile.avatarPath;
+  if (avatarPath) {
+    await supabase.deleteFiles(env.IMAGE_FILES_BUCKET, [avatarPath]);
+  }
+}

@@ -22,11 +22,18 @@ router.use(allowRole("user"));
 /* Profile */
 router.get("/me", generalApiLimiter(), profileController.getProfile);
 router.patch("/me", creationApiLimiter(), profileController.updateProfile);
+
 router.patch(
   "/me/avatar",
   rateLimiter(20, 10 * 60 * 1000),
   uploadPicture,
   profileController.updateUserAvatar,
+);
+
+router.delete(
+  "/me/avatar",
+  rateLimiter(25, 10 * 60 * 1000),
+  profileController.removeUserAvatar,
 );
 
 /* Session routes */

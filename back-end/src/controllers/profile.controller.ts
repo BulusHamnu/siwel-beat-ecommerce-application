@@ -71,18 +71,29 @@ export const updateProfile = async (
 };
 
 /* Post profile picture */
+async function uploadAvatar(imageFile: Express.Multer.File) {
+  const imageBuffer = await checkAndResizeImgRatio(imageFile.buffer, "avatar");
+
+  return await supabase.uploadFile(
+    env.IMAGE_FILES_BUCKET,
+    imageFile.originalname,
+    "avatars/",
+    imageBuffer,
+  );
+}
+
 export const updateUserAvatar = async (
-  req: Request<{}, ApiResponse<{ avatar: string }>, {}, {}>,
-  res: Response<ApiResponse<{ avatar: string }>>,
+  req: Request<{}, ApiResponse<{ avatarUrl: string }>, {}, {}>,
+  res: Response<ApiResponse<{ avatarUrl: string }>>,
   next: NextFunction,
 ): Promise<void> => {
   let pictureUrl: string = "";
 
   try {
     const userId = req.user!.id;
-    const image = req.file;
+    const imageFile = req.file;
 
-    if (!image)
+    if (!imageFile)
       throw new AppError(
         ErrorCodes.IMAGE_REQUIRED,
         "Please provide an image for your avatar.",
@@ -91,24 +102,38 @@ export const updateUserAvatar = async (
         null,
       );
 
-    const imageBuffer = await checkAndResizeImgRatio(image.buffer, "avatar");
-    pictureUrl = await supabase.uploadFile(
-      env.IMAGE_FILES_BUCKET,
-      image.originalname,
-      "avatars/",
-      imageBuffer,
-    );
+    const pictureUrl = await uploadAvatar(imageFile);
+    const avatarUrl = await userService.updateUserAvatar(userId, pictureUrl);
 
-    const avatar = await userService.updateUserAvatar(userId, pictureUrl);
-
-    const response: ApiResponse<{ avatar: string }> = {
+    const response: ApiResponse<{ avatarUrl: string }> = {
       status: true,
-      message: "Profile picture was uploaded successful.",
-      data: { avatar },
+      message: "User avatar was uploaded successfully.",
+      data: { avatarUrl },
     };
     res.status(200).json(response);
   } catch (error) {
     if (pictureUrl) await supabase.deleteFiles("images", [pictureUrl]);
+    next(error);
+  }
+};
+
+/* Post profile picture */
+export const removeUserAvatar = async (
+  req: Request<{}, ApiResponse<null>, {}, {}>,
+  res: Response<ApiResponse<null>>,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    await userService.removeUserAvatar(userId);
+
+    const response: ApiResponse<null> = {
+      status: true,
+      message: "User avatar was removed successfully.",
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
     next(error);
   }
 };
