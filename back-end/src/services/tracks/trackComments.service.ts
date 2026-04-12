@@ -1,5 +1,5 @@
 import Comment, { type CommentInterface } from "../../models/comment.schema.js";
-import { type FlattenMaps, type ObjectId } from "mongoose";
+import mongoose, { type FlattenMaps, type ObjectId } from "mongoose";
 import * as notificationService from "../notification.service.js";
 import Track from "../../models/track.schema.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
@@ -71,7 +71,7 @@ export interface populatedComment extends Omit<CommentInterface, "userId"> {
   userId: {
     _id: string;
     isVerified: string;
-    picture: string;
+    avatar: string;
   };
   replies?: populatedComment[];
 }
@@ -82,7 +82,8 @@ function addProfilePictures(
 ): void {
   // add user picture so it will be display with user details
   const profile: UserProfile = profiles.get(comment.userId._id.toString());
-  comment.userId.picture = profile?.avatar || "";
+
+  comment.userId.avatar = profile?.avatar || "";
   if (comment.replies)
     comment.replies.forEach((reply) => {
       addProfilePictures(reply, profiles);
@@ -213,6 +214,7 @@ export const updateComment = async (
     );
 
   const { commentsMap, profilesMap } = await getCommentsAndProfilesMap(trackId);
+
   // build tree to link comment with their replies
   commentsMap.forEach((comment) => {
     if (comment.parentId) {
@@ -221,8 +223,10 @@ export const updateComment = async (
     }
   });
 
-  addProfilePictures(updatedComment, profilesMap);
-  return updatedComment;
+  const comment = commentsMap.get(updatedComment._id.toString());
+
+  addProfilePictures(comment, profilesMap);
+  return comment;
 };
 
 /* Delete a comment */
@@ -231,17 +235,22 @@ export const deleteComment = async (
   id: string,
   userId: string,
 ): Promise<void> => {
-  // delete comment with replies to reduce orphan comment
-  await Promise.all([
-    Comment.deleteOne({
+  const session = await mongoose.startSession();
+
+  try {
+    await Comment.deleteOne({
       _id: commentId,
       trackId: id,
       userId,
-    }),
-    Comment.deleteMany({
+    }).session(session);
+
+    await Comment.deleteMany({
       parentId: commentId,
       trackId: id,
       userId,
-    }),
-  ]);
+    }).session(session);
+    //
+  } finally {
+    session.endSession();
+  }
 };
