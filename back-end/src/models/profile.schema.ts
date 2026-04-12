@@ -16,6 +16,7 @@ export interface ProfileInterface extends Document {
   notification: {
     emailNotification: {
       commentAndLikes: boolean;
+      orders: boolean;
     };
   };
 }
@@ -62,6 +63,10 @@ const profileSchema = new Schema<ProfileInterface>(
     notification: {
       emailNotification: {
         commentAndLikes: {
+          type: Boolean,
+          default: false,
+        },
+        orders: {
           type: Boolean,
           default: false,
         },

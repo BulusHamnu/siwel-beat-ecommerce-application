@@ -22,6 +22,10 @@ export const userUpdateBodySchema = Joi.object({
         "any.required": "{#key} is required in emailNotification.",
         "boolean.base": "{#key} must be boolean.",
       }),
+      orders: Joi.boolean().required().messages({
+        "any.required": "{#key} is required in emailNotification.",
+        "boolean.base": "{#key} must be boolean.",
+      }),
     }).required(),
   })
     .optional()

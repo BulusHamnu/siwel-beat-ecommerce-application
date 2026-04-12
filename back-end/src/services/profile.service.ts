@@ -47,12 +47,14 @@ export interface ProfileUpdatesInput {
   notification?: {
     emailNotification: {
       commentAndLikes: boolean;
+      orders: boolean;
     };
   };
 }
 
 export interface ProfileUpdates extends ProfileUpdatesInput {
   "notification.emailNotification.commentAndLikes"?: boolean | undefined;
+  "notification.emailNotification.orders"?: boolean | undefined;
 }
 
 function filterProfileUpdates(updates: ProfileUpdates) {
@@ -69,8 +71,18 @@ function filterProfileUpdates(updates: ProfileUpdates) {
     if (!allowFields.includes(key)) delete updates[key];
 
     if (key === "notification") {
-      updates["notification.emailNotification.commentAndLikes"] =
-        updates.notification?.emailNotification.commentAndLikes;
+      const emailNotification = updates["notification"]?.emailNotification;
+      if (!emailNotification) return;
+
+      if (typeof emailNotification.commentAndLikes === "boolean") {
+        updates["notification.emailNotification.commentAndLikes"] =
+          emailNotification.commentAndLikes;
+      }
+
+      if (typeof emailNotification.orders === "boolean") {
+        updates["notification.emailNotification.orders"] =
+          emailNotification.orders;
+      }
 
       delete updates["notification"];
     }
@@ -83,10 +95,37 @@ export const updateProfile = async (
 ): Promise<UserProfile> => {
   const session = await mongoose.startSession();
   try {
-    const user: UserInterface | null = await User.findOne({ _id: id }).session(
-      session,
+    filterProfileUpdates(updates);
+
+    const profile: ProfileInterface | null = await Profile.findOneAndUpdate(
+      { userId: id },
+      { $set: updates },
+      { new: true, session },
     );
-    if (!user)
+
+    if (!profile) {
+      throw new AppError(
+        ErrorCodes.PROFILE_NOT_FOUND,
+        "Profile not found.",
+        404,
+        true,
+        null,
+      );
+    }
+
+    let user: UserInterface | null = null;
+    if (updates["username"]) {
+      const username = updates["username"].toLowerCase().replace(" ", "_");
+      user = await User.findOneAndUpdate(
+        { _id: id },
+        { $set: { username } },
+        { new: true, session },
+      );
+    } else {
+      user = await User.findOne({ _id: id }).session(session);
+    }
+
+    if (!user) {
       throw new AppError(
         ErrorCodes.USER_NOT_FOUND,
         "User not found.",
@@ -94,18 +133,6 @@ export const updateProfile = async (
         true,
         null,
       );
-
-    filterProfileUpdates(updates);
-
-    const profile: ProfileInterface | null = await Profile.findOneAndUpdate(
-      { userId: user._id },
-      { $set: updates },
-      { new: true, session },
-    );
-
-    if (updates["username"]) {
-      user.username = updates["username"].toLowerCase().replace(" ", "_");
-      await user.save({ session });
     }
 
     const profileObj = profile?.toObject();
