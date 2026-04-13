@@ -84,7 +84,7 @@ type commentsMap = Map<string, populatedComment>;
 async function getTrackCommentsAndBuildTree(
   trackId: string,
 ): Promise<commentsMap> {
-  let comments = await Comment.find({ trackId: trackId })
+  let comments = await Comment.find({ trackId })
     .populate("userId", "_id username isVerified avatar")
     .lean<populatedComment[]>();
 
@@ -210,7 +210,6 @@ export const deleteComment = async (
     await Comment.deleteMany({
       parentId: commentId,
       trackId: id,
-      userId,
     }).session(session);
     //
   } finally {
@@ -229,7 +228,7 @@ export const likeComment = async (
     let updatedComment: CommentInterface | null = null;
 
     await session.withTransaction(async () => {
-      updatedComment = await Comment.findByIdAndUpdate(
+      updatedComment = await Comment.findOneAndUpdate(
         { _id: commentId },
         { $inc: { likes: 1 } },
         { new: true, session },
