@@ -4,9 +4,7 @@ import * as notificationService from "../notification.service.js";
 import { NotificationType } from "../../models/notification.schema.js";
 import Track from "../../models/track.schema.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
-import Profile from "../../models/profile.schema.js";
 import { Types } from "mongoose";
-import type { UserProfile } from "../../controllers/userTypes.js";
 import CommentLike, {
   type CommentLikeInterface,
 } from "../../models/commentLike.schema.js";
@@ -17,6 +15,7 @@ export interface parentComment extends Omit<CommentInterface, "userId"> {
     _id: string;
     username: string;
     email: string;
+    avatar: string;
   };
 }
 
@@ -26,7 +25,7 @@ async function sendCommentReplyNotification(
 ): Promise<void> {
   const parentComment = (await Comment.findOne({ _id: parentId }).populate(
     "userId",
-    "username email _id",
+    "username email avatar _id",
   )) as parentComment | null;
 
   if (!parentComment) return;
@@ -74,51 +73,36 @@ export interface populatedComment extends Omit<CommentInterface, "userId"> {
   _id: Types.ObjectId;
   userId: {
     _id: string;
+    username: string;
     isVerified: string;
     avatar: string;
   };
   replies?: populatedComment[];
 }
 
-function addProfilePictures(
-  comment: populatedComment,
-  profiles: Map<string, any>,
-): void {
-  // add user picture so it will be display with user details
-  const profile: UserProfile = profiles.get(comment.userId._id.toString());
-
-  comment.userId.avatar = profile?.avatar || "";
-  if (comment.replies)
-    comment.replies.forEach((reply) => {
-      addProfilePictures(reply, profiles);
-    });
-}
-
-async function getCommentsAndProfilesMap(trackId: string) {
-  // build comments map for easy look up by key
+type commentsMap = Map<string, populatedComment>;
+async function getTrackCommentsAndBuildTree(
+  trackId: string,
+): Promise<commentsMap> {
   let comments = await Comment.find({ trackId: trackId })
-    .populate("userId", "_id username isVerified")
+    .populate("userId", "_id username isVerified avatar")
     .lean<populatedComment[]>();
 
-  const userIds = comments.map((comment) => comment.userId._id);
-
-  const commentsMap = new Map<string, any>();
+  const commentsTree = new Map<string, any>();
   comments.forEach((comment) => {
     comment.replies = [];
-    commentsMap.set(comment._id.toString(), comment);
+    commentsTree.set(comment._id.toString(), comment);
   });
 
-  // build profiles map for easy look up by key
-  const userProfiles = await Profile.find({
-    userId: { $in: userIds },
-  }).lean();
-
-  const profilesMap = new Map<string, any>();
-  userProfiles.forEach((profile) => {
-    profilesMap.set(profile.userId.toString(), profile);
+  // Build comments tree
+  commentsTree.forEach((comment) => {
+    if (comment.parentId) {
+      const parentComment = commentsTree.get(comment.parentId.toString());
+      parentComment.replies.push(comment);
+    }
   });
 
-  return { commentsMap, profilesMap };
+  return commentsTree;
 }
 
 export const getCommentAndReplies = async (
@@ -135,9 +119,9 @@ export const getCommentAndReplies = async (
       null,
     );
 
-  const { commentsMap, profilesMap } = await getCommentsAndProfilesMap(trackId);
+  const commentsTree = await getTrackCommentsAndBuildTree(trackId);
 
-  const comment: populatedComment = commentsMap.get(commentId);
+  const comment: populatedComment | undefined = commentsTree.get(commentId);
   if (!comment)
     throw new AppError(
       ErrorCodes.COMMENT_NOT_FOUND,
@@ -147,15 +131,6 @@ export const getCommentAndReplies = async (
       null,
     );
 
-  // build tree to link comment with their replies
-  commentsMap.forEach((comment) => {
-    if (comment.parentId) {
-      const parentComment = commentsMap.get(comment.parentId.toString());
-      parentComment.replies.push(comment);
-    }
-  });
-
-  addProfilePictures(comment, profilesMap);
   return comment;
 };
 
@@ -173,20 +148,14 @@ export const getAllComments = async (
       null,
     );
 
-  const rootComments: populatedComment[] = [];
-  const { commentsMap, profilesMap } = await getCommentsAndProfilesMap(id);
+  const commentsTree = await getTrackCommentsAndBuildTree(id);
 
-  // build tree to link comment with their replies
-  commentsMap.forEach((comment) => {
-    if (comment.parentId) {
-      const parentComment = commentsMap.get(comment.parentId.toString());
-      parentComment.replies.push(comment);
-    } else {
-      rootComments.push(comment);
-    }
+  const rootComments: populatedComment[] = [];
+  commentsTree.forEach((comment) => {
+    if (comment.parentId) return;
+    rootComments.push(comment);
   });
 
-  rootComments.forEach((comment) => addProfilePictures(comment, profilesMap));
   return rootComments;
 };
 
@@ -217,20 +186,10 @@ export const updateComment = async (
       null,
     );
 
-  const { commentsMap, profilesMap } = await getCommentsAndProfilesMap(trackId);
+  const commentsTree = await getTrackCommentsAndBuildTree(trackId);
+  const comment = commentsTree.get(updatedComment._id.toString());
 
-  // build tree to link comment with their replies
-  commentsMap.forEach((comment) => {
-    if (comment.parentId) {
-      const parentComment = commentsMap.get(comment.parentId.toString());
-      parentComment.replies.push(comment);
-    }
-  });
-
-  const comment = commentsMap.get(updatedComment._id.toString());
-
-  addProfilePictures(comment, profilesMap);
-  return comment;
+  return comment!;
 };
 
 /* Delete a comment */
