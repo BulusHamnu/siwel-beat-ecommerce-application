@@ -8,8 +8,6 @@ export interface ProfileInterface extends Document {
   lastName: string;
   gender: string;
   bio: string;
-  avatar: string;
-  avatarPath: string;
   createdAt: Date;
   updatedAt: Date;
   lemonSqueezyId: string;
@@ -49,14 +47,6 @@ const profileSchema = new Schema<ProfileInterface>(
       type: String,
     },
     bio: {
-      type: String,
-      default: "",
-    },
-    avatar: {
-      type: String,
-      default: "",
-    },
-    avatarPath: {
       type: String,
       default: "",
     },

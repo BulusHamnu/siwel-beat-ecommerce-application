@@ -6,6 +6,8 @@ import env from "../configs/env.js";
 /* User type */
 export interface UserInterface extends Document {
   username: string;
+  avatar: string;
+  avatarPath: string;
   email: string;
   password: string;
   provider: string;
@@ -39,6 +41,14 @@ const userSchema = new Schema<UserInterface>(
       type: String,
       required: true,
       min: 5,
+    },
+    avatar: {
+      type: String,
+      default: "",
+    },
+    avatarPath: {
+      type: String,
+      default: "",
     },
     email: {
       type: String,
@@ -103,6 +113,7 @@ userSchema.methods.removeUnwantedField = function <
   delete obj.emailVerification;
   delete obj.password;
   delete obj.google;
+  delete obj.avatarPath;
   return obj;
 };
 

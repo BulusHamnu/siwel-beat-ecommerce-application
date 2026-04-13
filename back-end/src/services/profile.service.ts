@@ -32,7 +32,6 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
     );
 
   const profileObj = profile?.toObject();
-  delete profileObj.avatarPath;
 
   return {
     username: user.username,
@@ -40,6 +39,7 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
     email: user.email,
     role: user.role,
     isActive: user.isActive,
+    avatar: user.avatar,
     ...profileObj,
   };
 };
@@ -51,7 +51,7 @@ export interface ProfileUpdatesInput {
   lastName?: string;
   gender?: string;
   bio?: string;
-  profilePic?: string;
+  avatar?: string;
   email?: string;
   notification?: {
     emailNotification: {
@@ -145,7 +145,6 @@ export const updateProfile = async (
     }
 
     const profileObj = profile?.toObject();
-    delete profileObj.avatarPath;
 
     return {
       username: user.username,
@@ -164,14 +163,14 @@ export const updateUserAvatar = async (
   userId: string,
   pictureUrl: string,
 ): Promise<string> => {
-  const profile: ProfileInterface | null = await Profile.findOne({ userId });
+  const user: UserInterface | null = await User.findOne({ _id: userId });
   const imgBucket = env.IMAGE_FILES_BUCKET;
-  const oldPicturePath = profile?.avatarPath;
+  const oldPicturePath = user?.avatarPath;
 
   const publicUrl = await supabase.getPublicUrl(imgBucket, pictureUrl); // need public url for avatar because it's public.
 
-  const updated = await Profile.updateOne(
-    { userId },
+  const updated = await User.updateOne(
+    { _id: userId },
     { $set: { avatar: publicUrl, avatarPath: pictureUrl } },
   );
 
@@ -191,10 +190,10 @@ export const updateUserAvatar = async (
 
 /* Remove user profile avatar */
 export async function removeUserAvatar(userId: string) {
-  const profile: ProfileInterface | null = await Profile.findOne({ userId });
-  if (!profile) {
+  const user: UserInterface | null = await User.findOne({ _id: userId });
+  if (!user) {
     throw new AppError(
-      ErrorCodes.PROFILE_NOT_FOUND,
+      ErrorCodes.USER_NOT_FOUND,
       "Profile not found.",
       404,
       true,
@@ -202,8 +201,8 @@ export async function removeUserAvatar(userId: string) {
     );
   }
 
-  const updatedProfile = await Profile.updateOne(
-    { userId },
+  const updatedProfile = await User.updateOne(
+    { _id: userId },
     { $set: { avatar: "", avatarPath: "" } },
   );
 
@@ -217,7 +216,7 @@ export async function removeUserAvatar(userId: string) {
     );
   }
 
-  const avatarPath = profile.avatarPath;
+  const avatarPath = user.avatarPath;
   if (avatarPath) {
     await supabase.deleteFiles(env.IMAGE_FILES_BUCKET, [avatarPath]);
   }

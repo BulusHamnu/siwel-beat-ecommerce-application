@@ -42,6 +42,7 @@ export const createNewUser = async ({
     await session.withTransaction(async () => {
       newUser = new User({
         username,
+        avatar,
         email,
         provider,
         role,
@@ -60,7 +61,6 @@ export const createNewUser = async ({
         userId: newUser._id,
         firstName,
         lastName,
-        avatar,
         gender,
       });
 
