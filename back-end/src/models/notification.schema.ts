@@ -1,6 +1,11 @@
 import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 
+export enum NotificationType {
+  COMMENT_LIKED = "COMMENT_LIKED",
+  COMMENT_REPLIED = "COMMENT_REPLIED",
+}
+
 export interface notification extends Document {
   userId: ObjectId;
   date: Date;

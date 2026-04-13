@@ -1,24 +1,24 @@
 import type { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 
-export interface CommentLike extends Document {
+export interface CommentLikeInterface extends Document {
   userId: ObjectId;
-  trackId: ObjectId;
+  commentId: ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const commentLike = new mongoose.Schema<CommentLike>(
+const commentLike = new mongoose.Schema<CommentLikeInterface>(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "User",
     },
-    trackId: {
-      type: mongoose.Schema.ObjectId,
+    commentId: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Track",
+      ref: "Comment",
     },
   },
   { timestamps: true },
@@ -26,7 +26,10 @@ const commentLike = new mongoose.Schema<CommentLike>(
 
 /* Indexes */
 commentLike.index({ userId: 1 });
-commentLike.index({ userId: 1, trackId: 1 }, { unique: true });
+commentLike.index({ userId: 1, commentId: 1 }, { unique: true });
 
-const CommentLike = mongoose.model<CommentLike>("CommentLike", commentLike);
+const CommentLike = mongoose.model<CommentLikeInterface>(
+  "CommentLike",
+  commentLike,
+);
 export default CommentLike;

@@ -172,3 +172,60 @@ export const deleteComment = async (
     next(error);
   }
 };
+
+/* Like comment */
+export const likeComment = async (
+  req: Request<
+    { id: string; commentId: string },
+    ApiResponse<{ likesCount: number }>,
+    {},
+    {}
+  >,
+  res: Response<ApiResponse<{ likesCount: number }>>,
+  next: NextFunction,
+) => {
+  try {
+    const commentId = req.params.commentId;
+    const userId = req.user!.id;
+
+    const { likesCount } = await commentService.likeComment(userId, commentId);
+
+    const response: ApiResponse<{ likesCount: number }> = {
+      status: true,
+      message: "You liked this comment.",
+      data: { likesCount },
+    };
+
+    res.status(201).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* Like comment */
+export const getCommentLikes = async (
+  req: Request<
+    { id: string; commentId: string },
+    ApiResponse<commentService.CommentLikes>,
+    {},
+    {}
+  >,
+  res: Response<ApiResponse<commentService.CommentLikes>>,
+  next: NextFunction,
+) => {
+  try {
+    const commentId = req.params.commentId;
+
+    const data = await commentService.getAllCommentLikes(commentId);
+
+    const response: ApiResponse<commentService.CommentLikes> = {
+      status: true,
+      message: "Comment likedBy retrieved successfully.",
+      data: data,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};

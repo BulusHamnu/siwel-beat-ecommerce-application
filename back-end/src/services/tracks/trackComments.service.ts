@@ -1,11 +1,15 @@
 import Comment, { type CommentInterface } from "../../models/comment.schema.js";
 import mongoose, { type FlattenMaps, type ObjectId } from "mongoose";
 import * as notificationService from "../notification.service.js";
+import { NotificationType } from "../../models/notification.schema.js";
 import Track from "../../models/track.schema.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
 import Profile from "../../models/profile.schema.js";
 import { Types } from "mongoose";
 import type { UserProfile } from "../../controllers/userTypes.js";
+import CommentLike, {
+  type CommentLikeInterface,
+} from "../../models/commentLike.schema.js";
 
 /* Post a comment */
 export interface parentComment extends Omit<CommentInterface, "userId"> {
@@ -253,4 +257,94 @@ export const deleteComment = async (
   } finally {
     session.endSession();
   }
+};
+
+/* Like comment */
+export const likeComment = async (
+  userId: string,
+  commentId: string,
+): Promise<{ likesCount: number }> => {
+  const session = await mongoose.startSession();
+  try {
+    let likesCount: number = 0;
+    let updatedComment: CommentInterface | null = null;
+
+    await session.withTransaction(async () => {
+      updatedComment = await Comment.findByIdAndUpdate(
+        { _id: commentId },
+        { $inc: { likes: 1 } },
+        { new: true, session },
+      );
+
+      if (!updatedComment)
+        throw new AppError(
+          ErrorCodes.COMMENT_NOT_FOUND,
+          "Comment not found.",
+          404,
+          true,
+          null,
+        );
+
+      const newCommentLike = new CommentLike({
+        userId,
+        commentId,
+      });
+
+      await newCommentLike.save({ session });
+
+      if (newCommentLike) {
+        await notificationService.postNewNotification(
+          userId,
+          "Someone liked your comment on a track",
+          NotificationType.COMMENT_LIKED,
+          newCommentLike._id as string,
+        );
+      }
+
+      likesCount = updatedComment.likes;
+    });
+
+    return { likesCount };
+  } catch (error: any) {
+    if (error.code === 11000)
+      throw new AppError(
+        ErrorCodes.COMMENT_ALREADY_LIKED,
+        "You already liked this comment",
+        400,
+        true,
+        null,
+      );
+
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
+
+/* Get Comment likes */
+export interface CommentLikes {
+  likesCount: number;
+  likedBy: FlattenMaps<CommentLikeInterface>[];
+}
+
+export const getAllCommentLikes = async (
+  commentId: string,
+): Promise<CommentLikes> => {
+  const comment: CommentInterface | null = await Comment.findOne({
+    _id: commentId,
+  }).lean<CommentInterface>();
+  if (!comment)
+    throw new AppError(
+      ErrorCodes.COMMENT_NOT_FOUND,
+      "Comment not found.",
+      404,
+      true,
+      null,
+    );
+
+  const commentLikes = await CommentLike.find({ commentId })
+    .populate("userId", "username avatar _id")
+    .lean();
+
+  return { likesCount: comment.likes, likedBy: commentLikes };
 };
