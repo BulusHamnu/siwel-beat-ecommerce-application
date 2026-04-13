@@ -348,3 +348,53 @@ export const getAllCommentLikes = async (
 
   return { likesCount: comment.likes, likedBy: commentLikes };
 };
+
+/* Delete comment like */
+export const deleteCommentLike = async (
+  userId: string,
+  commentId: string,
+): Promise<{ likesCount: number }> => {
+  const session = await mongoose.startSession();
+  try {
+    let likesCount: number = 0;
+    let updatedComment: CommentInterface | null = null;
+
+    await session.withTransaction(async () => {
+      updatedComment = await Comment.findByIdAndUpdate(
+        { _id: commentId },
+        { $inc: { likes: -1 } },
+        { new: true, session },
+      );
+
+      if (!updatedComment)
+        throw new AppError(
+          ErrorCodes.COMMENT_NOT_FOUND,
+          "Comment not found.",
+          404,
+          true,
+          null,
+        );
+
+      const deletedLike = await CommentLike.deleteOne({
+        userId,
+        commentId,
+      }).session(session);
+
+      if (!deletedLike.acknowledged || deletedLike.deletedCount <= 0) {
+        throw new AppError(
+          ErrorCodes.LIKE_NOT_FOUND,
+          "You haven't liked this comment.",
+          400,
+          true,
+          null,
+        );
+      }
+
+      likesCount = updatedComment.likes;
+    });
+
+    return { likesCount };
+  } finally {
+    session.endSession();
+  }
+};

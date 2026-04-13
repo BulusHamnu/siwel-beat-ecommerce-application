@@ -229,3 +229,35 @@ export const getCommentLikes = async (
     next(error);
   }
 };
+
+/* Delete comment like */
+export const deleteLike = async (
+  req: Request<
+    { id: string; commentId: string },
+    ApiResponse<{ likesCount: number }>,
+    {},
+    {}
+  >,
+  res: Response<ApiResponse<{ likesCount: number }>>,
+  next: NextFunction,
+) => {
+  try {
+    const commentId = req.params.commentId;
+    const userId = req.user!.id;
+
+    const { likesCount } = await commentService.deleteCommentLike(
+      userId,
+      commentId,
+    );
+
+    const response: ApiResponse<{ likesCount: number }> = {
+      status: true,
+      message: "You removed your like from this comment.",
+      data: { likesCount },
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};

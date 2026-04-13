@@ -43,7 +43,7 @@ router.delete(
   commentController.deleteComment,
 );
 
-/* Comment like */
+/* Comment likes */
 router.post(
   "/:id/comments/:commentId/likes",
   creationApiLimiter(),
@@ -53,6 +53,11 @@ router.get(
   "/:id/comments/:commentId/likes",
   generalApiLimiter(),
   commentController.getCommentLikes,
+);
+router.delete(
+  "/:id/comments/:commentId/likes",
+  generalApiLimiter(),
+  commentController.deleteLike,
 );
 
 export default router;
