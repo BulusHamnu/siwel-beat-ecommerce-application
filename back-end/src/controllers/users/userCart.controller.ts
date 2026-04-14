@@ -9,21 +9,22 @@ import * as userValidator from "../../utils/validators/user.validator.js";
 export const addToCart = async (
   req: Request<{}, ApiResponse<void>, { trackId: string; license: string }, {}>,
   res: Response<ApiResponse<void>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const user = req.user!;
+    const userId = req.user!.id;
     const { trackId, license } = validateAndSanitizeBody(
       req.body,
-      userValidator.cartBodySchema
+      userValidator.cartBodySchema,
     );
 
-    await cartService.addToCart(trackId, license, user.id);
+    await cartService.addToCart(trackId, license, userId);
 
     const response: ApiResponse<void> = {
       status: true,
       message: "Product added to cart sucessfully.",
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -34,13 +35,13 @@ export const addToCart = async (
 export const removeFromCart = async (
   req: Request<{}, ApiResponse<void>, { trackId: string; license: string }, {}>,
   res: Response<ApiResponse<void>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
     const { trackId, license } = validateAndSanitizeBody(
       req.body,
-      userValidator.cartBodySchema
+      userValidator.cartBodySchema,
     );
 
     await cartService.removeFromCart(trackId, license, user.id);
@@ -49,6 +50,7 @@ export const removeFromCart = async (
       status: true,
       message: "Product was removed from cart sucessfully.",
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -59,7 +61,7 @@ export const removeFromCart = async (
 export const getCart = async (
   req: Request<{}, ApiResponse<CartInterface>, {}, {}>,
   res: Response<ApiResponse<CartInterface>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
@@ -67,7 +69,7 @@ export const getCart = async (
     const cart = await cartService.getUserCart(user.id);
     const response: ApiResponse<CartInterface> = {
       status: true,
-      message: "Cart retrived successfully.",
+      message: "Cart retrieved successfully.",
       data: cart,
     };
 

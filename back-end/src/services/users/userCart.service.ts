@@ -6,37 +6,20 @@ import Cart, {
   type CartInterface,
 } from "../../models/cart.schema.js";
 import { type ObjectId } from "mongoose";
-import getUserCartandTracks from "../shared/getUserCartAndTracks.js";
-import { getCart } from "../shared/getUserCartAndTracks.js";
+import mongoose, { Types } from "mongoose";
 
 /* Add to cart */
 export const addToCart = async (
   trackId: string,
   license: string,
-  userId: string,
+  userId: string | ObjectId,
 ): Promise<void> => {
-  const userCart = await getCart(userId);
-
   const track: TrackInterface | null = await Track.findOne({ _id: trackId });
   if (!track)
     throw new AppError(
       ErrorCodes.TRACK_NOT_FOUND,
-      "Track not found",
+      "Track not found.",
       404,
-      true,
-      null,
-    );
-
-  // check if product is already in cart to avoid duplicate
-  const productExist = userCart.items.find(
-    (track) =>
-      String(track.productId) === String(trackId) && license === track.license,
-  );
-  if (productExist)
-    throw new AppError(
-      ErrorCodes.PRODUCT_ALREADY_EXISTS,
-      "Product already exist in cart.",
-      400,
       true,
       null,
     );
@@ -45,12 +28,38 @@ export const addToCart = async (
     name: track.title,
     productId: track._id as ObjectId,
     license,
-    price: license === "basic" ? track.basicPrice : track.premiumPrice,
+    price: license === "premium" ? track.premiumPrice : track.basicPrice,
     type: track.type,
   };
 
-  userCart.items.push(productSnapShop);
-  await userCart.save();
+  const updated = await Cart.updateOne(
+    {
+      userId,
+      items: {
+        $not: {
+          $elemMatch: {
+            productId: track._id,
+            license: license,
+          },
+        },
+      },
+    },
+    {
+      $setOnInsert: { userId },
+      $push: { items: productSnapShop },
+    },
+    { upsert: true },
+  );
+
+  if (updated.modifiedCount === 0 && updated.upsertedCount === 0) {
+    throw new AppError(
+      ErrorCodes.PRODUCT_ALREADY_EXISTS,
+      "Product already exists in cart.",
+      400,
+      true,
+      null,
+    );
+  }
 };
 
 /* Remove from cart */
@@ -59,11 +68,30 @@ export const removeFromCart = async (
   license: string,
   userId: string,
 ): Promise<void> => {
-  await Cart.findOneAndUpdate(
+  const updated = await Cart.updateOne(
     { userId },
     { $pull: { items: { productId: trackId, license } } },
-    { new: true },
   );
+
+  if (updated.matchedCount === 0)
+    throw new AppError(
+      ErrorCodes.CART_NOT_FOUND,
+      "Cart not found.",
+      404,
+      true,
+      null,
+    );
+
+  if (updated.modifiedCount === 0)
+    throw new AppError(
+      ErrorCodes.PRODUCT_NOT_FOUND,
+      "Product does not exists in cart.",
+      400,
+      true,
+      null,
+    );
+
+  console.log(updated);
 };
 
 /* Get user cart */
@@ -72,7 +100,7 @@ interface CartItemUpdated extends CartItem {
   newPrice?: number;
 }
 
-function validateProductsStatus(
+function validateItemsStatus(
   cartItems: CartItem[],
   trackMap: Map<string, any>,
 ): void {
@@ -81,7 +109,7 @@ function validateProductsStatus(
 
     if (!track) {
       product.status = ItemStatus.deleted;
-    } else if (track.status !== "active") {
+    } else if (track.status !== "published") {
       product.status = ItemStatus.inactive;
     } else if (
       (product.license === "basic" && track.basicPrice !== product.price) ||
@@ -93,26 +121,45 @@ function validateProductsStatus(
     } else {
       product.status = ItemStatus.active;
     }
+
+    //
   });
 }
 
-export const getUserCart = async (userId: string): Promise<CartInterface> => {
-  const { userCart, tracks } = await getUserCartandTracks(userId);
-  const userCartObj: CartInterface = userCart.toObject(); // So we can add new fields to item objects
+export async function retrieveCart(userId: string): Promise<CartInterface> {
+  let userCart = await Cart.findOne({ userId }).lean<CartInterface>();
+  if (!userCart)
+    throw new AppError(
+      ErrorCodes.CART_NOT_FOUND,
+      "Cart not found.",
+      404,
+      true,
+      null,
+    );
 
-  if (userCartObj.items.length <= 0 && tracks.length <= 0) return userCart;
+  return userCart;
+}
+
+export const getUserCart = async (userId: string): Promise<CartInterface> => {
+  const cart = await retrieveCart(userId);
+  if (cart.items.length <= 0) return cart;
+
+  const productIds = cart.items.map((item) => item.productId);
+  const tracks = await Track.find({ _id: { $in: productIds } }).lean<
+    TrackInterface[]
+  >();
 
   const trackMap = new Map<string, any>();
   tracks.forEach((track) => {
     trackMap.set(String(track._id), track);
   });
 
-  validateProductsStatus(userCartObj.items, trackMap); // User should know if product status or price has changed
-  const subTotal = userCartObj.items.reduce(
+  validateItemsStatus(cart.items, trackMap); // User should know if product status or price has changed
+  const subTotal = cart.items.reduce(
     (sum, item) => sum + Number(item.price),
     0,
   );
 
-  userCartObj.subTotal = subTotal;
-  return userCartObj;
+  cart.subTotal = subTotal;
+  return cart;
 };
