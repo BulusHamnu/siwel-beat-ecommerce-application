@@ -5,16 +5,24 @@ import Notification, {
 import User, { type UserInterface } from "../models/user.schema.js";
 
 /* Post new notification */
-export const postNewNotification = async (
-  userId: string,
-  message: string,
-  type: string,
-  entityId: string | null,
-) => {
+export const postNewNotification = async ({
+  userId,
+  message,
+  type,
+  resourceId,
+  entityId,
+}: {
+  userId: string;
+  message: string;
+  type: string;
+  resourceId: string;
+  entityId: string | null;
+}) => {
   const newNotification: notification = await Notification.create({
     userId,
     message,
     type,
+    resourceId,
     entityId,
   });
 
@@ -93,12 +101,15 @@ export const deleteNotification = async (
   userId: string,
   notificationId: string,
 ): Promise<void> => {
-  const notificationDeleted = await Notification.findOneAndDelete({
+  const notificationDeleted = await Notification.deleteOne({
     _id: notificationId,
     userId,
   });
 
-  if (!notificationDeleted)
+  if (
+    !notificationDeleted.acknowledged ||
+    notificationDeleted.deletedCount <= 0
+  )
     throw new AppError(
       ErrorCodes.NOTIFICATION_NOT_FOUND,
       "Notification not found",
@@ -112,6 +123,7 @@ export const deleteNotification = async (
 export async function notifyAdmins(
   message: string,
   type: string,
+  resourceId: string,
   entityId: string | null = null,
 ) {
   // There is not specify admin, all active admins will be notify
@@ -122,7 +134,13 @@ export async function notifyAdmins(
 
   if (admins.length <= 0) return;
   const notificationQueries = admins.map((admin) => {
-    return postNewNotification(admin._id as string, message, type, entityId);
+    Notification.create({
+      userId: admin._id,
+      message,
+      type,
+      resourceId,
+      entityId,
+    });
   });
 
   await Promise.all(notificationQueries);

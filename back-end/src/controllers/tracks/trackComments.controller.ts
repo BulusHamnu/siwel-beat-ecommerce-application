@@ -185,10 +185,15 @@ export const likeComment = async (
   next: NextFunction,
 ) => {
   try {
+    const trackId = req.params.id;
     const commentId = req.params.commentId;
     const userId = req.user!.id;
 
-    const { likesCount } = await commentService.likeComment(userId, commentId);
+    const { likesCount } = await commentService.likeComment(
+      userId,
+      commentId,
+      trackId,
+    );
 
     const response: ApiResponse<{ likesCount: number }> = {
       status: true,

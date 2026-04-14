@@ -6,6 +6,7 @@ import sendEmail from "./sendEmail.js";
 import Template from "../utils/emailTemplate.js";
 import crypto from "crypto";
 import * as NotificationService from "./notification.service.js";
+import { NotificationType } from "../models/notification.schema.js";
 
 /* Subcribe to news letter */
 async function addToList(
@@ -55,7 +56,7 @@ export const subscribeToNewsletter = async (email: string): Promise<void> => {
 
   await NotificationService.notifyAdmins(
     "Hurray! Someone just join the newsletter.",
-    "NEWSLETTER_SUBSCRIBED",
+    NotificationType.NEWSLETTER_SUBSCRIBED,
     sub._id as string,
   );
 };

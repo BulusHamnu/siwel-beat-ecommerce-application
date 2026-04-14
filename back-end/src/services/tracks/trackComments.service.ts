@@ -19,23 +19,66 @@ export interface parentComment extends Omit<CommentInterface, "userId"> {
   };
 }
 
-async function sendCommentReplyNotification(
-  parentId: ObjectId,
-  entityId: string,
-): Promise<void> {
-  const parentComment = (await Comment.findOne({ _id: parentId }).populate(
-    "userId",
-    "username email avatar _id",
-  )) as parentComment | null;
+async function sendCommentNotification({
+  parentCommentId,
+  resourceId,
+  entityId,
+  type,
+}: {
+  parentCommentId: ObjectId | null;
+  resourceId: string;
+  entityId: string;
+  type: string;
+}): Promise<void> {
+  console.log({ parentCommentId, resourceId, entityId, type });
+  switch (type) {
+    case NotificationType.COMMENT_REPLIED: {
+      if (parentCommentId) return;
 
-  if (!parentComment) return;
+      const parentComment = (await Comment.findOne({
+        _id: parentCommentId,
+      }).populate("userId", "username  _id")) as parentComment | null;
 
-  await notificationService.postNewNotification(
-    parentComment?.userId._id!,
-    `${parentComment?.userId.username} replied to your comment.`,
-    "COMMENT_REPLIED",
-    entityId,
-  );
+      await notificationService.postNewNotification({
+        userId: parentComment?.userId._id!,
+        message: `${parentComment?.userId.username} replied to your comment.`,
+        type: NotificationType.COMMENT_REPLIED,
+        resourceId,
+        entityId,
+      });
+
+      break;
+    }
+
+    case NotificationType.TRACK_COMMENTED: {
+      await notificationService.notifyAdmins(
+        "You have a new comment on your track.",
+        NotificationType.TRACK_COMMENTED,
+        resourceId,
+        entityId,
+      );
+
+      break;
+    }
+
+    case NotificationType.COMMENT_LIKED: {
+      if (entityId) return;
+
+      const comment = (await Comment.findOne({
+        _id: entityId,
+      }).populate("userId", "username _id")) as populatedComment | null;
+
+      await notificationService.postNewNotification({
+        userId: comment?.userId._id!,
+        message: `${comment?.userId.username} liked your comment on a track`,
+        type: NotificationType.COMMENT_LIKED,
+        resourceId,
+        entityId,
+      });
+
+      break;
+    }
+  }
 }
 
 export const postNewComment = async (
@@ -54,16 +97,14 @@ export const postNewComment = async (
     );
 
   const comment = await Comment.create({ content, parentId, trackId, userId });
-  if (parentId) {
-    // Notify commenter for replies
-    await sendCommentReplyNotification(parentId, comment._id as string);
-  } else {
-    await notificationService.notifyAdmins(
-      "You have a new comment on your track.",
-      "TRACK_COMMENTED",
-      comment._id as string,
-    );
-  }
+  await sendCommentNotification({
+    type: parentId
+      ? NotificationType.COMMENT_REPLIED
+      : NotificationType.TRACK_COMMENTED,
+    parentCommentId: parentId,
+    resourceId: trackId,
+    entityId: comment._id as string,
+  });
 
   return comment;
 };
@@ -98,6 +139,7 @@ async function getTrackCommentsAndBuildTree(
   commentsTree.forEach((comment) => {
     if (comment.parentId) {
       const parentComment = commentsTree.get(comment.parentId.toString());
+      if (!parentComment) return;
       parentComment.replies.push(comment);
     }
   });
@@ -221,6 +263,7 @@ export const deleteComment = async (
 export const likeComment = async (
   userId: string,
   commentId: string,
+  trackId: string,
 ): Promise<{ likesCount: number }> => {
   const session = await mongoose.startSession();
   try {
@@ -251,12 +294,12 @@ export const likeComment = async (
       await newCommentLike.save({ session });
 
       if (newCommentLike) {
-        await notificationService.postNewNotification(
-          userId,
-          "Someone liked your comment on a track",
-          NotificationType.COMMENT_LIKED,
-          newCommentLike._id as string,
-        );
+        await sendCommentNotification({
+          type: NotificationType.COMMENT_LIKED,
+          parentCommentId: null,
+          resourceId: trackId,
+          entityId: updatedComment._id as string,
+        });
       }
 
       likesCount = updatedComment.likes;

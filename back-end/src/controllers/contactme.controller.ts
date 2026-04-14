@@ -6,7 +6,7 @@ import Joi from "joi";
 import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js";
 
 /* Contact me controller */
-interface ContactMeReqBody {
+export interface ContactMeReqBody {
   name: string;
   email: string;
   request: string;
