@@ -24,6 +24,12 @@ export const addToCart = async (
       null,
     );
 
+  try {
+    await Cart.create({ userId });
+  } catch (error: any) {
+    if (error.code !== 11000) throw error;
+  }
+
   const productSnapShop: CartItem = {
     name: track.title,
     productId: track._id as ObjectId,
@@ -45,13 +51,11 @@ export const addToCart = async (
       },
     },
     {
-      $setOnInsert: { userId },
       $push: { items: productSnapShop },
     },
-    { upsert: true },
   );
 
-  if (updated.modifiedCount === 0 && updated.upsertedCount === 0) {
+  if (updated.modifiedCount === 0 || updated.matchedCount === 0) {
     throw new AppError(
       ErrorCodes.PRODUCT_ALREADY_EXISTS,
       "Product already exists in cart.",
