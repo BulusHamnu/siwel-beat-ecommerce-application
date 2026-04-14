@@ -1,17 +1,17 @@
 import AppError, { ErrorCodes } from "../errors/appError.js";
 import { type CartItem, type CartInterface } from "../models/cart.schema.js";
-import getUserCartandTracks from "./shared/getUserCartAndTracks.js";
-
-export interface checkoutSummary {
-  total: number;
-  items: CartItem[];
-}
+import { retrieveCart } from "./users/userCart.service.js";
+import Track, { type TrackInterface } from "../models/track.schema.js";
+import { createOrder } from "./shared/ordersShared.service.js";
 
 /* Get checkout summary */
-function verifyItemsStatus(trackMap: Map<string, any>, cartItems: CartItem[]) {
+function validateProductsStatus(
+  cartItems: CartItem[],
+  trackMap: Map<string, any>,
+) {
   cartItems.forEach((item) => {
     const track = trackMap.get(String(item.productId));
-    if (!track || track.status !== "active") {
+    if (!track || track.status !== "published") {
       throw new AppError(
         ErrorCodes.CART_INVALID,
         "Some items in your cart are invalid, please confirm and update cart.",
@@ -34,28 +34,38 @@ function verifyItemsStatus(trackMap: Map<string, any>, cartItems: CartItem[]) {
   });
 }
 
-export const getCheckoutSummary = async (
+export const createCheckout = async (
   userId: string,
   items: string[],
-): Promise<checkoutSummary> => {
-  const { userCart, tracks } = await getUserCartandTracks(userId);
-  const userCartObj: CartInterface = userCart.toObject();
+): Promise<string> => {
+  const userCart = await retrieveCart(userId);
 
-  // Filter selected items
-  const selectedItems = userCartObj.items.filter((item) =>
+  const selectedItems = userCart.items.filter((item) =>
     items.includes(String(item.productId)),
   );
+
+  if (selectedItems.length <= 0)
+    throw new AppError(
+      ErrorCodes.CHECKOUT_ERROR,
+      "No items selected.",
+      400,
+      true,
+      null,
+    );
+
+  const productIds = selectedItems.map((item) => item.productId);
+  const tracks = await Track.find({ _id: { $in: productIds } }).lean<
+    TrackInterface[]
+  >();
 
   const trackMap = new Map<string, any>();
   tracks.forEach((track) => {
     trackMap.set(String(track._id), track);
   });
-  verifyItemsStatus(trackMap, selectedItems); // Items have to be valid for checkout
 
-  const totalAmount = selectedItems.reduce(
-    (sum, item) => sum + Number(item.price),
-    0,
-  );
+  validateProductsStatus(selectedItems, trackMap); // Items have to be valid for checkout
 
-  return { items: selectedItems, total: totalAmount };
+  await createOrder(selectedItems);
+
+  return "url_not_available";
 };

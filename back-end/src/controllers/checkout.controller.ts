@@ -1,9 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
-import {
-  getCheckoutSummary,
-  type checkoutSummary,
-} from "../services/checkout.service.js";
+import { createCheckout } from "../services/checkout.service.js";
 import Joi from "joi";
 import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js";
 
@@ -19,22 +16,25 @@ function validateCheckoutReqBody(data: { items: string[] }): {
 }
 
 export const checkOut = async (
-  req: Request<{}, ApiResponse<checkoutSummary>, { items: string[] }, {}>,
-  res: Response<ApiResponse<checkoutSummary>>,
-  next: NextFunction
+  req: Request<{}, ApiResponse<{ url: string }>, { items: string[] }, {}>,
+  res: Response<ApiResponse<{ url: string }>>,
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
     const { items } = validateCheckoutReqBody(req.body);
 
-    const summary = await getCheckoutSummary(user.id, items);
-    const response: ApiResponse<checkoutSummary> = {
+    const url = await createCheckout(user.id, items);
+
+    const response: ApiResponse<{ url: string }> = {
       status: true,
       message: "Checkout summary retrived successfully.",
-      data: summary,
+      data: {
+        url,
+      },
     };
 
-    res.status(200).json(response);
+    res.status(201).json(response);
   } catch (error) {
     next(error);
   }

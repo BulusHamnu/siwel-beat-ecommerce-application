@@ -6,6 +6,21 @@ import type { userPayload } from "../../middlewares/requiredAuth.js";
 import OrderItem, {
   type OrderItemInterface,
 } from "../../models/orderItem.schema.js";
+import type { CartItem } from "../../models/cart.schema.js";
+import logger from "../../utils/logger.js";
+
+/* Create order */
+export async function createOrder(orderItems: CartItem[]) {
+  logger.info("OrderItems", { orderItems });
+
+  throw new AppError(
+    "NOT_IMPLEMENTED",
+    "Checkout is not available yet.",
+    501,
+    true,
+    null,
+  );
+}
 
 export interface Queries {
   status?: string;

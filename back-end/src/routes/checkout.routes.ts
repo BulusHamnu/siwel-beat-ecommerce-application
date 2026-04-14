@@ -12,6 +12,6 @@ router.use(rateLimiter(20, 15 * 60 * 1000));
 router.use(allowRole("user"));
 router.use(requiredVerifiedEmail);
 
-router.post("/summary", checkOut);
+router.post("/", checkOut);
 
 export default router;
