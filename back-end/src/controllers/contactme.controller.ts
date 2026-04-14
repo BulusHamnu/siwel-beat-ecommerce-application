@@ -1,7 +1,7 @@
 import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
 import logger from "../utils/logger.js";
-import { sendMessage } from "../services/public.apis.service.js";
+import { sendMessage } from "../services/contactme.service.js";
 import Joi from "joi";
 import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js";
 
@@ -12,7 +12,7 @@ export interface ContactMeReqBody {
   request: string;
   message: string;
 }
-// validator function
+
 export function validateContactmeBody(data: ContactMeReqBody) {
   const contactmeBody = Joi.object({
     email: Joi.string().email().required().lowercase(),
