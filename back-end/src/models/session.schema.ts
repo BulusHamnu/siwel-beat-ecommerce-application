@@ -29,5 +29,9 @@ const sessionSchema = new Schema<SessionInterface>(
   { timestamps: true },
 );
 
+/* Indexes */
+sessionSchema.index({ userId: 1 });
+sessionSchema.index({ refreshToken: 1 });
+
 const Session = model<SessionInterface>("Session", sessionSchema);
 export default Session;

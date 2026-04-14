@@ -55,7 +55,6 @@ export const orderItem = new mongoose.Schema<OrderItemInterface>(
 );
 
 /* Indexes */
-orderItem.index({ productId: 1 });
 orderItem.index({ orderId: 1, productId: 1, status: 1 });
 
 const OrderItem = mongoose.model<OrderItemInterface>("OrderItem", orderItem);
