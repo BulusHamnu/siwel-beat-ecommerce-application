@@ -3,30 +3,32 @@ import Purchase, {
 } from "../../models/purchase.schema.js";
 import { type Pagination } from "../../controllers/responseInterface.js";
 import type { FilterQuery } from "mongoose";
+import AppError, { ErrorCodes } from "../../errors/appError.js";
 
 /* Get purchases */
 interface PurchaseQueries {
   type?: string;
   userId: string;
 }
+
 function buildQueries(
   userId: string,
-  type?: string
+  type?: string,
 ): FilterQuery<PurchaseQueries> {
   // User only get their purchases
   const queries: FilterQuery<PurchaseQueries> = {
     userId,
   };
+
   if (type) queries["type"] = type;
 
   return queries;
 }
 
-// Get purchases and purchases document counts
 async function getPurchasesAndCounts(
   queries: FilterQuery<PurchaseQueries>,
   skip: number,
-  limit: number
+  limit: number,
 ) {
   const countsQuery = Purchase.find(queries).countDocuments();
   const purchasesQuery = Purchase.find(queries)
@@ -47,11 +49,11 @@ export interface PurchasesResult {
   pagination: Pagination;
 }
 
-export const getAllPurchases = async (
+export const getUserPurchases = async (
   userId: string,
   type: string,
   page: number,
-  limit: number
+  limit: number,
 ): Promise<PurchasesResult> => {
   const skip = (page - 1) * limit;
 
@@ -59,7 +61,7 @@ export const getAllPurchases = async (
   const { purchaseCount, purchasesWithExtra } = await getPurchasesAndCounts(
     queries,
     skip,
-    limit
+    limit,
   );
 
   // For easy navigation through purchases
@@ -76,4 +78,25 @@ export const getAllPurchases = async (
       totalPage,
     },
   };
+};
+
+/* Get a purchase */
+export const getPurchase = async (
+  userId: string,
+  purchaseId: string,
+): Promise<PurchaseInterface> => {
+  const purchase = await Purchase.findOne({
+    _id: purchaseId,
+    userId,
+  }).lean<PurchaseInterface>();
+  if (!purchase)
+    throw new AppError(
+      ErrorCodes.PURCHASE_NOT_FOUND,
+      "Purchase not found",
+      404,
+      true,
+      null,
+    );
+
+  return purchase;
 };

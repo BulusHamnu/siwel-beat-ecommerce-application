@@ -1,18 +1,13 @@
 import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "../responseInterface.js";
-import {
-  getAllPurchases,
-  type PurchasesResult,
-} from "../../services/users/userPurchases.service.js";
-import AppError, { ErrorCodes } from "../../errors/appError.js";
-import Purchase, {
-  type PurchaseInterface,
-} from "../../models/purchase.schema.js";
+import { type PurchasesResult } from "../../services/users/userPurchases.service.js";
+import * as purchaseService from "../../services/users/userPurchases.service.js";
+import { type PurchaseInterface } from "../../models/purchase.schema.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import * as userValidator from "../../utils/validators/user.validator.js";
 
-/* Get user's purchases controller */
-export const getAllPurchase = async (
+/* Get user's purchases */
+export const getAllPurchases = async (
   req: Request<{}, ApiResponse<PurchasesResult>, {}, {}>,
   res: Response<ApiResponse<PurchasesResult>>,
   next: NextFunction,
@@ -24,15 +19,16 @@ export const getAllPurchase = async (
       userValidator.getPurchaseQuerySchema,
     );
 
-    const purchases = await getAllPurchases(
+    const purchases = await purchaseService.getUserPurchases(
       user.id,
       type,
       Number(page || 1),
       Number(limit || 10),
     );
+
     const response: ApiResponse<PurchasesResult> = {
       status: true,
-      message: "Purchases retrived successfully",
+      message: "Purchases retrieved successfully",
       data: purchases,
     };
 
@@ -42,29 +38,21 @@ export const getAllPurchase = async (
   }
 };
 
-/* Get user's purchase controller */
+/* Get user's purchase */
 export const getPurchase = async (
   req: Request<{ id: string }, {}, {}, {}>,
   res: Response<ApiResponse<PurchaseInterface>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const user = req.user!;
+    const userId = req.user!.id;
     const { id } = req.params;
 
-    const purchase = await Purchase.findOne({ userId: user.id, _id: id });
-    if (!purchase)
-      throw new AppError(
-        ErrorCodes.PURCHASE_NOT_FOUND,
-        "Purchase not found",
-        404,
-        true,
-        null,
-      );
+    const purchase = await purchaseService.getPurchase(userId, id);
 
     const response: ApiResponse<PurchaseInterface> = {
       status: true,
-      message: "Purchase retrived successfully",
+      message: "Purchase retrieved successfully",
       data: purchase,
     };
 

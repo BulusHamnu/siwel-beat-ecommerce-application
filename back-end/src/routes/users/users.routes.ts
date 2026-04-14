@@ -56,7 +56,7 @@ router.get("/me/orders/:id", generalApiLimiter(), orderController.getOrder);
 router.get(
   "/me/purchases",
   generalApiLimiter(),
-  purchaseController.getAllPurchase,
+  purchaseController.getAllPurchases,
 );
 router.get(
   "/me/purchases/:id",
