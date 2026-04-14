@@ -46,14 +46,15 @@ router.get(
 );
 
 router.patch(
-  "/notifications/:id/read",
+  "/notifications/:id",
   generalApiLimiter(),
-  notificationController.markNoticationAsRead,
+  notificationController.updateNotificationStatus,
 );
+
 router.patch(
-  "/notifications/:id/unread",
+  "/notifications/:id",
   generalApiLimiter(),
-  notificationController.markNoticationAsRead,
+  notificationController.updateNotificationStatus,
 );
 
 router.delete(

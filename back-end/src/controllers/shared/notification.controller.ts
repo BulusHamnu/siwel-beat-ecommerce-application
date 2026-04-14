@@ -3,26 +3,30 @@ import type { ApiResponse } from "../responseInterface.js";
 import * as notificationService from "../../services/notification.service.js";
 import type { notification } from "../../models/notification.schema.js";
 import * as notificationValidator from "../../utils/validators/notification.validator.js";
+import AppError, { ErrorCodes } from "../../errors/appError.js";
+import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
+import Joi from "joi";
 
-/* Get all notifications controller */
+/* Get all notifications */
 export const getAllNotifications = async (
   req: Request<{}, {}, {}, { status: string }>,
   res: Response<ApiResponse<notification[]>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const user = req.user!;
+    const userId = req.user!.id;
     const { status } = notificationValidator.validateNotificationQuery(
-      req.query
+      req.query,
     );
 
     const notifications = await notificationService.getAllNotifications(
-      user.id,
-      status
+      userId,
+      status,
     );
+
     const response: ApiResponse<notification[]> = {
       status: true,
-      message: "Notifications retrived succesfully.",
+      message: "Notifications retrieved succesfully.",
       data: notifications,
     };
 
@@ -32,11 +36,11 @@ export const getAllNotifications = async (
   }
 };
 
-/* Get a notification controller */
+/* Get a notification */
 export const getNotification = async (
   req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,
   res: Response<ApiResponse<notification>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
@@ -46,7 +50,7 @@ export const getNotification = async (
 
     const response: ApiResponse<notification> = {
       status: true,
-      message: "Notification retrived succesfully.",
+      message: "Notification retrieved succesfully.",
       data: notification,
     };
 
@@ -56,48 +60,45 @@ export const getNotification = async (
   }
 };
 
-/* Update notification as read controller*/
-export const markNoticationAsRead = async (
-  req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,
+/* Update notification status */
+function validateNotificationUpdateBody(body: { read: boolean }): {
+  read: boolean;
+} {
+  const bodySchema = Joi.object({
+    read: Joi.boolean().required(),
+  });
+
+  return validateAndSanitizeBody(body, bodySchema);
+}
+
+export const updateNotificationStatus = async (
+  req: Request<
+    { id: string },
+    ApiResponse<notification>,
+    { read: boolean },
+    {}
+  >,
   res: Response<ApiResponse<notification>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const user = req.user!;
-    const { id } = notificationValidator.validateNotificationParams(req.params);
+    const userId = req.user!.id;
+    const notificationId = req.params.id;
 
-    const updatedNotification =
-      await notificationService.updateNotificationStatus(user.id, id, true);
+    const { read } = validateNotificationUpdateBody(req.body);
+
+    const notification = await notificationService.updateNotificationStatus(
+      userId,
+      notificationId,
+      read,
+    );
 
     const response: ApiResponse<notification> = {
       status: true,
-      message: "Notification was updated succesfully.",
-      data: updatedNotification,
+      message: "Notification status updated succesfully.",
+      data: notification,
     };
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
 
-/* Update notification as unread controller*/
-export const markNoticationAsUnread = async (
-  req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,
-  res: Response<ApiResponse<notification>>,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const user = req.user!;
-    const { id } = notificationValidator.validateNotificationParams(req.params);
-
-    const updatedNotification =
-      await notificationService.updateNotificationStatus(user.id, id, false);
-
-    const response: ApiResponse<notification> = {
-      status: true,
-      message: "Notification was updated succesfully.",
-      data: updatedNotification,
-    };
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -108,7 +109,7 @@ export const markNoticationAsUnread = async (
 export const deleteNotification = async (
   req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,
   res: Response<ApiResponse<notification>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
