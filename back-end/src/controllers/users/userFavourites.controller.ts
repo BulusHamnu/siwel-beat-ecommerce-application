@@ -1,40 +1,41 @@
 import type { Request, Response, NextFunction } from "express";
 import { type ApiResponse } from "../responseInterface.js";
-import favouriteServices from "../../services/users/userFavourites.service.js";
+import * as favouriteServices from "../../services/users/userFavourites.service.js";
 import { type FavouriteInterface } from "../../models/favourite.schema.js";
 import * as userValidator from "../../utils/validators/user.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 
-/* Add to favourites controller */
+/* Add to favourites */
 export const addToUserFavourites = async (
   req: Request<{}, ApiResponse<void>, { trackId: string }, {}>,
   res: Response<ApiResponse<void>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
     const { trackId } = validateAndSanitizeBody(
       req.body,
-      userValidator.trackIdSchema
+      userValidator.trackIdSchema,
     );
 
     await favouriteServices.addFavouriteTrack(user.id, trackId);
 
     const response: ApiResponse<void> = {
       status: true,
-      message: "Track was added to favourites list successfully.",
+      message: "Track was added to favourites list.",
     };
+
     res.status(201).json(response);
   } catch (error) {
     next(error);
   }
 };
 
-/* Get favourites controller */
+/* Get favourites */
 export const getUserFavourites = async (
   req: Request<{}, ApiResponse<FavouriteInterface[]>, {}, {}>,
   res: Response<ApiResponse<FavouriteInterface[]>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
@@ -51,17 +52,17 @@ export const getUserFavourites = async (
   }
 };
 
-/* Remove from favourites controller */
+/* Remove from favourites */
 export const removeFromFavourites = async (
   req: Request<{}, ApiResponse<void>, { trackId: string }, {}>,
   res: Response<ApiResponse<void>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
     const { trackId } = validateAndSanitizeBody(
       req.body,
-      userValidator.trackIdSchema
+      userValidator.trackIdSchema,
     );
 
     await favouriteServices.removeFromFavourites(trackId, user.id);
@@ -74,4 +75,3 @@ export const removeFromFavourites = async (
     next(error);
   }
 };
-

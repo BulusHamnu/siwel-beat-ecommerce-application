@@ -2,14 +2,14 @@ import Favourite, {
   type FavouriteInterface,
 } from "../../models/favourite.schema.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
-import Track from "../../models/track.schema.js";
+import Track, { type TrackInterface } from "../../models/track.schema.js";
 
 /* Add to favourites */
-const addFavouriteTrack = async (
+export const addFavouriteTrack = async (
   userId: string,
   trackId: string,
 ): Promise<void> => {
-  const track = await Track.findOne({ _id: trackId });
+  const track = await Track.findOne({ _id: trackId }).lean<TrackInterface>();
   if (!track)
     throw new AppError(
       ErrorCodes.TRACK_NOT_FOUND,
@@ -19,35 +19,47 @@ const addFavouriteTrack = async (
       null,
     );
 
-  const favourite = await Favourite.findOne({ trackId, userId });
-  if (favourite)
-    throw new AppError(
-      ErrorCodes.TRACK_ALREADY_EXISTS,
-      "Track already exists in the favourites list.",
-      400,
-      true,
-      null,
-    );
+  try {
+    await Favourite.create({ userId, trackId });
+  } catch (error: any) {
+    if (error.code === 11000)
+      throw new AppError(
+        ErrorCodes.FAVOURITE_ALREADY_EXISTS,
+        "Track already exists in the favourites.",
+        400,
+        true,
+        null,
+      );
 
-  await Favourite.create({ userId, trackId });
+    throw error;
+  }
 };
 
 /* Get favourites */
-const getFavourites = async (userId: string): Promise<FavouriteInterface[]> => {
+export const getFavourites = async (
+  userId: string,
+): Promise<FavouriteInterface[]> => {
   const favourites = await Favourite.find({ userId }).populate(
     "trackId",
-    "relatedTrack genre tags bpm status key type description price title _id",
+    "genre tags bpm status key type description price title _id",
   );
 
   return favourites;
 };
 
 /* Remove from favourites */
-const removeFromFavourites = async (
+export const removeFromFavourites = async (
   trackId: string,
   userId: string,
 ): Promise<void> => {
-  await Favourite.findOneAndDelete({ trackId, userId });
-};
+  const deleted = await Favourite.findOneAndDelete({ trackId, userId });
 
-export default { addFavouriteTrack, getFavourites, removeFromFavourites };
+  if (!deleted)
+    throw new AppError(
+      ErrorCodes.FAVOURITE_NOT_FOUND,
+      "Track is not in your favourites.",
+      404,
+      true,
+      null,
+    );
+};

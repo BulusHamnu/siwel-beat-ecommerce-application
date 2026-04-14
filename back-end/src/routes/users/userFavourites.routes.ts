@@ -13,11 +13,13 @@ router.post(
   creationApiLimiter(),
   favouriteRoutes.addToUserFavourites,
 );
+
 router.get(
   "/favourites",
   generalApiLimiter(),
   favouriteRoutes.getUserFavourites,
 );
+
 router.delete(
   "/favourites",
   creationApiLimiter(),
