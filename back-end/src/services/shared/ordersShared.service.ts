@@ -101,6 +101,7 @@ export interface orderResult {
   orders: OrderPlusItems[];
   pagination: Pagination;
 }
+
 export const getAllOrders = async (
   page: number,
   limit: number,
@@ -142,6 +143,7 @@ export const getOrder = async (
   const queries: { _id: string; userId?: string } = {
     _id: id,
   };
+
   if (user.role === "user") queries["userId"] = user.id; // For admin to get any order while user get their order
 
   const order: OrderInterface | null = await Order.findOne(queries);

@@ -17,7 +17,7 @@ interface OrdersQueryBody {
 export const getAllOrders = async (
   req: Request<{}, ApiResponse<orderResult>, {}>,
   res: Response<ApiResponse<orderResult>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
@@ -31,12 +31,12 @@ export const getAllOrders = async (
       Number(limit || 10),
       status,
       date,
-      userId
+      userId,
     );
 
     const response: ApiResponse<orderResult> = {
       status: true,
-      message: "Orders retrived succesfully.",
+      message: "Orders retrieved succesfully.",
       data: result,
     };
 
@@ -50,7 +50,7 @@ export const getAllOrders = async (
 export const getOrder = async (
   req: Request<{ id: string }, ApiResponse<OrderPlusItems>, {}, {}>,
   res: Response<ApiResponse<OrderPlusItems>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
