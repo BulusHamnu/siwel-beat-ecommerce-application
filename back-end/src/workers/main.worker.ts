@@ -5,7 +5,10 @@ import connectDb from "../configs/db.js";
 import sendEmail from "../services/sendEmail.js";
 import Template from "../utils/emailTemplate.js";
 import supabase from "../services/supabase.js";
-import { postNewNotification } from "../services/notification.service.js";
+import {
+  postNewNotification,
+  notifyAdmins,
+} from "../services/notification.service.js";
 
 await connectDb();
 
@@ -52,6 +55,11 @@ const mainWorkerprocessor = async (job: Job) => {
 
     case "post-notification": {
       const { userId, message, type, resourceId, entityId } = data;
+      if (!userId) {
+        await notifyAdmins(message, type, resourceId, entityId);
+        break;
+      }
+
       await postNewNotification({
         userId,
         message,

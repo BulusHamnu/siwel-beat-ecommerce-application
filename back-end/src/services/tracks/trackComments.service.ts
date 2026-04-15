@@ -8,6 +8,8 @@ import { Types } from "mongoose";
 import CommentLike, {
   type CommentLikeInterface,
 } from "../../models/commentLike.schema.js";
+import mainQueue from "../../queues/main.queue.js";
+import logger from "../../utils/logger.js";
 
 /* Post a comment */
 export interface parentComment extends Omit<CommentInterface, "userId"> {
@@ -30,52 +32,93 @@ async function sendCommentNotification({
   entityId: string;
   type: string;
 }): Promise<void> {
-  console.log({ parentCommentId, resourceId, entityId, type });
   switch (type) {
     case NotificationType.COMMENT_REPLIED: {
-      if (parentCommentId) return;
+      if (!parentCommentId) return;
 
       const parentComment = (await Comment.findOne({
         _id: parentCommentId,
       }).populate("userId", "username  _id")) as parentComment | null;
 
-      await notificationService.postNewNotification({
-        userId: parentComment?.userId._id!,
-        message: `${parentComment?.userId.username} replied to your comment.`,
-        type: NotificationType.COMMENT_REPLIED,
-        resourceId,
-        entityId,
-      });
+      await mainQueue.add(
+        "post-notification",
+        {
+          userId: parentComment?.userId._id!,
+          message: `${parentComment?.userId.username} replied to your comment.`,
+          type: NotificationType.COMMENT_REPLIED,
+          resourceId,
+          entityId,
+        },
+        {
+          attempts: 2,
+          backoff: {
+            type: "exponential",
+            delay: 2000,
+          },
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        },
+      );
 
       break;
     }
 
     case NotificationType.TRACK_COMMENTED: {
-      await notificationService.notifyAdmins(
-        "You have a new comment on your track.",
-        NotificationType.TRACK_COMMENTED,
-        resourceId,
-        entityId,
+      await mainQueue.add(
+        "post-notification",
+        {
+          userId: null,
+          message: "You have a new comment on your track.",
+          type: NotificationType.TRACK_COMMENTED,
+          resourceId,
+          entityId,
+        },
+        {
+          attempts: 2,
+          backoff: {
+            type: "exponential",
+            delay: 2000,
+          },
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        },
       );
 
       break;
     }
 
     case NotificationType.COMMENT_LIKED: {
-      if (entityId) return;
+      if (!entityId) return;
 
       const comment = (await Comment.findOne({
         _id: entityId,
       }).populate("userId", "username _id")) as populatedComment | null;
 
-      await notificationService.postNewNotification({
-        userId: comment?.userId._id!,
-        message: `${comment?.userId.username} liked your comment on a track`,
-        type: NotificationType.COMMENT_LIKED,
-        resourceId,
-        entityId,
-      });
+      await mainQueue.add(
+        "post-notification",
+        {
+          userId: comment?.userId._id!,
+          message: `${comment?.userId.username} liked your comment on a track`,
+          type: NotificationType.COMMENT_LIKED,
+          resourceId,
+          entityId,
+        },
+        {
+          attempts: 2,
+          backoff: {
+            type: "exponential",
+            delay: 2000,
+          },
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        },
+      );
 
+      break;
+    }
+
+    default: {
+      logger.warn("Unidentified comment notification type.");
       break;
     }
   }

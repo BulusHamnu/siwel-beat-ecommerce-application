@@ -7,7 +7,7 @@ import { validateTrackidParam } from "../../utils/validators/track.validator.js"
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import * as trackValidator from "../../utils/validators/track.validator.js";
 
-/* Post new comment controller */
+/* Post new comment  */
 export const postComment = async (
   req: Request<
     { id: string },
@@ -38,17 +38,19 @@ export const postComment = async (
       message: "Comment posted sucessfully.",
       data: comment,
     };
+
     res.status(201).json(response);
   } catch (error) {
     next(error);
   }
 };
 
-/* Get a comment controller  */
+/* Get a comment   */
 interface getCommentParam {
   commentId: string;
   id: string;
-} //getCommentParam
+}
+
 export const getComment = async (
   req: Request<{}, ApiResponse<populatedComment>, {}, {}>,
   res: Response<ApiResponse<populatedComment>>,
@@ -77,7 +79,7 @@ export const getComment = async (
   }
 };
 
-/* Get all comments controller*/
+/* Get all comments */
 export const getAllComment = async (
   req: Request<{ id: string }, ApiResponse<populatedComment[]>, {}, {}>,
   res: Response<ApiResponse<populatedComment[]>>,
@@ -86,9 +88,9 @@ export const getAllComment = async (
   try {
     const { id } = req.params;
 
-    // get comment
     const comments: populatedComment[] =
       await commentService.getAllComments(id);
+
     const response: ApiResponse<populatedComment[]> = {
       status: true,
       message: "Comments retrieved successfully.",
@@ -101,7 +103,7 @@ export const getAllComment = async (
   }
 };
 
-/* Update comment controller */
+/* Update comment  */
 export const updateComment = async (
   req: Request<
     { id: string; commentId: string },
@@ -143,7 +145,7 @@ export const updateComment = async (
   }
 };
 
-/* Delete a comment controller */
+/* Delete a comment  */
 export const deleteComment = async (
   req: Request<
     { id: string; commentId: string },
