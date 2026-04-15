@@ -6,7 +6,7 @@ import * as userValidator from "../../utils/validators/user.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 
 /* Add to favourites */
-export const addToUserFavourites = async (
+export const addToMyFavourites = async (
   req: Request<{}, ApiResponse<void>, { trackId: string }, {}>,
   res: Response<ApiResponse<void>>,
   next: NextFunction,
@@ -32,7 +32,7 @@ export const addToUserFavourites = async (
 };
 
 /* Get favourites */
-export const getUserFavourites = async (
+export const getMyFavourites = async (
   req: Request<{}, ApiResponse<FavouriteInterface[]>, {}, {}>,
   res: Response<ApiResponse<FavouriteInterface[]>>,
   next: NextFunction,
@@ -43,9 +43,10 @@ export const getUserFavourites = async (
     const favourites = await favouriteServices.getFavourites(user.id);
     const response: ApiResponse<FavouriteInterface[]> = {
       status: true,
-      message: "Favourite tracks retrived successfully.",
+      message: "Favourite tracks retrieved successfully.",
       data: favourites,
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -70,7 +71,8 @@ export const removeFromFavourites = async (
       status: true,
       message: "Track was removed succefully.",
     };
-    res.status(201).json(response);
+
+    res.status(200).json(response);
   } catch (error) {
     next(error);
   }

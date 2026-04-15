@@ -16,6 +16,10 @@ import * as sessionController from "../../controllers/users/userSession.controll
 
 const router = Router();
 
+/* Public user endpoints */
+router.get("/:id", profileController.getUserPublicProfile);
+router.get("/:id/favourites", profileController.getUserFavourites);
+
 router.use(requiredAuth);
 router.use(allowRole("user"));
 

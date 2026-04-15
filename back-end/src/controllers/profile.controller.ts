@@ -10,6 +10,8 @@ import * as userValidator from "../utils/validators/user.validator.js";
 import env from "../configs/env.js";
 import { checkAndResizeImgRatio } from "../utils/helpers.js";
 import mainQueue from "../queues/main.queue.js";
+import { getFavourites } from "../services/users/userFavourites.service.js";
+import type { FavouriteInterface } from "../models/favourite.schema.js";
 
 /* Get user profile  */
 export const getProfile = async (
@@ -73,7 +75,7 @@ export const updateProfile = async (
   }
 };
 
-/* Post profile picture */
+/* Post profile avatar */
 async function uploadAvatar(imageFile: Express.Multer.File) {
   const imageBuffer = await checkAndResizeImgRatio(imageFile.buffer, "avatar");
 
@@ -135,7 +137,7 @@ export const updateUserAvatar = async (
   }
 };
 
-/* Post profile picture */
+/* Remove profile avatar */
 export const removeUserAvatar = async (
   req: Request<{}, ApiResponse<null>, {}, {}>,
   res: Response<ApiResponse<null>>,
@@ -148,6 +150,81 @@ export const removeUserAvatar = async (
     const response: ApiResponse<null> = {
       status: true,
       message: "User avatar was removed successfully.",
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* Get user's public profile */
+interface ProfileSnapshot {
+  username: string;
+  isVerified: boolean;
+  email: string;
+  avatar: string;
+  firstName: string;
+  lastName: string;
+  gender: string;
+  bio: string;
+}
+
+export const getUserPublicProfile = async (
+  req: Request<{ id: string }, ApiResponse<ProfileSnapshot>, {}, {}>,
+  res: Response<ApiResponse<ProfileSnapshot>>,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const userId: string = req.params.id;
+
+    const {
+      username,
+      isVerified,
+      email,
+      avatar,
+      firstName,
+      lastName,
+      gender,
+      bio,
+    }: UserProfile = await userService.getProfile(userId);
+
+    const response: ApiResponse<ProfileSnapshot> = {
+      status: true,
+      message: "User's profile retrieved successfully.",
+      data: {
+        username,
+        isVerified,
+        email,
+        avatar,
+        firstName,
+        lastName,
+        gender,
+        bio,
+      },
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* Get user's favourites list */
+export const getUserFavourites = async (
+  req: Request<{ id: string }, ApiResponse<FavouriteInterface[]>, {}, {}>,
+  res: Response<ApiResponse<FavouriteInterface[]>>,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const userId: string = req.params.id;
+
+    const userFavouriteList = await getFavourites(userId);
+
+    const response: ApiResponse<FavouriteInterface[]> = {
+      status: true,
+      message: "User's favourites retrieved successfully.",
+      data: userFavouriteList,
     };
 
     res.status(200).json(response);
