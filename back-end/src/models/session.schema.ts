@@ -32,6 +32,7 @@ const sessionSchema = new Schema<SessionInterface>(
 /* Indexes */
 sessionSchema.index({ userId: 1 });
 sessionSchema.index({ refreshToken: 1 });
+sessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
 
 const Session = model<SessionInterface>("Session", sessionSchema);
 export default Session;
