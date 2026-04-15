@@ -3,7 +3,6 @@ import type { ApiResponse } from "../responseInterface.js";
 import * as notificationService from "../../services/notification.service.js";
 import type { notification } from "../../models/notification.schema.js";
 import * as notificationValidator from "../../utils/validators/notification.validator.js";
-import AppError, { ErrorCodes } from "../../errors/appError.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import Joi from "joi";
 
@@ -121,6 +120,7 @@ export const deleteNotification = async (
       status: true,
       message: "Notification was deleted succesfully.",
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);

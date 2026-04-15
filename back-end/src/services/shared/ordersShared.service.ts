@@ -118,7 +118,6 @@ export const getAllOrders = async (
     queries,
   );
 
-  // For easy navigation through orders
   const hasNext = ordersWithOverhead.length > limit;
   const totalPage = Math.ceil(ordersCounts / limit);
   const ordersX = ordersWithOverhead.slice(0, limit);

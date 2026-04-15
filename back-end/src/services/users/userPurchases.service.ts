@@ -89,6 +89,7 @@ export const getPurchase = async (
     _id: purchaseId,
     userId,
   }).lean<PurchaseInterface>();
+
   if (!purchase)
     throw new AppError(
       ErrorCodes.PURCHASE_NOT_FOUND,
@@ -100,3 +101,27 @@ export const getPurchase = async (
 
   return purchase;
 };
+
+/* Check for user purchase */
+export async function checkForPurchase(
+  role: string,
+  userId: string,
+  licenseType: string,
+  trackId: string,
+): Promise<void> {
+  if (role === "admin") return;
+  let purchasedTrack: PurchaseInterface | null = await Purchase.findOne({
+    trackId,
+    userId,
+    type: licenseType,
+  });
+
+  if (!purchasedTrack)
+    throw new AppError(
+      ErrorCodes.PURCHASE_NOT_FOUND,
+      "Unable to download license, no purchase found.",
+      404,
+      true,
+      null,
+    );
+}

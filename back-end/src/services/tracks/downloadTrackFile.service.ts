@@ -1,7 +1,4 @@
 import AppError, { ErrorCodes } from "../../errors/appError.js";
-import Purchase, {
-  type PurchaseInterface,
-} from "../../models/purchase.schema.js";
 import Track, { type TrackInterface } from "../../models/track.schema.js";
 import { type userPayload } from "../../middlewares/requiredAuth.js";
 import path from "path";
@@ -10,31 +7,9 @@ import License, { type LicenseInterface } from "../../models/license.schema.js";
 import env from "../../configs/env.js";
 import supabase from "../supabase.js";
 import logger from "../../utils/logger.js";
+import { checkForPurchase } from "../users/userPurchases.service.js";
 
 /* Get track file for download */
-export async function checkForPurchase(
-  role: string,
-  userId: string,
-  licenseType: string,
-  trackId: string,
-): Promise<void> {
-  if (role === "admin") return;
-  let purchasedTrack: PurchaseInterface | null = await Purchase.findOne({
-    trackId,
-    userId,
-    type: licenseType,
-  });
-
-  if (!purchasedTrack)
-    throw new AppError(
-      ErrorCodes.PURCHASE_NOT_FOUND,
-      "Unable to download license, no purchase found.",
-      404,
-      true,
-      null,
-    );
-}
-
 async function transformNameAndRetrieveFilePath(
   requestedFile: string,
   licenseType: string,
@@ -118,7 +93,7 @@ export const retrieveTrackFileForDownload = async ({
   trackId: string;
   licenseType: string;
   requestedFile: string;
-}): Promise<{ downloadUrl: string }> => {
+}): Promise<{ url: string }> => {
   const track: TrackInterface | null = await Track.findOne({ _id: trackId });
   if (!track)
     throw new AppError(
@@ -159,5 +134,5 @@ export const retrieveTrackFileForDownload = async ({
     );
   }
 
-  return { downloadUrl: data.signedUrl };
+  return { url: data.signedUrl };
 };

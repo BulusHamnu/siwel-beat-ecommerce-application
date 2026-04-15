@@ -300,7 +300,7 @@ export const downloadTrackFile = async (
       trackValidator.downloadQuerySchema,
     );
 
-    const { downloadUrl } = await retrieveTrackFileForDownload({
+    const { url } = await retrieveTrackFileForDownload({
       user,
       trackId,
       licenseType: license,
@@ -327,7 +327,7 @@ export const downloadTrackFile = async (
       },
     );
 
-    res.status(200).json({ downloadUrl });
+    res.status(200).json({ url });
   } catch (error) {
     next(error);
   }
