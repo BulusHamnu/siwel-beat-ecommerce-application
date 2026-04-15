@@ -1,9 +1,43 @@
 import { type Job, Worker } from "bullmq";
 import env from "../configs/env.js";
 import logger from "../utils/logger.js";
+import connectDb from "../configs/db.js";
+import sendEmail from "../services/sendEmail.js";
+import Template from "../utils/emailTemplate.js";
+
+await connectDb();
 
 const mainWorkerprocessor = async (job: Job) => {
-  logger.info(job.name);
+  const name = job.name;
+  const data = job.data;
+  //
+  switch (name) {
+    case "send-verification-email": {
+      const { to, message, username, code } = data;
+      await sendEmail(
+        to,
+        message,
+        Template.emailVerificationTemplate(username, code),
+      );
+      break;
+    }
+
+    case "send-reset-password-email": {
+      const { to, message, username, code } = data;
+      await sendEmail(
+        to,
+        message,
+        Template.resetPasswordTemplate(username, code),
+      );
+      break;
+    }
+
+    case "password-reset-confirmation": {
+      const { to, message, username } = data;
+      await sendEmail(to, message, Template.resetSuccessfulTemplate(username));
+      break;
+    }
+  }
 };
 
 /* Main worker */

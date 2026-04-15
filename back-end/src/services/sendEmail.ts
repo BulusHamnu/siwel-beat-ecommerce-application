@@ -15,23 +15,16 @@ const transport = nodemailer.createTransport({
 const sendEmail = async (
   receiver: string,
   subject: string,
-  template: string = ""
-): Promise<boolean | undefined> => {
-  try {
-    await transport.sendMail({
-      from: `"${env.APP_NAME}" <${env.ADMIN_EMAIL}>`,
-      to: receiver,
-      subject,
-      html: template,
-    });
-    logger.info(`Email sucessfully sent to ${receiver}`);
-    return true;
-  } catch (error) {
-    logger.error(
-      `An error occured while sending email to: user: ${receiver}`,
-      error
-    );
-  }
+  template: string = "",
+): Promise<void> => {
+  await transport.sendMail({
+    from: `"${env.APP_NAME}" <${env.ADMIN_EMAIL}>`,
+    to: receiver,
+    subject,
+    html: template,
+  });
+
+  logger.info(`Email sucessfully sent to ${receiver}`);
 };
 
 export default sendEmail;

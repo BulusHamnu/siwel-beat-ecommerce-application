@@ -45,7 +45,7 @@ export const getGoogleOauthUrl = async (
 
     const response: ApiResponse<{ url: string }> = {
       status: true,
-      message: "Google oauth2 url retrived successfully.",
+      message: "Google oauth2 url retrieved successfully.",
       data: {
         url,
       },

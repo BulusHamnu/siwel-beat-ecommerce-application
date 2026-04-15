@@ -9,10 +9,9 @@ import {
 } from "./shared/authShared.service.js";
 import Profile from "../models/profile.schema.js";
 import { generateHashValue, generateRandCode } from "../utils/helpers.js";
-import sendEmail from "./sendEmail.js";
-import Template from "../utils/emailTemplate.js";
 import crypto from "crypto";
 import mongoose from "mongoose";
+import mainQueue from "../queues/main.queue.js";
 
 /* Create new user */
 export const createNewUser = async ({
@@ -81,12 +80,27 @@ export const createNewUser = async ({
     session.endSession();
   }
 
-  if (!isVerified)
-    await sendEmail(
-      newUser!.email,
-      "Please verify your email.",
-      Template.emailVerificationTemplate(newUser!.username, code),
+  if (!isVerified) {
+    await mainQueue.add(
+      "send-verification-email",
+      {
+        to: newUser!.email,
+        username: newUser!.username,
+        message: "Please verify your email.",
+        code,
+      },
+      {
+        jobId: `email:newuser-email-verification:${newUser!.email}`,
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 2000,
+        },
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+      },
     );
+  }
 
   return newUser!;
 };
@@ -197,10 +211,23 @@ export const resendVerificationEmail = async (email: string): Promise<void> => {
   user.emailVerification.expiresAt = expiresAt;
   await user.save();
 
-  await sendEmail(
-    user.email,
-    "Email Verification Code",
-    Template.emailVerificationTemplate(user.username, code),
+  await mainQueue.add(
+    "send-verification-email",
+    {
+      to: user.email,
+      username: user.username,
+      message: "Email Verification Code.",
+      code,
+    },
+    {
+      attempts: 3,
+      backoff: {
+        type: "exponential",
+        delay: 2000,
+      },
+      removeOnComplete: 1000,
+      removeOnFail: 5000,
+    },
   );
 };
 
@@ -304,10 +331,23 @@ export const forgetPassword = async (email: string): Promise<void> => {
   );
   await user.save();
 
-  await sendEmail(
-    user.email,
-    "Reset Password Code",
-    Template.resetPasswordTemplate(user.username, otpCode),
+  await mainQueue.add(
+    "send-reset-password-email",
+    {
+      to: user.email,
+      username: user.username,
+      message: "Reset Password Code.",
+      code: otpCode,
+    },
+    {
+      attempts: 3,
+      backoff: {
+        type: "fixed",
+        delay: 2000,
+      },
+      removeOnComplete: 1000,
+      removeOnFail: 5000,
+    },
   );
 };
 
@@ -412,10 +452,22 @@ export const resetPassword = async (
   user.resetPasswordVerification.resetTokenExpiresAt = null;
   await user.save();
 
-  await sendEmail(
-    user.email,
-    "Password Reset Successfully.",
-    Template.resetSuccessfulTemplate(user.username),
+  await mainQueue.add(
+    "password-reset-confirmation",
+    {
+      to: user.email,
+      username: user.username,
+      message: "Password Reset Successfully.",
+    },
+    {
+      attempts: 2,
+      backoff: {
+        type: "exponential",
+        delay: 3000,
+      },
+      removeOnComplete: 1000,
+      removeOnFail: 5000,
+    },
   );
 };
 
