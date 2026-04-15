@@ -308,11 +308,11 @@ export const likeComment = async (
   commentId: string,
   trackId: string,
 ): Promise<{ likesCount: number }> => {
+  let likesCount: number = 0;
+  let updatedComment: CommentInterface | null = null;
+
   const session = await mongoose.startSession();
   try {
-    let likesCount: number = 0;
-    let updatedComment: CommentInterface | null = null;
-
     await session.withTransaction(async () => {
       updatedComment = await Comment.findOneAndUpdate(
         { _id: commentId },
@@ -350,14 +350,10 @@ export const likeComment = async (
 
     return { likesCount };
   } catch (error: any) {
-    if (error.code === 11000)
-      throw new AppError(
-        ErrorCodes.COMMENT_ALREADY_LIKED,
-        "You already liked this comment",
-        400,
-        true,
-        null,
-      );
+    if (error.code === 11000) {
+      const comment = await Comment.findOne({ _id: commentId });
+      return { likesCount: comment!.likes };
+    }
 
     throw error;
   } finally {

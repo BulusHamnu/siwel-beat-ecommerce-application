@@ -15,7 +15,7 @@ export const getSessions = async (
 
     const response: ApiResponse<SessionInterface[]> = {
       status: true,
-      message: "Sessions retrived successfully.",
+      message: "Sessions retrieved successfully.",
       data: sessions,
     };
 
