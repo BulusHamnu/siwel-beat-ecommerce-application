@@ -9,8 +9,9 @@ import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js"
 import * as userValidator from "../utils/validators/user.validator.js";
 import env from "../configs/env.js";
 import { checkAndResizeImgRatio } from "../utils/helpers.js";
+import mainQueue from "../queues/main.queue.js";
 
-/* Get user profile controller */
+/* Get user profile  */
 export const getProfile = async (
   req: Request<
     {},
@@ -30,13 +31,14 @@ export const getProfile = async (
       message: "Profile retrieved successfully.",
       data: profile,
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
   }
 };
 
-/* Update user profile controller */
+/* Update user profile  */
 export const updateProfile = async (
   req: Request<
     {},
@@ -64,6 +66,7 @@ export const updateProfile = async (
       message: "Profile updated successfully.",
       data: profile,
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -112,7 +115,22 @@ export const updateUserAvatar = async (
     };
     res.status(200).json(response);
   } catch (error) {
-    if (pictureUrl) await supabase.deleteFiles("images", [pictureUrl]);
+    if (pictureUrl) {
+      await mainQueue.add(
+        "delete-files",
+        { bucket: "images", paths: [pictureUrl] },
+        {
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 2000,
+          },
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        },
+      );
+    }
+
     next(error);
   }
 };

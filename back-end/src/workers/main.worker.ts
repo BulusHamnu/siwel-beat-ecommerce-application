@@ -53,6 +53,13 @@ const mainWorkerprocessor = async (job: Job) => {
       break;
     }
 
+    case "delete-files": {
+      const { bucket, paths } = data;
+      await supabase.deleteFiles(bucket, paths);
+
+      break;
+    }
+
     case "post-notification": {
       const { userId, message, type, resourceId, entityId } = data;
       if (!userId) {

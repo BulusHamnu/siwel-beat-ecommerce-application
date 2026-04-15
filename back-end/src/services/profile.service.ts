@@ -5,6 +5,7 @@ import AppError, { ErrorCodes } from "../errors/appError.js";
 import supabase from "./supabase.js";
 import env from "../configs/env.js";
 import mongoose from "mongoose";
+import mainQueue from "../queues/main.queue.js";
 
 /* Get profile */
 export const getProfile = async (id: string): Promise<UserProfile> => {
@@ -184,7 +185,22 @@ export const updateUserAvatar = async (
     );
 
   // delete old picture
-  if (oldPicturePath) await supabase.deleteFiles("images", [oldPicturePath]);
+  if (oldPicturePath) {
+    await mainQueue.add(
+      "delete-files",
+      { bucket: "images", paths: [oldPicturePath] },
+      {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 2000,
+        },
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+      },
+    );
+  }
+
   return publicUrl;
 };
 
@@ -209,7 +225,7 @@ export async function removeUserAvatar(userId: string) {
   if (updatedProfile.matchedCount <= 0 || updatedProfile.modifiedCount <= 0) {
     throw new AppError(
       ErrorCodes.UNEXPECTED_ERROR,
-      "Unable to remove user avatar.",
+      "Unable to delete user avatar.",
       500,
       true,
       null,
@@ -218,6 +234,18 @@ export async function removeUserAvatar(userId: string) {
 
   const avatarPath = user.avatarPath;
   if (avatarPath) {
-    await supabase.deleteFiles(env.IMAGE_FILES_BUCKET, [avatarPath]);
+    await mainQueue.add(
+      "delete-files",
+      { bucket: "images", paths: [avatarPath] },
+      {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 2000,
+        },
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+      },
+    );
   }
 }
