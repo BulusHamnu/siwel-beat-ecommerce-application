@@ -43,6 +43,7 @@ interface Env {
   HASH_SALT_NUMBER: number;
   GOOGLE_REDIRECT_URL: string;
   SIGNED_URL_TTL: number;
+  REDIS_CONNECTION: { url: string } | { host: string; port: number };
 }
 
 const env: Env = {
@@ -59,6 +60,7 @@ const env: Env = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
   BACKEND_URL: process.env.BACKEND_URL || "http://localhost:5000",
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:8080",
+
   LOGIN_COOKIE_OPTS: {
     secure: process.env.NODE_ENV === "production",
     maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -66,6 +68,14 @@ const env: Env = {
     httpOnly: true,
     path: "/api/v1/auth",
   },
+
+  REDIS_CONNECTION: process.env.REDIS_URL
+    ? { url: process.env.REDIS_URL || "" }
+    : {
+        host: process.env.REDIS_HOST || "127.0.0.1",
+        port: Number(process.env.REDIS_PORT) || 6379,
+      },
+
   CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET || "",
   CLOUDINARY_NAME: process.env.CLOUDINARY_NAME || "",
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || "",
