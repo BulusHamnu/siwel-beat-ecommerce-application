@@ -2,11 +2,9 @@ import Newsletter, {
   type NewsletterInterface,
 } from "../models/newsletter.schema.js";
 import AppError, { ErrorCodes } from "../errors/appError.js";
-import sendEmail from "./sendEmail.js";
-import Template from "../utils/emailTemplate.js";
 import crypto from "crypto";
-import * as NotificationService from "./notification.service.js";
 import { NotificationType } from "../models/notification.schema.js";
+import mainQueue from "../queues/main.queue.js";
 
 /* Subcribe to news letter */
 async function addToList(
@@ -48,16 +46,42 @@ async function addToList(
 export const subscribeToNewsletter = async (email: string): Promise<void> => {
   const { token, sub } = await addToList(email);
 
-  await sendEmail(
-    email,
-    "You're Now on the List 🎉",
-    Template.newsletterSubscriptionNotification(email, token),
+  await mainQueue.add(
+    "send-newsletter-subscribed-email",
+    {
+      to: email,
+      token,
+      message: "You're Now on the List 🎉",
+    },
+    {
+      attempts: 3,
+      backoff: {
+        type: "exponential",
+        delay: 2000,
+      },
+      removeOnComplete: 1000,
+      removeOnFail: 5000,
+    },
   );
 
-  await NotificationService.notifyAdmins(
-    "Hurray! Someone just join the newsletter.",
-    NotificationType.NEWSLETTER_SUBSCRIBED,
-    sub._id as string,
+  await mainQueue.add(
+    "post-notification",
+    {
+      userId: null,
+      message: "Hurray! Someone just join the newsletter.",
+      type: NotificationType.NEWSLETTER_SUBSCRIBED,
+      resourceId: sub._id as string,
+      entityId: null,
+    },
+    {
+      attempts: 2,
+      backoff: {
+        type: "exponential",
+        delay: 2000,
+      },
+      removeOnComplete: 1000,
+      removeOnFail: 5000,
+    },
   );
 };
 
@@ -80,9 +104,20 @@ export const unsubscribeFromNewsletter = async (
       null,
     );
 
-  await sendEmail(
-    email,
-    "You’re Off the List",
-    Template.newsletterUnsubscriptionNotification(),
+  await mainQueue.add(
+    "send-newsletter-unsubscribed-email",
+    {
+      to: email,
+      message: "You’re Off the List",
+    },
+    {
+      attempts: 3,
+      backoff: {
+        type: "exponential",
+        delay: 2000,
+      },
+      removeOnComplete: 1000,
+      removeOnFail: 5000,
+    },
   );
 };

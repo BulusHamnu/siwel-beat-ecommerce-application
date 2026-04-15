@@ -25,12 +25,13 @@ export const subscribeToNewletter = async (
     const { email } = validateNewsletterBody(req.body);
 
     await newsletterService.subscribeToNewsletter(email);
-    logger.info(`${email} just subscribed to the newletter.`);
+    logger.info(`${email} just subscribed to the newsletter.`);
 
     const response: ApiResponse<void> = {
       status: true,
-      message: "Subscription was successful.",
+      message: "You've successfully subscribed to the newsletter.",
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -62,15 +63,16 @@ export const unsubscribeToNewletter = async (
     await newsletterService.unsubscribeFromNewsletter(email, token);
 
     let redirect: string =
-      env.FRONTEND_URL + "/news-letter/unsubscibe?result=SUCCESS";
+      env.FRONTEND_URL + "/news-letter/unsubscribe?result=success";
     res.status(302).redirect(redirect);
   } catch (error) {
     logger.error(
       `An error occur while trying to remove user from news-letter.`,
       error,
     );
+    //
     res
       .status(302)
-      .redirect(`${env.FRONTEND_URL}/news-letter/unsubscibe?result=ERROR`);
+      .redirect(`${env.FRONTEND_URL}/news-letter/unsubscribe?result=error`);
   }
 };

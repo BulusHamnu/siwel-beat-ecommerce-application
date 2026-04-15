@@ -15,7 +15,7 @@ await connectDb();
 const mainWorkerprocessor = async (job: Job) => {
   const name = job.name;
   const data = job.data;
-  //
+
   switch (name) {
     case "send-verification-email": {
       const { to, message, username, code } = data;
@@ -24,7 +24,6 @@ const mainWorkerprocessor = async (job: Job) => {
         message,
         Template.emailVerificationTemplate(username, code),
       );
-
       break;
     }
 
@@ -35,28 +34,44 @@ const mainWorkerprocessor = async (job: Job) => {
         message,
         Template.resetPasswordTemplate(username, code),
       );
+      break;
+    }
 
+    case "send-newsletter-subscribed-email": {
+      const { to, message, token } = data;
+      await sendEmail(
+        to,
+        message,
+        Template.newsletterSubscriptionNotification(to, token),
+      );
+      break;
+    }
+
+    case "send-newsletter-unsubscribed-email": {
+      const { to, message } = data;
+      await sendEmail(
+        to,
+        message,
+        Template.newsletterUnsubscriptionNotification(),
+      );
       break;
     }
 
     case "password-reset-confirmation": {
       const { to, message, username } = data;
       await sendEmail(to, message, Template.resetSuccessfulTemplate(username));
-
       break;
     }
 
     case "delete-track-files": {
       const { paths } = data;
       await supabase.safeRemoveTrackFiles(paths);
-
       break;
     }
 
     case "delete-files": {
       const { bucket, paths } = data;
       await supabase.deleteFiles(bucket, paths);
-
       break;
     }
 
@@ -74,7 +89,6 @@ const mainWorkerprocessor = async (job: Job) => {
         resourceId,
         entityId,
       });
-
       break;
     }
   }
