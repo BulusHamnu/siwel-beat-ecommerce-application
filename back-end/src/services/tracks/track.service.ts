@@ -12,6 +12,7 @@ import Audio, { type AudioInterface } from "../../models/audio.schema.js";
 import License, { type LicenseInterface } from "../../models/license.schema.js";
 import mongoose, { type FlattenMaps, type ClientSession } from "mongoose";
 import env from "../../configs/env.js";
+import mainQueue from "../../queues/main.queue.js";
 
 /* Create new track */
 export interface createTrackInput {
@@ -460,10 +461,23 @@ export const updateTrack = async (
         { $set: { ...licenseUpdate } },
         { session },
       );
-
-      if (oldFilesPath.length > 0)
-        await supabase.safeRemoveTrackFiles(oldFilesPath);
     });
+
+    if (oldFilesPath.length > 0) {
+      await mainQueue.add(
+        "delete-track-files",
+        { paths: oldFilesPath },
+        {
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 2000,
+          },
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        },
+      );
+    }
 
     logger.info(`Track was updated succesfully id: ${updatedTrack!._id}`);
     return updatedTrack!;
@@ -616,7 +630,21 @@ export async function deleteTrackAndFiles(trackId: string) {
       await Audio.deleteMany({ trackId }).session(session);
       await License.deleteMany({ trackId }).session(session);
 
-      await supabase.safeRemoveTrackFiles(filesPath);
+      await mainQueue.add(
+        "delete-track-files",
+        {
+          paths: filesPath,
+        },
+        {
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 2000,
+          },
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        },
+      );
     });
   } finally {
     session.endSession();

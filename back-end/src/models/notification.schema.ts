@@ -8,6 +8,8 @@ export enum NotificationType {
 
   MESSAGE_RECEIVED = "MESSAGE_RECEIVED",
   NEWSLETTER_SUBSCRIBED = "NEWSLETTER_SUBSCRIBED",
+
+  DOWNLOAD_STARTED = "DOWNLOAD_STARTED",
 }
 
 export interface notification extends Document {

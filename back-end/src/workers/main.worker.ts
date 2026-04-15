@@ -4,6 +4,8 @@ import logger from "../utils/logger.js";
 import connectDb from "../configs/db.js";
 import sendEmail from "../services/sendEmail.js";
 import Template from "../utils/emailTemplate.js";
+import supabase from "../services/supabase.js";
+import { postNewNotification } from "../services/notification.service.js";
 
 await connectDb();
 
@@ -19,6 +21,7 @@ const mainWorkerprocessor = async (job: Job) => {
         message,
         Template.emailVerificationTemplate(username, code),
       );
+
       break;
     }
 
@@ -29,12 +32,34 @@ const mainWorkerprocessor = async (job: Job) => {
         message,
         Template.resetPasswordTemplate(username, code),
       );
+
       break;
     }
 
     case "password-reset-confirmation": {
       const { to, message, username } = data;
       await sendEmail(to, message, Template.resetSuccessfulTemplate(username));
+
+      break;
+    }
+
+    case "delete-track-files": {
+      const { paths } = data;
+      await supabase.safeRemoveTrackFiles(paths);
+
+      break;
+    }
+
+    case "post-notification": {
+      const { userId, message, type, resourceId, entityId } = data;
+      await postNewNotification({
+        userId,
+        message,
+        type,
+        resourceId,
+        entityId,
+      });
+
       break;
     }
   }

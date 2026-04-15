@@ -8,8 +8,6 @@ import { type Pagination } from "../responseInterface.js";
 import logger from "../../utils/logger.js";
 import supabase, { type uploadedTrackFiles } from "../../services/supabase.js";
 import { Readable } from "stream";
-import { fileTypeFromBlob } from "file-type";
-import * as notificationService from "../../services/notification.service.js";
 import * as trackValidator from "../../utils/validators/track.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import {
@@ -19,6 +17,8 @@ import {
 import { validateTrackidParam } from "../../utils/validators/track.validator.js";
 import type { MulterTrackFiles } from "../../middlewares/upload.js";
 import Audio from "../../models/audio.schema.js";
+import mainQueue from "../../queues/main.queue.js";
+import { NotificationType } from "../../models/notification.schema.js";
 
 /* Post new track  */
 const bundleTrackFilesPath = (files: uploadedTrackFiles): string[] => {
@@ -65,7 +65,21 @@ export const postTrack = async (
   } catch (error: any) {
     // clean files
     if (paths && paths.length > 0) {
-      await supabase.safeRemoveTrackFiles(paths);
+      await mainQueue.add(
+        "delete-track-files",
+        {
+          paths,
+        },
+        {
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 2000,
+          },
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        },
+      );
     }
 
     next(error);
@@ -230,7 +244,21 @@ export const updateTrack = async (
   } catch (error) {
     // clean files
     if (paths && paths.length > 0) {
-      await supabase.safeRemoveTrackFiles(paths);
+      await mainQueue.add(
+        "delete-track-files",
+        {
+          paths,
+        },
+        {
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 2000,
+          },
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        },
+      );
     }
     next(error);
   }
@@ -279,11 +307,24 @@ export const downloadTrackFile = async (
       requestedFile: type,
     });
 
-    await notificationService.postNewNotification(
-      user.id,
-      "Your download is ready.",
-      "DOWNLOAD_STARTED",
-      trackId,
+    await mainQueue.add(
+      "post-notification",
+      {
+        userId: user.id,
+        message: "Your download is ready.",
+        type: NotificationType.DOWNLOAD_STARTED,
+        resourceId: trackId,
+        entityId: null,
+      },
+      {
+        attempts: 2,
+        backoff: {
+          type: "exponential",
+          delay: 2000,
+        },
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+      },
     );
 
     res.status(200).json({ downloadUrl });
