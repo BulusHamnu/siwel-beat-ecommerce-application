@@ -57,6 +57,7 @@ app.use("/api/v1/admin", adminRoutes);
 
 /* Error handler */
 app.use(errorHandler);
+console.log(env);
 
 /* Initiate Db connection */
 await connectDb();
