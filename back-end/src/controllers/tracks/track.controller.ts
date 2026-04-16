@@ -42,7 +42,7 @@ export const postTrack = async (
   let paths: string[] = [];
 
   try {
-    const files = req.files as MulterTrackFiles;
+    const files = req.files as unknown as MulterTrackFiles;
 
     trackValidator.validateTrackFiles(files);
     const trackData = validateAndSanitizeBody(
@@ -217,7 +217,7 @@ export const updateTrack = async (
 
   try {
     const trackId = validateTrackidParam(req.params.id);
-    const files = req.files as MulterTrackFiles;
+    const files = req.files as unknown as MulterTrackFiles;
 
     const trackData = validateAndSanitizeBody(
       req.body,
