@@ -79,7 +79,8 @@ async function attachItemsToOrders(
 ): Promise<OrderPlusItems[]> {
   const orderMap = new Map<string, any>();
 
-  orders.forEach((order) => {
+  type orderWithItems = OrderInterface & { items?: OrderItemInterface[] };
+  orders.forEach((order: orderWithItems) => {
     order.items = [];
     orderMap.set(String(order._id), order);
   });
@@ -90,8 +91,9 @@ async function attachItemsToOrders(
   }).lean<OrderItemInterface[]>();
 
   ordersItems.forEach((item) => {
-    const order = orderMap.get(item.orderId.toString());
-    order.items.push(item);
+    const order: orderWithItems = orderMap.get(item.orderId.toString());
+    if (!order) return;
+    order.items?.push(item);
   });
 
   return [...orders];
