@@ -73,6 +73,7 @@ export const getComment = async (
       message: "Comment retrieved successfully.",
       data: comment,
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);

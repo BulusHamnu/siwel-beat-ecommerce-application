@@ -7,14 +7,14 @@ import * as adminService from "../services/admin.service.js";
 export const getDashboard = async (
   req: Request,
   res: Response<ApiResponse<dashboardStatistics>>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
     const dashboard = await adminService.getDashboard();
     const response: ApiResponse<dashboardStatistics> = {
       status: true,
-      message: "Dashboard retrived successfully.",
+      message: "Dashboard retrieved successfully.",
       data: dashboard,
     };
 

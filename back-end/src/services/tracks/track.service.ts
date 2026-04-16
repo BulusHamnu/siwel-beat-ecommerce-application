@@ -292,7 +292,7 @@ export async function publishTrack(trackId: string): Promise<TrackInterface> {
         );
     });
 
-    logger.info("Track was published successfully.", {
+    logger.info("Track published successfully.", {
       trackId: publishedTrack!._id,
     });
 

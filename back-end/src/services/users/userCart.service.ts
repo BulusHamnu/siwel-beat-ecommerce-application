@@ -6,7 +6,6 @@ import Cart, {
   type CartInterface,
 } from "../../models/cart.schema.js";
 import { type ObjectId } from "mongoose";
-import mongoose, { Types } from "mongoose";
 
 /* Add to cart */
 export const addToCart = async (
@@ -94,8 +93,6 @@ export const removeFromCart = async (
       true,
       null,
     );
-
-  console.log(updated);
 };
 
 /* Get user cart */
@@ -125,8 +122,6 @@ function validateItemsStatus(
     } else {
       product.status = ItemStatus.active;
     }
-
-    //
   });
 }
 

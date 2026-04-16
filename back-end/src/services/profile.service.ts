@@ -35,6 +35,7 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
   const profileObj = profile?.toObject();
 
   return {
+    id: user._id,
     username: user.username,
     isVerified: user.isVerified,
     email: user.email,
@@ -148,6 +149,7 @@ export const updateProfile = async (
     const profileObj = profile?.toObject();
 
     return {
+      id: user._id,
       username: user.username,
       isVerified: user.isVerified,
       email: user.email,

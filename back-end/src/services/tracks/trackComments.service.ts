@@ -133,7 +133,7 @@ async function sendCommentNotification({
     }
 
     default: {
-      logger.warn("Unidentified comment notification type.");
+      logger.debug(`Unidentified comment notification type: ${type}`);
       break;
     }
   }
@@ -302,16 +302,27 @@ export const deleteComment = async (
   const session = await mongoose.startSession();
 
   try {
-    await Comment.deleteOne({
-      _id: commentId,
-      trackId: id,
-      userId,
-    }).session(session);
+    await session.withTransaction(async () => {
+      const deleted = await Comment.deleteOne({
+        _id: commentId,
+        trackId: id,
+        userId,
+      }).session(session);
 
-    await Comment.deleteMany({
-      parentId: commentId,
-      trackId: id,
-    }).session(session);
+      if (deleted.deletedCount !== 1)
+        throw new AppError(
+          ErrorCodes.COMMENT_NOT_FOUND,
+          "Comment not found.",
+          404,
+          true,
+          null,
+        );
+
+      await Comment.deleteMany({
+        parentId: commentId,
+        trackId: id,
+      }).session(session);
+    });
     //
   } finally {
     session.endSession();

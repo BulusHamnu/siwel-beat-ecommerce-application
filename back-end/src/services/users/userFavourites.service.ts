@@ -25,7 +25,7 @@ export const addFavouriteTrack = async (
     if (error.code === 11000)
       throw new AppError(
         ErrorCodes.FAVOURITE_ALREADY_EXISTS,
-        "Track already exists in the favourites.",
+        "Track already exists in favourites.",
         400,
         true,
         null,

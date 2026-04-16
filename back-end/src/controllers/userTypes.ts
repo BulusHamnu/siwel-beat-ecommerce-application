@@ -1,3 +1,4 @@
+import { type ObjectId } from "mongoose";
 // userbody types
 export interface CreateUserBody {
   firstName: string;
@@ -15,6 +16,7 @@ export interface CreateUserBody {
 }
 
 export interface UserProfile {
+  id: string | ObjectId;
   _id: string;
   email: string;
   isVerified: boolean;

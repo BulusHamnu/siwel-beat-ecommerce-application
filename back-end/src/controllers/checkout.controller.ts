@@ -28,13 +28,13 @@ export const checkOut = async (
 
     const response: ApiResponse<{ url: string }> = {
       status: true,
-      message: "Checkout summary retrived successfully.",
+      message: "Checkout summary retrieved successfully.",
       data: {
         url,
       },
     };
 
-    res.status(201).json(response);
+    res.status(200).json(response);
   } catch (error) {
     next(error);
   }

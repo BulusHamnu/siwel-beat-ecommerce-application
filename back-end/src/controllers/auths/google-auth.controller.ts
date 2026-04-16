@@ -41,7 +41,7 @@ export const getGoogleOauthUrl = async (
     });
 
     const url = `${env.GOOGLE_OAUTH2_URL}?${authparams.toString()}`;
-    logger.info(`Google Oauth prompt url requested for: ${state}`);
+    logger.info(`Google Oauth url requested for: ${state}`);
 
     const response: ApiResponse<{ url: string }> = {
       status: true,
@@ -50,6 +50,7 @@ export const getGoogleOauthUrl = async (
         url,
       },
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);

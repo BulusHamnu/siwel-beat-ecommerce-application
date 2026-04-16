@@ -16,20 +16,27 @@ import * as sessionController from "../../controllers/users/userSession.controll
 
 const router = Router();
 
-/* Public user endpoints */
-router.get("/:id", profileController.getUserPublicProfile);
-router.get("/:id/favourites", profileController.getUserFavourites);
-
-router.use(requiredAuth);
-router.use(allowRole("user"));
-
 /* Profile */
-router.get("/me", generalApiLimiter(), profileController.getProfile);
-router.patch("/me", creationApiLimiter(), profileController.updateProfile);
+router.get(
+  "/me",
+  generalApiLimiter(),
+  requiredAuth,
+  allowRole("user"),
+  profileController.getProfile,
+);
+router.patch(
+  "/me",
+  creationApiLimiter(),
+  requiredAuth,
+  allowRole("user"),
+  profileController.updateProfile,
+);
 
 router.patch(
   "/me/avatar",
   rateLimiter(20, 10 * 60 * 1000),
+  requiredAuth,
+  allowRole("user"),
   uploadPicture,
   profileController.updateUserAvatar,
 );
@@ -37,38 +44,68 @@ router.patch(
 router.delete(
   "/me/avatar",
   rateLimiter(25, 10 * 60 * 1000),
+  requiredAuth,
+  allowRole("user"),
   profileController.removeUserAvatar,
 );
 
 /* Session routes */
-router.get("/me/sessions", generalApiLimiter(), sessionController.getSessions);
+router.get(
+  "/me/sessions",
+  generalApiLimiter(),
+  requiredAuth,
+  allowRole("user"),
+  sessionController.getSessions,
+);
 router.delete(
   "/me/sessions/:id",
   generalApiLimiter(),
+  requiredAuth,
+  allowRole("user"),
   sessionController.removeSession,
 );
 
 /* Notification Route */
-router.use("/me", notificationRoutes);
-router.use("/me", favoritesRoutes);
+router.use("/me", requiredAuth, allowRole("user"), notificationRoutes);
+router.use("/me", requiredAuth, allowRole("user"), favoritesRoutes);
 
 /* Orders routes */
-router.get("/me/orders", generalApiLimiter(), orderController.getAllOrders);
-router.get("/me/orders/:id", generalApiLimiter(), orderController.getOrder);
+router.get(
+  "/me/orders",
+  generalApiLimiter(),
+  requiredAuth,
+  allowRole("user"),
+  orderController.getAllOrders,
+);
+router.get(
+  "/me/orders/:id",
+  generalApiLimiter(),
+  requiredAuth,
+  allowRole("user"),
+  orderController.getOrder,
+);
 
 /* Purchases routes */
 router.get(
   "/me/purchases",
   generalApiLimiter(),
+  requiredAuth,
+  allowRole("user"),
   purchaseController.getAllPurchases,
 );
 router.get(
   "/me/purchases/:id",
   generalApiLimiter(),
+  requiredAuth,
+  allowRole("user"),
   purchaseController.getPurchase,
 );
 
 /* Cart routes */
-router.use("/me", cartRoutes);
+router.use("/me", requiredAuth, allowRole("user"), cartRoutes);
+
+/* Public user endpoints */
+router.get("/:id", profileController.getUserPublicProfile);
+router.get("/:id/favourites", profileController.getUserFavourites);
 
 export default router;

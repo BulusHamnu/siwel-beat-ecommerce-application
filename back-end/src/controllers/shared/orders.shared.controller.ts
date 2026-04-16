@@ -6,7 +6,7 @@ import { type OrderPlusItems } from "../../services/shared/ordersShared.service.
 import * as orderValidator from "../../utils/validators/order.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 
-/* Get all user orders controller */
+/* Get all user orders  */
 interface OrdersQueryBody {
   page: number;
   limit: number;
@@ -46,7 +46,7 @@ export const getAllOrders = async (
   }
 };
 
-/* Get an order controller */
+/* Get an order  */
 export const getOrder = async (
   req: Request<{ id: string }, ApiResponse<OrderPlusItems>, {}, {}>,
   res: Response<ApiResponse<OrderPlusItems>>,
@@ -60,7 +60,7 @@ export const getOrder = async (
 
     const response: ApiResponse<OrderPlusItems> = {
       status: true,
-      message: "Order retrived successfully.",
+      message: "Order retrieved successfully.",
       data: order,
     };
 

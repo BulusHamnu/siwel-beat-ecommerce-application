@@ -48,7 +48,7 @@ export const removeFromCart = async (
 
     const response: ApiResponse<void> = {
       status: true,
-      message: "Product was removed from cart sucessfully.",
+      message: "Product was removed from cart.",
     };
 
     res.status(200).json(response);

@@ -12,6 +12,7 @@ import { checkAndResizeImgRatio } from "../utils/helpers.js";
 import mainQueue from "../queues/main.queue.js";
 import { getFavourites } from "../services/users/userFavourites.service.js";
 import type { FavouriteInterface } from "../models/favourite.schema.js";
+import type { ObjectId } from "mongoose";
 
 /* Get user profile  */
 export const getProfile = async (
@@ -160,6 +161,7 @@ export const removeUserAvatar = async (
 
 /* Get user's public profile */
 interface ProfileSnapshot {
+  id: string | ObjectId;
   username: string;
   isVerified: boolean;
   email: string;
@@ -187,12 +189,14 @@ export const getUserPublicProfile = async (
       lastName,
       gender,
       bio,
+      id,
     }: UserProfile = await userService.getProfile(userId);
 
     const response: ApiResponse<ProfileSnapshot> = {
       status: true,
       message: "User's profile retrieved successfully.",
       data: {
+        id,
         username,
         isVerified,
         email,

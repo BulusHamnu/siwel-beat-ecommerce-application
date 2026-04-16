@@ -2,7 +2,6 @@ import type { Response, Request, NextFunction } from "express";
 import AppError, { ErrorCodes } from "../errors/appError.js";
 
 const allowRole = (...roles: string[]): any => {
-  // return role checking middleware
   return async (
     req: Request<{}, {}, {}, {}>,
     res: Response<{}>,

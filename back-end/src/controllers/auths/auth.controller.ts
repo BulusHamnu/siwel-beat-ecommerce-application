@@ -7,7 +7,6 @@ import env from "../../configs/env.js";
 import * as authValidator from "../../utils/validators/auth.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
-import User from "../../models/user.schema.js";
 import Session from "../../models/session.schema.js";
 
 /* Sign up new user */
@@ -23,7 +22,7 @@ export const signUp = async (
     );
 
     const newUser = await authService.createNewUser(cleanSignupBody);
-    logger.info("User created successully!", { userId: newUser._id });
+    logger.info("User created successully.", { userId: newUser._id });
 
     const response: ApiResponse<void> = {
       status: true,
@@ -70,9 +69,10 @@ export const logIn = async (
     res.cookie("refreshToken", refreshToken, env.LOGIN_COOKIE_OPTS);
     const response: ApiResponse<LoginReturnType> = {
       status: true,
-      message: "Login successully!",
+      message: "Login successully.",
       data: { user, accessToken },
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -103,6 +103,7 @@ export const refreshToken = async (
       message: "Access token",
       data: { accessToken },
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -132,6 +133,7 @@ export const verifyEmail = async (
       status: true,
       message: "Email verified successfully.",
     };
+
     res.status(200).json(response);
   } catch (error: unknown) {
     next(error);
@@ -154,6 +156,7 @@ export const resendVeficationEmail = async (
       status: true,
       message: "Verification email sent successfully.",
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -181,6 +184,7 @@ export const forgetPassword = async (
       status: true,
       message: "Reset password code sent successfully.",
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -214,6 +218,7 @@ export const verifyResetPasswordOtp = async (
       message: "Code is valid.",
       data: { resetToken },
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -243,6 +248,7 @@ export const resetpassword = async (
       status: true,
       message: "Password reset successfully!",
     };
+
     res.status(200).json(response);
   } catch (error) {
     next(error);

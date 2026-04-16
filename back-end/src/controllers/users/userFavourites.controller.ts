@@ -22,7 +22,7 @@ export const addToMyFavourites = async (
 
     const response: ApiResponse<void> = {
       status: true,
-      message: "Track was added to favourites list.",
+      message: "Track was added to favourites.",
     };
 
     res.status(201).json(response);
@@ -43,7 +43,7 @@ export const getMyFavourites = async (
     const favourites = await favouriteServices.getFavourites(user.id);
     const response: ApiResponse<FavouriteInterface[]> = {
       status: true,
-      message: "Favourite tracks retrieved successfully.",
+      message: "Favourites retrieved successfully.",
       data: favourites,
     };
 
@@ -69,7 +69,7 @@ export const removeFromFavourites = async (
     await favouriteServices.removeFromFavourites(trackId, user.id);
     const response: ApiResponse<void> = {
       status: true,
-      message: "Track was removed succefully.",
+      message: "Track was removed successfully.",
     };
 
     res.status(200).json(response);
