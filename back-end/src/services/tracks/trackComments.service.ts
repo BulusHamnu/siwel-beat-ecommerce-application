@@ -1,6 +1,5 @@
 import Comment, { type CommentInterface } from "../../models/comment.schema.js";
 import mongoose, { type FlattenMaps, type ObjectId } from "mongoose";
-import * as notificationService from "../notification.service.js";
 import { NotificationType } from "../../models/notification.schema.js";
 import Track from "../../models/track.schema.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
@@ -21,13 +20,25 @@ export interface parentComment extends Omit<CommentInterface, "userId"> {
   };
 }
 
+function isSelfAction(
+  actorUserId: ObjectId | string | undefined,
+  targetUserId: ObjectId | undefined,
+): boolean {
+  if (!targetUserId || !actorUserId) return false;
+  return String(targetUserId) === String(actorUserId);
+}
+
 async function sendCommentNotification({
   parentCommentId,
+  commentUserId = undefined,
+  likeUserId = undefined,
   resourceId,
   entityId,
   type,
 }: {
   parentCommentId: ObjectId | null;
+  commentUserId?: ObjectId | undefined;
+  likeUserId?: ObjectId | undefined;
   resourceId: string;
   entityId: string;
   type: string;
@@ -39,6 +50,8 @@ async function sendCommentNotification({
       const parentComment = (await Comment.findOne({
         _id: parentCommentId,
       }).populate("userId", "username  _id")) as parentComment | null;
+
+      if (isSelfAction(parentComment?.userId._id, commentUserId)) return;
 
       await mainQueue.add(
         "post-notification",
@@ -94,6 +107,8 @@ async function sendCommentNotification({
         _id: entityId,
       }).populate("userId", "username _id")) as populatedComment | null;
 
+      if (isSelfAction(comment?.userId._id, likeUserId)) return;
+
       await mainQueue.add(
         "post-notification",
         {
@@ -145,6 +160,7 @@ export const postNewComment = async (
       ? NotificationType.COMMENT_REPLIED
       : NotificationType.TRACK_COMMENTED,
     parentCommentId: parentId,
+    commentUserId: comment.userId,
     resourceId: trackId,
     entityId: comment._id as string,
   });
@@ -340,6 +356,7 @@ export const likeComment = async (
         await sendCommentNotification({
           type: NotificationType.COMMENT_LIKED,
           parentCommentId: null,
+          likeUserId: newCommentLike.userId,
           resourceId: trackId,
           entityId: updatedComment._id as string,
         });
