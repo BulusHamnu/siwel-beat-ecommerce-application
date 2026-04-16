@@ -15,11 +15,12 @@ import contactMeRoutes from "./routes/contactme.routes.js";
 import newsLetterRoutes from "./routes/newsletter.routes.js";
 import checkoutRoutes from "./routes/checkout.routes.js";
 import helmet from "helmet";
+import { mainWorkerprocessor, workerConfigs } from "./workers/main.worker.js";
+import { Worker } from "bullmq";
 
-// Initiate server
 const app: Express = express();
 
-// Middlewares
+/* Middlewares */
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -38,7 +39,7 @@ app.use(
 );
 app.use(cookieParser());
 
-// Routes
+/* Routes */
 app.get("/", (req: Request, res: Response, next: NextFunction): void => {
   try {
     res.send("<h1>Hello World</h1>");
@@ -50,15 +51,28 @@ app.use("/api/v1/contact-me", contactMeRoutes);
 app.use("/api/v1/news-letter", newsLetterRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tracks", trackRoutes);
-app.use("/api/v1/checkout", checkoutRoutes);
+app.use("/api/v1/checkouts", checkoutRoutes);
 app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1/admin", adminRoutes);
 
-// error handler
+/* Error handler */
 app.use(errorHandler);
 
+/* Initiate Db connection */
 await connectDb();
 
+/* Initiate worker */
+const mainWorker = new Worker(
+  "main-queue",
+  mainWorkerprocessor,
+  workerConfigs.opts,
+);
+
+mainWorker.on("completed", workerConfigs.jobCompletedCallbackFunc);
+mainWorker.on("failed", workerConfigs.jobFailedCallbackFunc);
+mainWorker.on("ready", workerConfigs.onReadyCallbackFunc);
+
+/* Start server */
 app.listen(env.PORT, async (): Promise<void> => {
   logger.info(`Server started on: http://localhost:${env.PORT}`);
 });

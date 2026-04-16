@@ -10,9 +10,8 @@ import {
   notifyAdmins,
 } from "../services/notification.service.js";
 
-await connectDb();
-
-const mainWorkerprocessor = async (job: Job) => {
+/* Main worker processor*/
+export const mainWorkerprocessor = async (job: Job) => {
   const name = job.name;
   const data = job.data;
 
@@ -94,23 +93,20 @@ const mainWorkerprocessor = async (job: Job) => {
   }
 };
 
-/* Main worker */
-const connection = env.REDIS_CONNECTION;
-const mainWorker = new Worker("main-queue", mainWorkerprocessor, {
-  prefix: "siwelbeat-app",
-  connection,
-  concurrency: 5,
-});
-
-//
-mainWorker.on("completed", (job: Job) => {
-  const data = job.data;
-  logger.info(`${job.name} - job was executed successfully`, data);
-});
-
-mainWorker.on("failed", (job: Job | undefined) => {
-  const data = job?.data;
-  logger.error(`An error occured while executing - ${job?.name} job.`, data);
-});
-
-export default mainWorker;
+/* Worker config */
+export const workerConfigs = {
+  opts: {
+    prefix: "siwelbeat-app",
+    connection: env.REDIS_CONNECTION,
+    concurrency: 5,
+  },
+  jobCompletedCallbackFunc: (job: Job) => {
+    const data = job.data;
+    logger.info(`${job.name} - job was executed successfully`, data);
+  },
+  jobFailedCallbackFunc: (job: Job | undefined) => {
+    const data = job?.data;
+    logger.error(`An error occured while executing - ${job?.name} job.`, data);
+  },
+  onReadyCallbackFunc: () => logger.info("Worker is ready"),
+};
