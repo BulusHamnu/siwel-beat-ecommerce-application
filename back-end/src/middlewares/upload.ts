@@ -68,6 +68,7 @@ const imageAllowedFileType: string[] = [
   "image/svg+xml",
   "image/webp",
 ];
+
 const fileFilter = async (
   req: Request,
   file: Express.Multer.File,
@@ -150,7 +151,7 @@ const upload = multer({
 ]);
 
 /* Profile picture multer middlware */
-export const uploadPicture = multer({
+export const uploadAvatar = multer({
   limits: { fieldSize: 5000000 },
   storage,
   fileFilter: (

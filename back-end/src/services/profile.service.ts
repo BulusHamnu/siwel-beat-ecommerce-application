@@ -162,7 +162,7 @@ export const updateProfile = async (
 };
 
 /* Update user avatar */
-export const updateUserAvatar = async (
+export const updateAvatar = async (
   userId: string,
   pictureUrl: string,
 ): Promise<string> => {
@@ -207,7 +207,7 @@ export const updateUserAvatar = async (
 };
 
 /* Remove user profile avatar */
-export async function removeUserAvatar(userId: string) {
+export async function removeAvatar(userId: string) {
   const user: UserInterface | null = await User.findOne({ _id: userId });
   if (!user) {
     throw new AppError(

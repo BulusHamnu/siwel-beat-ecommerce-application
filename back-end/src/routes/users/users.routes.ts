@@ -1,7 +1,7 @@
 import { Router } from "express";
 import requiredAuth from "../../middlewares/requiredAuth.js";
 import allowRole from "../../middlewares/allowRole.js";
-import { uploadPicture } from "../../middlewares/upload.js";
+import { uploadAvatar } from "../../middlewares/upload.js";
 import * as orderController from "../../controllers/shared/orders.shared.controller.js";
 import * as profileController from "../../controllers/profile.controller.js";
 import * as purchaseController from "../../controllers/users/userPurchases.controller.js";
@@ -24,6 +24,7 @@ router.get(
   allowRole("user"),
   profileController.getProfile,
 );
+
 router.patch(
   "/me",
   creationApiLimiter(),
@@ -37,8 +38,8 @@ router.patch(
   rateLimiter(20, 10 * 60 * 1000),
   requiredAuth,
   allowRole("user"),
-  uploadPicture,
-  profileController.updateUserAvatar,
+  uploadAvatar,
+  profileController.updateProfileAvatar,
 );
 
 router.delete(
@@ -46,7 +47,7 @@ router.delete(
   rateLimiter(25, 10 * 60 * 1000),
   requiredAuth,
   allowRole("user"),
-  profileController.removeUserAvatar,
+  profileController.removeProfileAvatar,
 );
 
 /* Sessions routes */

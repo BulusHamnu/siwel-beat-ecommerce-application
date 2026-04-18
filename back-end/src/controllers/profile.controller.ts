@@ -88,9 +88,9 @@ async function uploadAvatar(imageFile: Express.Multer.File) {
   );
 }
 
-export const updateUserAvatar = async (
-  req: Request<{}, ApiResponse<{ avatarUrl: string }>, {}, {}>,
-  res: Response<ApiResponse<{ avatarUrl: string }>>,
+export const updateProfileAvatar = async (
+  req: Request<{}, ApiResponse<{ url: string }>, {}, {}>,
+  res: Response<ApiResponse<{ url: string }>>,
   next: NextFunction,
 ): Promise<void> => {
   let pictureUrl: string = "";
@@ -109,13 +109,14 @@ export const updateUserAvatar = async (
       );
 
     const pictureUrl = await uploadAvatar(imageFile);
-    const avatarUrl = await userService.updateUserAvatar(userId, pictureUrl);
+    const avatarUrl = await userService.updateAvatar(userId, pictureUrl);
 
-    const response: ApiResponse<{ avatarUrl: string }> = {
+    const response: ApiResponse<{ url: string }> = {
       status: true,
-      message: "User avatar was uploaded successfully.",
-      data: { avatarUrl },
+      message: "Avatar was uploaded successfully.",
+      data: { url: avatarUrl },
     };
+
     res.status(200).json(response);
   } catch (error) {
     if (pictureUrl) {
@@ -139,18 +140,18 @@ export const updateUserAvatar = async (
 };
 
 /* Remove profile avatar */
-export const removeUserAvatar = async (
+export const removeProfileAvatar = async (
   req: Request<{}, ApiResponse<null>, {}, {}>,
   res: Response<ApiResponse<null>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    await userService.removeUserAvatar(userId);
+    await userService.removeAvatar(userId);
 
     const response: ApiResponse<null> = {
       status: true,
-      message: "User avatar was removed successfully.",
+      message: "Avatar was removed successfully.",
     };
 
     res.status(200).json(response);

@@ -5,7 +5,7 @@ import allowRole from "../middlewares/allowRole.js";
 import * as ordersController from "../controllers/shared/orders.shared.controller.js";
 import * as notificationController from "../controllers/shared/notification.controller.js";
 import * as profileController from "../controllers/profile.controller.js";
-import { uploadPicture } from "../middlewares/upload.js";
+import { uploadAvatar } from "../middlewares/upload.js";
 import rateLimiter, {
   creationApiLimiter,
   generalApiLimiter,
@@ -23,19 +23,20 @@ router.get(
   rateLimiter(20, 10 * 60 * 1000),
   profileController.getProfile,
 );
+
 router.patch("/me", creationApiLimiter(), profileController.updateProfile);
 
 router.patch(
   "/me/avatar",
   rateLimiter(20, 10 * 60 * 1000),
-  uploadPicture,
-  profileController.updateUserAvatar,
+  uploadAvatar,
+  profileController.updateProfileAvatar,
 );
 
 router.delete(
   "/me/avatar",
   rateLimiter(25, 10 * 60 * 1000),
-  profileController.removeUserAvatar,
+  profileController.removeProfileAvatar,
 );
 
 /* Sessions routes */
