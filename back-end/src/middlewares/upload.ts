@@ -93,14 +93,14 @@ const fileFilter = async (
   }
   // Check audio files
   if (file.fieldname === "untaggedAudio" || file.fieldname === "taggedAudio") {
-    const allowedAudioMimeTypes = ["audio/mpeg", "audio/wav", "audio/midi"];
+    const allowedAudioMimeTypes = ["audio/mpeg"]; // "audio/wav", "audio/midi"; Only allowed mp3 for now
     if (allowedAudioMimeTypes.includes(fileType)) {
       cb(null, true);
     } else {
       cb(
         new AppError(
           ErrorCodes.VALIDATION_ERROR,
-          "Only audio files are allowed.",
+          "Only mp3 audio files are allowed.",
           400,
           true,
           null,
@@ -140,7 +140,7 @@ const fileFilter = async (
 /* Track upload multer middleware */
 const upload = multer({
   storage,
-  limits: { fileSize: 5000000 },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter,
 }).fields([
   { name: "coverImage", maxCount: 1 },
