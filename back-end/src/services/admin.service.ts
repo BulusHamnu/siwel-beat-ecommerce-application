@@ -7,7 +7,7 @@ export interface dashboardStatistics {
   newUsers: number;
   totalOrders: number;
   totalSuccessfulOrders: number;
-  totalActiveBeat: number;
+  totalPublishedBeat: number;
   totalBeat: number;
   totalUsers: number;
 }
@@ -19,11 +19,11 @@ function getThreeDayRange(): { start: string; end: string } {
   const year = today.getFullYear();
 
   const start = new Date(
-    Date.UTC(year, month, date - 2, 0, 0, 0)
+    Date.UTC(year, month, date - 2, 0, 0, 0),
   ).toISOString();
 
   const end = new Date(
-    Date.UTC(year, month, date, 23, 59, 59, 999)
+    Date.UTC(year, month, date, 23, 59, 59, 999),
   ).toISOString();
 
   return { start, end };
@@ -45,8 +45,8 @@ export const getDashboard = async (): Promise<dashboardStatistics> => {
 
   // beat stats
   const totalBeatQuery = Track.find().countDocuments();
-  const totalActiveBeatQuery = Track.find({
-    status: "active",
+  const totalPublishedBeatQuery = Track.find({
+    status: "published",
   }).countDocuments();
 
   //orders stats
@@ -59,14 +59,14 @@ export const getDashboard = async (): Promise<dashboardStatistics> => {
     newUsers,
     totalUsers,
     totalBeat,
-    totalActiveBeat,
+    totalPublishedBeat,
     totalOrders,
     totalSuccessfulOrders,
   ] = await Promise.all([
     newUserQuery,
     totalUsersQuery,
     totalBeatQuery,
-    totalActiveBeatQuery,
+    totalPublishedBeatQuery,
     totalOrdersQuery,
     totalSuccessOrdersQuery,
   ]);
@@ -75,7 +75,7 @@ export const getDashboard = async (): Promise<dashboardStatistics> => {
     newUsers,
     totalUsers,
     totalBeat,
-    totalActiveBeat,
+    totalPublishedBeat,
     totalOrders,
     totalSuccessfulOrders,
   } as dashboardStatistics;
