@@ -14,7 +14,7 @@ export const getDashboard = async (
     const dashboard = await adminService.getDashboard();
     const response: ApiResponse<dashboardStatistics> = {
       status: true,
-      message: "Dashboard retrieved successfully.",
+      message: "Dashboard stats retrieved successfully.",
       data: dashboard,
     };
 

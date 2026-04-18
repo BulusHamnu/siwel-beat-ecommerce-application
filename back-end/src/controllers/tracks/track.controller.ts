@@ -276,7 +276,7 @@ export async function retrieveTrackMedia(
     const data = await trackService.retrieveTrackMedia(trackId);
     const response: ApiResponse<trackService.TrackMedia> = {
       status: true,
-      message: "Track files retrieved successfully.",
+      message: "Track media retrieved successfully.",
       data: data,
     };
 
