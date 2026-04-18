@@ -12,7 +12,7 @@ import rateLimiter, {
   generalApiLimiter,
   creationApiLimiter,
 } from "../../middlewares/rateLimiter.js";
-import * as sessionController from "../../controllers/users/userSession.controller.js";
+import * as sessionController from "../../controllers/shared/session.controller.js";
 
 const router = Router();
 
@@ -49,7 +49,7 @@ router.delete(
   profileController.removeUserAvatar,
 );
 
-/* Session routes */
+/* Sessions routes */
 router.get(
   "/me/sessions",
   generalApiLimiter(),

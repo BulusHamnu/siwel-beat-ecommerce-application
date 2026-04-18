@@ -1,10 +1,19 @@
-import AppError, { ErrorCodes } from "../../errors/appError.js";
-import Session from "../../models/session.schema.js";
+import AppError, { ErrorCodes } from "../errors/appError.js";
+import Session, { type SessionInterface } from "../models/session.schema.js";
 import mongoose from "mongoose";
 
 /* Get user session function */
 export async function getUserSessions(userId: string) {
-  return await Session.find({ userId });
+  const userSessions = await Session.find({ userId }).lean<
+    SessionInterface[]
+  >();
+
+  const sessionsX: SessionInterface[] = userSessions.map((session: any) => {
+    delete session.refreshToken;
+    return session;
+  });
+
+  return sessionsX;
 }
 
 /* Delete a session */

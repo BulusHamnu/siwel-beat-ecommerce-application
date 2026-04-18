@@ -10,6 +10,7 @@ import rateLimiter, {
   creationApiLimiter,
   generalApiLimiter,
 } from "../middlewares/rateLimiter.js";
+import * as sessionController from "../controllers/shared/session.controller.js";
 
 const router = Router();
 
@@ -28,6 +29,22 @@ router.patch(
   rateLimiter(20, 10 * 60 * 1000),
   uploadPicture,
   profileController.updateUserAvatar,
+);
+
+/* Sessions routes */
+router.get(
+  "/me/sessions",
+  generalApiLimiter(),
+  requiredAuth,
+  allowRole("admin"),
+  sessionController.getSessions,
+);
+router.delete(
+  "/me/sessions/:id",
+  generalApiLimiter(),
+  requiredAuth,
+  allowRole("admin"),
+  sessionController.removeSession,
 );
 
 /* Dashboard routes */

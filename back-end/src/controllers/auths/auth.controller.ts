@@ -69,7 +69,7 @@ export const logIn = async (
     res.cookie("refreshToken", refreshToken, env.LOGIN_COOKIE_OPTS);
     const response: ApiResponse<LoginReturnType> = {
       status: true,
-      message: "Login successully.",
+      message: "Login successfully.",
       data: { user, accessToken },
     };
 
@@ -100,7 +100,7 @@ export const refreshToken = async (
 
     const response: ApiResponse<{ accessToken: string }> = {
       status: true,
-      message: "Access token",
+      message: "Access token retrieved successfully.",
       data: { accessToken },
     };
 

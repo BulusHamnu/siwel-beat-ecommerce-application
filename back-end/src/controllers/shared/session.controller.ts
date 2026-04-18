@@ -1,7 +1,7 @@
 import type { Response, Request, NextFunction } from "express";
 import { type ApiResponse } from "../responseInterface.js";
 import { type SessionInterface } from "../../models/session.schema.js";
-import * as sessionService from "../../services/users/userSession.service.js";
+import * as sessionService from "../../services/session.service.js";
 
 /* Get sessions handler */
 export const getSessions = async (
