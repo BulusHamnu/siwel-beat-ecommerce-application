@@ -24,11 +24,18 @@ router.get(
   profileController.getProfile,
 );
 router.patch("/me", creationApiLimiter(), profileController.updateProfile);
+
 router.patch(
-  "/me/picture",
+  "/me/avatar",
   rateLimiter(20, 10 * 60 * 1000),
   uploadPicture,
   profileController.updateUserAvatar,
+);
+
+router.delete(
+  "/me/avatar",
+  rateLimiter(25, 10 * 60 * 1000),
+  profileController.removeUserAvatar,
 );
 
 /* Sessions routes */
@@ -39,6 +46,7 @@ router.get(
   allowRole("admin"),
   sessionController.getSessions,
 );
+
 router.delete(
   "/me/sessions/:id",
   generalApiLimiter(),
