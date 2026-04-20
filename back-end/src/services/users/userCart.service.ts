@@ -126,15 +126,19 @@ function validateItemsStatus(
 }
 
 export async function retrieveCart(userId: string): Promise<CartInterface> {
-  let userCart = await Cart.findOne({ userId }).lean<CartInterface>();
-  if (!userCart)
-    throw new AppError(
-      ErrorCodes.CART_NOT_FOUND,
-      "Cart not found.",
-      404,
-      true,
-      null,
-    );
+  const userCart: CartInterface = await Cart.findOneAndUpdate(
+    { userId },
+    {
+      $setOnInsert: {
+        userId,
+        items: [],
+      },
+    },
+    {
+      upsert: true,
+      new: true,
+    },
+  ).lean<CartInterface>();
 
   return userCart;
 }

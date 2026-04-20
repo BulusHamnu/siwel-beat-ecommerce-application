@@ -160,7 +160,7 @@ export const postNewComment = async (
     if (!parentComment)
       throw new AppError(
         ErrorCodes.PARENT_COMMENT_NOT_FOUND,
-        "Parent comment not found..",
+        "Parent comment not found.",
         404,
         true,
         null,
