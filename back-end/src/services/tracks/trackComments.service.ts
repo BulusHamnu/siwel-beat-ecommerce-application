@@ -154,6 +154,19 @@ export const postNewComment = async (
       null,
     );
 
+  if (parentId) {
+    const parentComment = await Comment.findOne({ _id: parentId });
+
+    if (!parentComment)
+      throw new AppError(
+        ErrorCodes.PARENT_COMMENT_NOT_FOUND,
+        "Parent comment not found..",
+        404,
+        true,
+        null,
+      );
+  }
+
   const comment = await Comment.create({ content, parentId, trackId, userId });
   await sendCommentNotification({
     type: parentId
