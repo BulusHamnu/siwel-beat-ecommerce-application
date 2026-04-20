@@ -13,6 +13,7 @@ export const addToCart = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
+
     const { trackId, license } = validateAndSanitizeBody(
       req.body,
       userValidator.cartBodySchema,
@@ -39,6 +40,7 @@ export const removeFromCart = async (
 ): Promise<void> => {
   try {
     const user = req.user!;
+
     const { trackId, license } = validateAndSanitizeBody(
       req.body,
       userValidator.cartBodySchema,
