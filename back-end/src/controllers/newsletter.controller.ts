@@ -64,15 +64,47 @@ export const unsubscribeToNewletter = async (
 
     let redirect: string =
       env.FRONTEND_URL + "/news-letter/unsubscribe?result=success";
+
     res.status(302).redirect(redirect);
-  } catch (error) {
+  } catch (error: any) {
     logger.error(
       `An error occur while trying to remove user from news-letter.`,
       error,
     );
-    //
-    res
-      .status(302)
-      .redirect(`${env.FRONTEND_URL}/news-letter/unsubscribe?result=error`);
+
+    const code = error.code;
+    switch (code) {
+      case ErrorCodes.VALIDATION_ERROR: {
+        return res
+          .status(302)
+          .redirect(
+            `${env.FRONTEND_URL}/news-letter/unsubscribe?result=missing_parameters`,
+          );
+      }
+
+      case ErrorCodes.NEWSLETTER_SUBSCRIPTION_NOT_FOUND: {
+        return res
+          .status(302)
+          .redirect(
+            `${env.FRONTEND_URL}/news-letter/unsubscribe?result=not_found`,
+          );
+      }
+
+      case ErrorCodes.TOKEN_INVALID: {
+        return res
+          .status(302)
+          .redirect(
+            `${env.FRONTEND_URL}/news-letter/unsubscribe?result=token_invalid`,
+          );
+      }
+
+      default: {
+        return res
+          .status(302)
+          .redirect(
+            `${env.FRONTEND_URL}/news-letter/unsubscribe?result=unexpected_error`,
+          );
+      }
+    }
   }
 };

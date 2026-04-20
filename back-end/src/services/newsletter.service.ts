@@ -5,16 +5,23 @@ import AppError, { ErrorCodes } from "../errors/appError.js";
 import crypto from "crypto";
 import { NotificationType } from "../models/notification.schema.js";
 import mainQueue from "../queues/main.queue.js";
+import { generateHashValue } from "../utils/helpers.js";
 
 /* Subcribe to news letter */
 async function addToList(
   email: string,
 ): Promise<{ token: string; sub: NewsletterInterface }> {
   let sub: any = null;
-  let token = crypto.randomBytes(24).toString("hex");
+  const token = crypto.randomBytes(24).toString("hex");
+  const hashToken = generateHashValue(token);
 
   try {
-    sub = await Newsletter.create({ email, subscribed: true, token });
+    sub = await Newsletter.create({
+      email,
+      subscribed: true,
+      token: hashToken,
+    });
+    //
   } catch (error: any) {
     if (error.code !== 11000) throw error;
 
@@ -33,7 +40,7 @@ async function addToList(
       //
     } else if (subExist) {
       subExist.subscribed = true;
-      subExist.token = token;
+      subExist.token = hashToken;
       sub = await subExist.save();
 
       return { token, sub };
@@ -90,8 +97,32 @@ export const unsubscribeFromNewsletter = async (
   email: string,
   token: string,
 ): Promise<void> => {
+  const subRecord = await Newsletter.findOne({ email }).lean();
+  if (!subRecord)
+    throw new AppError(
+      ErrorCodes.NEWSLETTER_SUBSCRIPTION_NOT_FOUND,
+      "Newsletter subscription not found.",
+      404,
+      true,
+      null,
+    );
+
+  if (!subRecord.subscribed) return;
+
+  const storedHashedToken = subRecord.token;
+  const hashedToken = generateHashValue(token);
+
+  if (storedHashedToken !== hashedToken)
+    throw new AppError(
+      ErrorCodes.TOKEN_INVALID,
+      "Newsletter token is invalid",
+      401,
+      true,
+      null,
+    );
+
   const updated = await Newsletter.updateOne(
-    { email, token, subscribed: true },
+    { email, subscribed: true, token: hashedToken },
     { $set: { subscribed: false, token: null } },
   );
 
