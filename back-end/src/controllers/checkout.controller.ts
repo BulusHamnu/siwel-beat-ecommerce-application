@@ -1,22 +1,33 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
-import { createCheckout } from "../services/checkout.service.js";
+import {
+  createCheckout,
+  type CheckoutItem,
+} from "../services/checkout.service.js";
 import Joi from "joi";
 import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js";
 
-/* Check out controller */
-function validateCheckoutReqBody(data: { items: string[] }): {
-  items: string[];
+/* Check out  */
+function validateCheckoutReqBody(data: { items: CheckoutItem[] }): {
+  items: CheckoutItem[];
 } {
   const itemsSchema = Joi.object({
-    items: Joi.array().items(Joi.string()).min(1).required(),
+    items: Joi.array()
+      .items(
+        Joi.object({
+          productId: Joi.string().required(),
+          license: Joi.string().valid("basic", "premium").required(),
+        }),
+      )
+      .min(1)
+      .required(),
   });
 
   return validateAndSanitizeBody(data, itemsSchema);
 }
 
 export const checkOut = async (
-  req: Request<{}, ApiResponse<{ url: string }>, { items: string[] }, {}>,
+  req: Request<{}, ApiResponse<{ url: string }>, { items: CheckoutItem[] }, {}>,
   res: Response<ApiResponse<{ url: string }>>,
   next: NextFunction,
 ): Promise<void> => {
@@ -28,7 +39,7 @@ export const checkOut = async (
 
     const response: ApiResponse<{ url: string }> = {
       status: true,
-      message: "Checkout summary retrieved successfully.",
+      message: "Order was created successfully.",
       data: {
         url,
       },

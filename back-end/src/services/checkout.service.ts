@@ -34,15 +34,26 @@ function validateProductsStatus(
   });
 }
 
+export interface CheckoutItem {
+  productId: string;
+  license: string;
+}
+
 export const createCheckout = async (
   userId: string,
-  items: string[],
+  items: CheckoutItem[],
 ): Promise<string> => {
   const userCart = await retrieveCart(userId);
+  const cartItems = userCart.items;
 
-  const selectedItems = userCart.items.filter((item) =>
-    items.includes(String(item.productId)),
-  );
+  const selectedItems = cartItems.filter((product) => {
+    for (const item of items) {
+      return (
+        item.productId === String(product.productId) &&
+        item.license === product.license
+      );
+    }
+  });
 
   if (selectedItems.length <= 0)
     throw new AppError(
