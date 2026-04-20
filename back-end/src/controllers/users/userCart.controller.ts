@@ -5,7 +5,7 @@ import { type CartInterface } from "../../models/cart.schema.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import * as userValidator from "../../utils/validators/user.validator.js";
 
-/* Add to cart controller */
+/* Add to cart  */
 export const addToCart = async (
   req: Request<{}, ApiResponse<void>, { trackId: string; license: string }, {}>,
   res: Response<ApiResponse<void>>,
@@ -32,7 +32,7 @@ export const addToCart = async (
   }
 };
 
-/* Remove from cart controller */
+/* Remove from cart  */
 export const removeFromCart = async (
   req: Request<{}, ApiResponse<void>, { trackId: string; license: string }, {}>,
   res: Response<ApiResponse<void>>,
@@ -59,7 +59,7 @@ export const removeFromCart = async (
   }
 };
 
-/* Get cart controller */
+/* Get cart  */
 export const getCart = async (
   req: Request<{}, ApiResponse<CartInterface>, {}, {}>,
   res: Response<ApiResponse<CartInterface>>,
