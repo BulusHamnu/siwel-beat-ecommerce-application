@@ -9,16 +9,16 @@ import validateAndSanitizeBody from "../utils/validators/validateAndSanitize.js"
 export interface ContactMeReqBody {
   name: string;
   email: string;
-  request: string;
+  subject: string;
   message: string;
 }
 
 export function validateContactmeBody(data: ContactMeReqBody) {
   const contactmeBody = Joi.object({
-    email: Joi.string().email().required().lowercase(),
-    message: Joi.string().required(),
     name: Joi.string().required(),
-    request: Joi.string().required(),
+    email: Joi.string().email().required().lowercase(),
+    subject: Joi.string().required(),
+    message: Joi.string().required(),
   });
 
   return validateAndSanitizeBody(data, contactmeBody);

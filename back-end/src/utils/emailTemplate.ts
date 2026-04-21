@@ -4,12 +4,12 @@ type template = (userName: string, code?: string | number | null) => string;
 type contactTemplate = ({
   name,
   email,
-  request,
+  subject,
   message,
 }: {
   name: string;
   email: string;
-  request: string;
+  subject: string;
   message: string;
 }) => string;
 
@@ -154,7 +154,7 @@ const Template: emailTemplate = {
       </html>
     `;
   },
-  contactMeTemplate: ({ name, email, request = "", message }) => {
+  contactMeTemplate: ({ name, email, subject = "", message }) => {
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -199,10 +199,10 @@ const Template: emailTemplate = {
             "
           ></div>
           ${
-            request
+            subject
               ? `
           <p style="font-family: Helvetica, Arial, sans-serif">
-            <span style="font-weight: 700">Request:</span> ${request}.
+            <span style="font-weight: 700">Subject:</span> ${subject}.
           </p>
           `
               : ""
