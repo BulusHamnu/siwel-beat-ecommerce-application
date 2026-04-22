@@ -35,10 +35,12 @@ async function getPurchasesAndCounts(
     .skip(skip)
     .limit(limit + 1)
     .sort({ createdAt: -1 })
-    .populate(
-      "trackId",
-      "genre tags bpm status key type description title _id",
-    );
+    .populate({
+      path: "trackId",
+      select:
+        "_id coverImageUrl title description key type status bpm tags genre",
+      match: { status: "published" },
+    });
 
   const [purchaseCount, purchasesWithExtra] = await Promise.all([
     countsQuery,
@@ -93,7 +95,12 @@ export const getPurchase = async (
     _id: purchaseId,
     userId,
   })
-    .populate("trackId", "genre tags bpm status key type description title _id")
+    .populate({
+      path: "trackId",
+      select:
+        "_id coverImageUrl title description key type status bpm tags genre",
+      match: { status: "published" },
+    })
     .lean<PurchaseInterface>();
 
   if (!purchase)

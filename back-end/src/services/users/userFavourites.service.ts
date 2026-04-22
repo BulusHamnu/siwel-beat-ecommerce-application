@@ -39,10 +39,12 @@ export const addFavouriteTrack = async (
 export const getFavourites = async (
   userId: string,
 ): Promise<FavouriteInterface[]> => {
-  const favourites = await Favourite.find({ userId }).populate(
-    "trackId",
-    "genre tags bpm status key type description basicPrice premiumPrice title _id",
-  );
+  const favourites = await Favourite.find({ userId }).populate({
+    path: "trackId",
+    select:
+      "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre",
+    match: { status: "published" },
+  });
 
   return favourites;
 };
