@@ -168,6 +168,7 @@ export const postNewComment = async (
   }
 
   const comment = await Comment.create({ content, parentId, trackId, userId });
+
   await sendCommentNotification({
     type: parentId
       ? NotificationType.COMMENT_REPLIED

@@ -34,7 +34,11 @@ async function getPurchasesAndCounts(
   const purchasesQuery = Purchase.find(queries)
     .skip(skip)
     .limit(limit + 1)
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .populate(
+      "trackId",
+      "genre tags bpm status key type description price title _id",
+    );
 
   const [purchaseCount, purchasesWithExtra] = await Promise.all([
     countsQuery,
@@ -88,7 +92,12 @@ export const getPurchase = async (
   const purchase = await Purchase.findOne({
     _id: purchaseId,
     userId,
-  }).lean<PurchaseInterface>();
+  })
+    .populate(
+      "trackId",
+      "genre tags bpm status key type description price title _id",
+    )
+    .lean<PurchaseInterface>();
 
   if (!purchase)
     throw new AppError(
