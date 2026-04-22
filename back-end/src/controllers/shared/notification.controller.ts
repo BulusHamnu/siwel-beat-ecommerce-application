@@ -8,7 +8,7 @@ import Joi from "joi";
 
 /* Get all notifications */
 export const getAllNotifications = async (
-  req: Request<{}, {}, {}, { read: boolean }>,
+  req: Request<{}, {}, {}, { read: string }>,
   res: Response<ApiResponse<notification[]>>,
   next: NextFunction,
 ): Promise<void> => {

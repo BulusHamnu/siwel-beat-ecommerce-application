@@ -10,6 +10,7 @@ router.get(
   generalApiLimiter(),
   notificationController.getAllNotifications,
 );
+
 router.get(
   "/notifications/:id",
   generalApiLimiter(),

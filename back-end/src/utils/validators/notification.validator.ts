@@ -3,7 +3,7 @@ import validateAndSanitizeBody from "./validateAndSanitize.js";
 import { Types } from "mongoose";
 
 /* Get all notification query param validator */
-export function validateNotificationQuery(data: { read: boolean }): {
+export function validateNotificationQuery(data: { read: string }): {
   read: boolean;
 } {
   const notificationQuerySchema = Joi.object({
