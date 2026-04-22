@@ -3,17 +3,13 @@ import validateAndSanitizeBody from "./validateAndSanitize.js";
 import { Types } from "mongoose";
 
 /* Get all notification query param validator */
-const notificationQuerySchema = Joi.object({
-  status: Joi.string()
-    .optional()
-    .valid("read", "unread", "all")
-    .allow("all")
-    .default("all"),
-});
-
-export function validateNotificationQuery(data: { status: string }): {
-  status: string;
+export function validateNotificationQuery(data: { read: boolean }): {
+  read: boolean;
 } {
+  const notificationQuerySchema = Joi.object({
+    read: Joi.boolean().optional(),
+  });
+
   return validateAndSanitizeBody(data, notificationQuerySchema);
 }
 

@@ -8,19 +8,17 @@ import Joi from "joi";
 
 /* Get all notifications */
 export const getAllNotifications = async (
-  req: Request<{}, {}, {}, { status: string }>,
+  req: Request<{}, {}, {}, { read: boolean }>,
   res: Response<ApiResponse<notification[]>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const { status } = notificationValidator.validateNotificationQuery(
-      req.query,
-    );
+    const { read } = notificationValidator.validateNotificationQuery(req.query);
 
     const notifications = await notificationService.getAllNotifications(
       userId,
-      status,
+      read,
     );
 
     const response: ApiResponse<notification[]> = {

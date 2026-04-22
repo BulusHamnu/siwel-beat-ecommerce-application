@@ -30,21 +30,13 @@ export const postNewNotification = async ({
 };
 
 /* Get all notifications */
-function buildQueries(
-  userId: string,
-  status: string = "",
-): { status?: string; userId: string } {
-  const queries: { read?: Boolean; userId: string } = { userId };
-  if (status && status !== "all")
-    queries["read"] = status === "read" ? true : false;
-  return queries;
-}
-
 export const getAllNotifications = async (
   userId: string,
-  read: string,
+  read: boolean,
 ): Promise<notification[]> => {
-  const queries = buildQueries(userId, read);
+  const queries: { read?: Boolean; userId: string } = { userId };
+  if (typeof read === "boolean") queries["read"] = read;
+
   const notifications = Notification.find(queries).sort({ date: -1 });
   return notifications;
 };
