@@ -37,7 +37,7 @@ async function getPurchasesAndCounts(
     .sort({ createdAt: -1 })
     .populate(
       "trackId",
-      "genre tags bpm status key type description price title _id",
+      "genre tags bpm status key type description title _id",
     );
 
   const [purchaseCount, purchasesWithExtra] = await Promise.all([
@@ -93,10 +93,7 @@ export const getPurchase = async (
     _id: purchaseId,
     userId,
   })
-    .populate(
-      "trackId",
-      "genre tags bpm status key type description price title _id",
-    )
+    .populate("trackId", "genre tags bpm status key type description title _id")
     .lean<PurchaseInterface>();
 
   if (!purchase)

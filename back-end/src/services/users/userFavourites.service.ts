@@ -41,7 +41,7 @@ export const getFavourites = async (
 ): Promise<FavouriteInterface[]> => {
   const favourites = await Favourite.find({ userId }).populate(
     "trackId",
-    "genre tags bpm status key type description price title _id",
+    "genre tags bpm status key type description basicPrice premiumPrice title _id",
   );
 
   return favourites;
