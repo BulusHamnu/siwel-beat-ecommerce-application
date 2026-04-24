@@ -4,6 +4,10 @@ import * as cartService from "../../services/users/userCart.service.js";
 import { type CartInterface } from "../../models/cart.schema.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import * as userValidator from "../../utils/validators/user.validator.js";
+import {
+  mapCartResponse,
+  type CartResponse,
+} from "../../mappers/cart.mappers.js";
 
 /* Add to cart  */
 export const addToCart = async (
@@ -61,18 +65,20 @@ export const removeFromCart = async (
 
 /* Get cart  */
 export const getCart = async (
-  req: Request<{}, ApiResponse<CartInterface>, {}, {}>,
-  res: Response<ApiResponse<CartInterface>>,
+  req: Request<{}, ApiResponse<CartResponse>, {}, {}>,
+  res: Response<ApiResponse<CartResponse>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
 
     const cart = await cartService.getUserCart(user.id);
-    const response: ApiResponse<CartInterface> = {
+    const cartRes = mapCartResponse(cart);
+
+    const response: ApiResponse<CartResponse> = {
       status: true,
       message: "Cart retrieved successfully.",
-      data: cart,
+      data: cartRes,
     };
 
     res.status(200).json(response);
