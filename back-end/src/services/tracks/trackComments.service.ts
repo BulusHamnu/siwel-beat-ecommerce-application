@@ -32,7 +32,7 @@ export async function sendCommentNotification({
     case NotificationType.COMMENT_REPLIED: {
       const replyComment = (await Comment.findOne({
         _id: entityId,
-      }).populate("userId", "username  _id")) as populatedComment | null;
+      }).populate("userId", "username  _id")) as PopulatedComment | null;
 
       await postNewNotification({
         userId: targetUserId,
@@ -47,7 +47,7 @@ export async function sendCommentNotification({
     case NotificationType.COMMENT_REPLIED: {
       const comment = (await Comment.findOne({
         _id: entityId,
-      }).populate("userId", "username  _id")) as populatedComment | null;
+      }).populate("userId", "username  _id")) as PopulatedComment | null;
 
       await notifyAdmins(
         `${comment?.userId.username || "Someone"} commented on your track.`,
@@ -61,7 +61,7 @@ export async function sendCommentNotification({
     case NotificationType.COMMENT_LIKED: {
       const commentLike = (await CommentLike.findOne({
         userId: actorUserId,
-      }).populate("userId", "username _id")) as populatedLike | null;
+      }).populate("userId", "username _id")) as PopulatedLike | null;
 
       await postNewNotification({
         userId: targetUserId,
@@ -142,7 +142,7 @@ export const postNewComment = async (
 };
 
 /* Get comment and replies */
-export interface populatedComment extends Omit<CommentInterface, "userId"> {
+export interface PopulatedComment extends Omit<CommentInterface, "userId"> {
   _id: Types.ObjectId;
   userId: {
     _id: string;
@@ -150,16 +150,16 @@ export interface populatedComment extends Omit<CommentInterface, "userId"> {
     isVerified: string;
     avatar: string;
   };
-  replies?: populatedComment[];
+  replies?: PopulatedComment[];
 }
 
-type commentsMap = Map<string, populatedComment>;
+type commentsMap = Map<string, PopulatedComment>;
 async function getTrackCommentsAndBuildTree(
   trackId: string,
 ): Promise<commentsMap> {
   let comments = await Comment.find({ trackId })
     .populate("userId", "_id username isVerified avatar")
-    .lean<populatedComment[]>();
+    .lean<PopulatedComment[]>();
 
   const commentsTree = new Map<string, any>();
   comments.forEach((comment) => {
@@ -182,7 +182,7 @@ async function getTrackCommentsAndBuildTree(
 export const getCommentAndReplies = async (
   commentId: string,
   trackId: string,
-): Promise<populatedComment> => {
+): Promise<PopulatedComment> => {
   const track = await Track.findOne({ _id: trackId });
   if (!track)
     throw new AppError(
@@ -195,7 +195,7 @@ export const getCommentAndReplies = async (
 
   const commentsTree = await getTrackCommentsAndBuildTree(trackId);
 
-  const comment: populatedComment | undefined = commentsTree.get(commentId);
+  const comment: PopulatedComment | undefined = commentsTree.get(commentId);
   if (!comment)
     throw new AppError(
       ErrorCodes.COMMENT_NOT_FOUND,
@@ -211,7 +211,7 @@ export const getCommentAndReplies = async (
 /* Get all comment */
 export const getAllComments = async (
   id: string,
-): Promise<populatedComment[]> => {
+): Promise<PopulatedComment[]> => {
   const track = await Track.findOne({ _id: id });
   if (!track)
     throw new AppError(
@@ -224,7 +224,7 @@ export const getAllComments = async (
 
   const commentsTree = await getTrackCommentsAndBuildTree(id);
 
-  const rootComments: populatedComment[] = [];
+  const rootComments: PopulatedComment[] = [];
   commentsTree.forEach((comment) => {
     if (comment.parentId) return;
     rootComments.push(comment);
@@ -239,8 +239,8 @@ export const updateComment = async (
   trackId: string,
   userId: string,
   content: string,
-): Promise<populatedComment> => {
-  const updatedComment: populatedComment | null =
+): Promise<PopulatedComment> => {
+  const updatedComment: PopulatedComment | null =
     await Comment.findOneAndUpdate(
       {
         _id: commentId,
@@ -303,13 +303,13 @@ export const deleteComment = async (
 };
 
 /* Like comment */
-export interface populatedLike {
+export interface PopulatedLike extends Omit<CommentLikeInterface, "userId"> {
   userId: {
     _id: string | ObjectId;
     username: string;
     avatar: string;
   };
-  commentId: string | ObjectId;
+  commentId: ObjectId;
 }
 
 export const likeComment = async (
@@ -388,7 +388,7 @@ export const likeComment = async (
 /* Get Comment likes */
 export interface CommentLikes {
   likesCount: number;
-  likedBy: FlattenMaps<CommentLikeInterface>[];
+  likedBy: PopulatedLike[];
 }
 
 export const getAllCommentLikes = async (
@@ -397,6 +397,7 @@ export const getAllCommentLikes = async (
   const comment: CommentInterface | null = await Comment.findOne({
     _id: commentId,
   }).lean<CommentInterface>();
+
   if (!comment)
     throw new AppError(
       ErrorCodes.COMMENT_NOT_FOUND,
@@ -406,9 +407,9 @@ export const getAllCommentLikes = async (
       null,
     );
 
-  const commentLikes = await CommentLike.find({ commentId })
-    .populate("userId", "username avatar _id")
-    .lean();
+  const commentLikes: any[] = await CommentLike.find({
+    commentId,
+  }).populate("userId", "username avatar _id"); //.lean();
 
   return { likesCount: comment.likes, likedBy: commentLikes };
 };
