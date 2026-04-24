@@ -9,6 +9,7 @@ import {
   postNewNotification,
   notifyAdmins,
 } from "../services/notification.service.js";
+import { sendCommentNotification } from "../services/tracks/trackComments.service.js";
 
 /* Main worker processor*/
 export const mainWorkerprocessor = async (job: Job) => {
@@ -88,6 +89,24 @@ export const mainWorkerprocessor = async (job: Job) => {
         resourceId,
         entityId,
       });
+      break;
+    }
+
+    case "send-comments-notification": {
+      const { type, targetUserId, actorUserId, resourceId, entityId } = data;
+
+      await sendCommentNotification({
+        type,
+        targetUserId,
+        actorUserId,
+        resourceId,
+        entityId,
+      });
+      break;
+    }
+
+    default: {
+      logger.debug(`Unidentified Job: ${name}`);
       break;
     }
   }

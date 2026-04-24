@@ -9,137 +9,67 @@ import CommentLike, {
 } from "../../models/commentLike.schema.js";
 import mainQueue from "../../queues/main.queue.js";
 import logger from "../../utils/logger.js";
-import { postNewNotification } from "../notification.service.js";
+import { postNewNotification, notifyAdmins } from "../notification.service.js";
+import { isSelfAction } from "../../utils/helpers.js";
 
-/* Post a comment */
-// export interface populatedComment extends Omit<CommentInterface, "userId"> {
-//   userId: {
-//     _id: string;
-//     username: string;
-//     email: string;
-//     avatar: string;
-//   };
-// }
-
-function isSelfAction(
-  actorUserId: ObjectId | string | undefined | null,
-  targetUserId: ObjectId | string | undefined | null,
-): boolean {
-  if (!targetUserId || !actorUserId) return false;
-  return String(targetUserId) === String(actorUserId);
-}
-
-async function sendCommentNotification({
+/* Post comments notification */
+export async function sendCommentNotification({
+  type,
   targetUserId,
-  // commentUserId = undefined,
-  likeUserId = undefined,
+  actorUserId,
   resourceId,
   entityId,
-  type,
 }: {
-  targetUserId: ObjectId | null;
-  // commentUserId?: ObjectId | undefined;
-  likeUserId?: ObjectId | undefined;
-  resourceId: string;
-  entityId: string;
   type: string;
-}): Promise<void> {
+  targetUserId: string;
+  actorUserId: string | ObjectId;
+  resourceId: string | ObjectId;
+  entityId: string | ObjectId;
+}) {
+  if (isSelfAction(targetUserId, actorUserId)) return;
+
   switch (type) {
     case NotificationType.COMMENT_REPLIED: {
-      if (!targetUserId) return;
-
       const replyComment = (await Comment.findOne({
         _id: entityId,
       }).populate("userId", "username  _id")) as populatedComment | null;
 
-      console.log({ targetUserId, replyComment });
-
-      // Don't send notification for self action
-      const actorUserId = replyComment?.userId._id;
-      if (isSelfAction(targetUserId, actorUserId)) return;
-
-      await mainQueue.add(
-        "post-notification",
-        {
-          userId: targetUserId,
-          message: `${replyComment?.userId.username} replied to your comment.`,
-          type: NotificationType.COMMENT_REPLIED,
-          resourceId,
-          entityId,
-        },
-        {
-          attempts: 2,
-          backoff: {
-            type: "exponential",
-            delay: 2000,
-          },
-          removeOnComplete: 1000,
-          removeOnFail: 5000,
-        },
-      );
-
+      await postNewNotification({
+        userId: targetUserId,
+        message: `${replyComment?.userId.username || "Someone"} replied to your comment.`,
+        type,
+        resourceId,
+        entityId,
+      });
       break;
     }
 
-    case NotificationType.TRACK_COMMENTED: {
-      //
+    case NotificationType.COMMENT_REPLIED: {
       const comment = (await Comment.findOne({
         _id: entityId,
       }).populate("userId", "username  _id")) as populatedComment | null;
 
-      await mainQueue.add(
-        "post-notification",
-        {
-          userId: null,
-          message: `${comment?.userId._id} commented on your track.`,
-          type: NotificationType.TRACK_COMMENTED,
-          resourceId,
-          entityId,
-        },
-        {
-          attempts: 2,
-          backoff: {
-            type: "exponential",
-            delay: 2000,
-          },
-          removeOnComplete: 1000,
-          removeOnFail: 5000,
-        },
+      await notifyAdmins(
+        `${comment?.userId.username || "Someone"} commented on your track.`,
+        type,
+        resourceId,
+        entityId,
       );
-
       break;
     }
 
     case NotificationType.COMMENT_LIKED: {
-      if (!targetUserId) return;
-
-      if (isSelfAction(targetUserId, likeUserId)) return;
-
       const commentLike = (await CommentLike.findOne({
-        userId: likeUserId,
-      }).populate("userId", "username _id")) as any | null;
+        userId: actorUserId,
+      }).populate("userId", "username _id")) as populatedLike | null;
 
-      await mainQueue.add(
-        "post-notification",
-        {
-          userId: targetUserId,
-          message: `${commentLike?.userId.username} liked your comment on a track`,
-          type: NotificationType.COMMENT_LIKED,
-          resourceId,
-          entityId,
-        },
-        {
-          attempts: 2,
-          backoff: {
-            type: "exponential",
-            delay: 2000,
-          },
-          removeOnComplete: 1000,
-          removeOnFail: 5000,
-        },
-      );
-
-      break;
+      await postNewNotification({
+        userId: targetUserId,
+        message: `${commentLike?.userId.username || "Someone"} liked your comment on a track.`,
+        type,
+        resourceId,
+        entityId,
+      });
     }
 
     default: {
@@ -149,6 +79,7 @@ async function sendCommentNotification({
   }
 }
 
+/* Post a comment */
 export const postNewComment = async (
   trackId: string,
   userId: string,
@@ -180,43 +111,32 @@ export const postNewComment = async (
 
   const comment = await Comment.create({ content, parentId, trackId, userId });
 
-  // Send comment notification
   const targetUserId = parentComment?.userId || null;
   const actorUserId = userId;
 
-  if (!isSelfAction(targetUserId, actorUserId)) {
-    const entityComment = (await Comment.findOne({
-      userId,
-    }).populate("userId", "username  _id")) as populatedComment | null;
+  const notificationType = parentComment
+    ? NotificationType.COMMENT_REPLIED
+    : NotificationType.TRACK_COMMENTED;
 
-    const notificationMessage = parentComment
-      ? `${entityComment?.userId.username} replied to your comment.`
-      : `${entityComment?.userId.username} commented on your track.`;
-
-    const notificationType = parentComment
-      ? NotificationType.COMMENT_REPLIED
-      : NotificationType.TRACK_COMMENTED;
-
-    await mainQueue.add(
-      "post-notification",
-      {
-        userId: targetUserId,
-        message: notificationMessage,
-        type: notificationType,
-        resourceId: trackId,
-        entityId: comment._id,
+  await mainQueue.add(
+    "send-comments-notification",
+    {
+      targetUserId,
+      actorUserId,
+      type: notificationType,
+      resourceId: trackId,
+      entityId: comment._id,
+    },
+    {
+      attempts: 2,
+      backoff: {
+        type: "exponential",
+        delay: 2000,
       },
-      {
-        attempts: 2,
-        backoff: {
-          type: "exponential",
-          delay: 2000,
-        },
-        removeOnComplete: 1000,
-        removeOnFail: 5000,
-      },
-    );
-  }
+      removeOnComplete: 1000,
+      removeOnFail: 5000,
+    },
+  );
 
   return comment;
 };
@@ -383,7 +303,7 @@ export const deleteComment = async (
 };
 
 /* Like comment */
-interface populatedLike {
+export interface populatedLike {
   userId: {
     _id: string | ObjectId;
     username: string;
@@ -426,20 +346,15 @@ export const likeComment = async (
       await newCommentLike.save({ session });
       likesCount = updatedComment.likes;
 
-      // Send like notification
-      const targetUserId = updatedComment.userId;
-      const actorUserId = newCommentLike.userId;
-
-      if (newCommentLike && !isSelfAction(targetUserId, actorUserId)) {
-        const commentLike = (await CommentLike.findOne({
-          userId: actorUserId,
-        }).populate("userId", "username  _id")) as populatedLike | null;
+      if (newCommentLike) {
+        const targetUserId = updatedComment.userId;
+        const actorUserId = newCommentLike.userId;
 
         await mainQueue.add(
-          "post-notification",
+          "send-comments-notification",
           {
-            userId: targetUserId,
-            message: `${commentLike?.userId.username} liked your comment on a track`,
+            targetUserId,
+            actorUserId,
             type: NotificationType.COMMENT_LIKED,
             resourceId: trackId,
             entityId: updatedComment._id as string,

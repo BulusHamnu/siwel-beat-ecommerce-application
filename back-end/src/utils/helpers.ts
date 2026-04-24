@@ -2,6 +2,7 @@ import { imageSize } from "image-size";
 import AppError, { ErrorCodes } from "../errors/appError.js";
 import sharp from "sharp";
 import crypto from "crypto";
+import { type ObjectId } from "mongoose";
 
 /* Generate random code */
 export const generateRandCode = (length: number = 6): number | string => {
@@ -95,4 +96,13 @@ export function generateHashValue(code: string | number) {
     .createHash("sha256")
     .update(code as any)
     .digest("hex");
+}
+
+/* Is self action verificator */
+export function isSelfAction(
+  actorUserId: ObjectId | string | undefined | null,
+  targetUserId: ObjectId | string | undefined | null,
+): boolean {
+  if (!targetUserId || !actorUserId) return false;
+  return String(targetUserId) === String(actorUserId);
 }

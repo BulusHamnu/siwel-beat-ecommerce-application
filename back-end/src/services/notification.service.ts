@@ -1,3 +1,4 @@
+import type { ObjectId } from "mongoose";
 import AppError, { ErrorCodes } from "../errors/appError.js";
 import Notification, {
   type notification,
@@ -12,11 +13,11 @@ export const postNewNotification = async ({
   resourceId,
   entityId,
 }: {
-  userId: string;
+  userId: string | ObjectId;
   message: string;
   type: string;
-  resourceId: string;
-  entityId: string | null;
+  resourceId: string | ObjectId;
+  entityId: string | ObjectId | null;
 }) => {
   const newNotification: notification = await Notification.create({
     userId,
@@ -115,8 +116,8 @@ export const deleteNotification = async (
 export async function notifyAdmins(
   message: string,
   type: string,
-  resourceId: string,
-  entityId: string | null = null,
+  resourceId: string | ObjectId,
+  entityId: string | ObjectId | null = null,
 ) {
   // There is not specify admin, all active admins will be notify
   const admins: UserInterface[] = await User.find({
