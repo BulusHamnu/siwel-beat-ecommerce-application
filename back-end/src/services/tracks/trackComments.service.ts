@@ -383,6 +383,15 @@ export const deleteComment = async (
 };
 
 /* Like comment */
+interface populatedLike {
+  userId: {
+    _id: string | ObjectId;
+    username: string;
+    avatar: string;
+  };
+  commentId: string | ObjectId;
+}
+
 export const likeComment = async (
   userId: string,
   commentId: string,
@@ -415,18 +424,37 @@ export const likeComment = async (
       });
 
       await newCommentLike.save({ session });
-
-      if (newCommentLike) {
-        await sendCommentNotification({
-          type: NotificationType.COMMENT_LIKED,
-          targetUserId: updatedComment.userId,
-          likeUserId: newCommentLike.userId,
-          resourceId: trackId,
-          entityId: updatedComment._id as string,
-        });
-      }
-
       likesCount = updatedComment.likes;
+
+      // Send like notification
+      const targetUserId = updatedComment.userId;
+      const actorUserId = newCommentLike.userId;
+
+      if (newCommentLike && !isSelfAction(targetUserId, actorUserId)) {
+        const commentLike = (await CommentLike.findOne({
+          userId: actorUserId,
+        }).populate("userId", "username  _id")) as populatedLike | null;
+
+        await mainQueue.add(
+          "post-notification",
+          {
+            userId: targetUserId,
+            message: `${commentLike?.userId.username} liked your comment on a track`,
+            type: NotificationType.COMMENT_LIKED,
+            resourceId: trackId,
+            entityId: updatedComment._id as string,
+          },
+          {
+            attempts: 2,
+            backoff: {
+              type: "exponential",
+              delay: 2000,
+            },
+            removeOnComplete: 1000,
+            removeOnFail: 5000,
+          },
+        );
+      }
     });
 
     return { likesCount };
