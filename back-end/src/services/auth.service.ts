@@ -202,7 +202,7 @@ export const resendVerificationEmail = async (email: string): Promise<void> => {
       "User is already verified.",
       400,
       true,
-      { identifier: email },
+      { email },
     );
 
   const { code, hashedCode, expiresAt } = await createEmailVerificationCode(15);
