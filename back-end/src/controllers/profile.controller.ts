@@ -1,6 +1,6 @@
 import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
-import type { UserProfile } from "./userTypes.js";
+import type { UserProfile } from "../services/profile.service.js";
 import { type ProfileUpdatesInput } from "../services/profile.service.js";
 import * as userService from "../services/profile.service.js";
 import AppError, { ErrorCodes } from "../errors/appError.js";
@@ -13,26 +13,24 @@ import mainQueue from "../queues/main.queue.js";
 import { getFavourites } from "../services/users/userFavourites.service.js";
 import type { FavouriteInterface } from "../models/favourite.schema.js";
 import type { ObjectId } from "mongoose";
+import { mapUserProfile } from "../mappers/profile.mapper.js";
 
 /* Get user profile  */
 export const getProfile = async (
-  req: Request<
-    {},
-    { status: boolean; message: string; data?: UserProfile },
-    { email: string },
-    {}
-  >,
-  res: Response<{ status: boolean; message: string; data?: UserProfile }>,
+  req: Request<{}, ApiResponse<UserProfile>, { email: string }, {}>,
+  res: Response<ApiResponse<UserProfile>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const userId: string = req.user!.id;
-    const profile: UserProfile = await userService.getProfile(userId);
+
+    const profile = await userService.getProfile(userId);
+    const profileRes = mapUserProfile(profile);
 
     const response: ApiResponse<UserProfile> = {
       status: true,
       message: "Profile retrieved successfully.",
-      data: profile,
+      data: profileRes,
     };
 
     res.status(200).json(response);
@@ -43,13 +41,8 @@ export const getProfile = async (
 
 /* Update user profile  */
 export const updateProfile = async (
-  req: Request<
-    {},
-    { status: boolean; message: string; data?: UserProfile },
-    ProfileUpdatesInput,
-    {}
-  >,
-  res: Response<{ status: boolean; message: string; data?: UserProfile }>,
+  req: Request<{}, ApiResponse<UserProfile>, ProfileUpdatesInput, {}>,
+  res: Response<ApiResponse<UserProfile>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
@@ -59,15 +52,13 @@ export const updateProfile = async (
       userValidator.userUpdateBodySchema,
     );
 
-    const profile: UserProfile = await userService.updateProfile(
-      userId,
-      sanitizedUpdates,
-    );
+    const profile = await userService.updateProfile(userId, sanitizedUpdates);
+    const profileRes = mapUserProfile(profile);
 
     const response: ApiResponse<UserProfile> = {
       status: true,
       message: "Profile updated successfully.",
-      data: profile,
+      data: profileRes,
     };
 
     res.status(200).json(response);
@@ -191,7 +182,7 @@ export const getUserPublicProfile = async (
       gender,
       bio,
       id,
-    }: UserProfile = await userService.getProfile(userId);
+    } = await userService.getProfile(userId);
 
     const response: ApiResponse<ProfileSnapshot> = {
       status: true,
