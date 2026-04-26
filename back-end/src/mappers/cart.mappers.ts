@@ -1,4 +1,4 @@
-import type { ItemStatus } from "../models/cart.schema.js";
+import type { CartItem, ItemStatus } from "../models/cart.schema.js";
 import type { PopulatedCart } from "../services/users/userCart.service.js";
 
 interface CartTrackSnapshot {
@@ -10,19 +10,14 @@ interface CartTrackSnapshot {
   genre: string;
 }
 
-interface ModifiedCartItem {
-  name: string;
+interface ModifiedCartItem extends Omit<CartItem, "productId"> {
   productId: string;
-  price: number;
-  license: string;
-  type: string;
   status: ItemStatus | undefined;
   newPrice: number | null;
   track: CartTrackSnapshot;
 }
 
 export interface CartResponse {
-  //   userId: string;
   items: ModifiedCartItem[];
   subTotal: number;
   createdAt: Date;
@@ -55,7 +50,6 @@ export function mapCartResponse(cart: PopulatedCart): CartResponse {
   }
 
   return {
-    // userId: String(cart.userId),
     items: cartItems,
     subTotal: cart.subTotal!,
     createdAt: cart.createdAt,
