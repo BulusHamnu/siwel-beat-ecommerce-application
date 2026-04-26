@@ -2,7 +2,11 @@ import Favourite, {
   type FavouriteInterface,
 } from "../../models/favourite.schema.js";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
-import Track, { type TrackInterface } from "../../models/track.schema.js";
+import Track, {
+  StatusType,
+  type TrackInterface,
+} from "../../models/track.schema.js";
+import type { ObjectId } from "mongoose";
 
 /* Add to favourites */
 export const addFavouriteTrack = async (
@@ -36,15 +40,37 @@ export const addFavouriteTrack = async (
 };
 
 /* Get favourites */
+export interface PopulatedFavourite extends Omit<
+  FavouriteInterface,
+  "trackId"
+> {
+  trackId: {
+    _id: ObjectId;
+    coverImageUrl: string;
+    title: string;
+    basicPrice: number;
+    premiumPrice: number;
+    description: string;
+    key: string;
+    type: string;
+    status: StatusType;
+    bpm: number;
+    tags: string[];
+    genre: string;
+  };
+}
+
 export const getFavourites = async (
   userId: string,
-): Promise<FavouriteInterface[]> => {
-  const favourites = await Favourite.find({ userId }).populate({
-    path: "trackId",
-    select:
-      "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre",
-    match: { status: "published" },
-  });
+): Promise<PopulatedFavourite[]> => {
+  const favourites = await Favourite.find({ userId })
+    .populate({
+      path: "trackId",
+      select:
+        "_id coverImageUrl title basicPrice premiumPrice description key type status bpm tags genre",
+      match: { status: "published" },
+    })
+    .lean<PopulatedFavourite[]>();
 
   return favourites;
 };

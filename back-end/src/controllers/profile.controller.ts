@@ -10,10 +10,17 @@ import * as userValidator from "../utils/validators/user.validator.js";
 import env from "../configs/env.js";
 import { checkAndResizeImgRatio } from "../utils/helpers.js";
 import mainQueue from "../queues/main.queue.js";
-import { getFavourites } from "../services/users/userFavourites.service.js";
+import {
+  getFavourites,
+  type PopulatedFavourite,
+} from "../services/users/userFavourites.service.js";
 import type { FavouriteInterface } from "../models/favourite.schema.js";
 import type { ObjectId } from "mongoose";
 import { mapUserProfile } from "../mappers/profile.mapper.js";
+import {
+  mapFavourites,
+  type FavouriteResponse,
+} from "../mappers/favourite.mappers.js";
 
 /* Get user profile  */
 export const getProfile = async (
@@ -208,19 +215,20 @@ export const getUserPublicProfile = async (
 
 /* Get user's favourites list */
 export const getUserFavourites = async (
-  req: Request<{ id: string }, ApiResponse<FavouriteInterface[]>, {}, {}>,
-  res: Response<ApiResponse<FavouriteInterface[]>>,
+  req: Request<{ id: string }, ApiResponse<FavouriteResponse[]>, {}, {}>,
+  res: Response<ApiResponse<FavouriteResponse[]>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const userId: string = req.params.id;
 
-    const userFavouriteList = await getFavourites(userId);
+    const userFavourites = await getFavourites(userId);
+    const favouritesRes = mapFavourites(userFavourites);
 
-    const response: ApiResponse<FavouriteInterface[]> = {
+    const response: ApiResponse<FavouriteResponse[]> = {
       status: true,
       message: "User's favourites retrieved successfully.",
-      data: userFavouriteList,
+      data: favouritesRes,
     };
 
     res.status(200).json(response);

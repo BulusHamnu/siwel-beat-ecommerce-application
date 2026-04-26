@@ -1,9 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
 import { type ApiResponse } from "../responseInterface.js";
 import * as favouriteServices from "../../services/users/userFavourites.service.js";
-import { type FavouriteInterface } from "../../models/favourite.schema.js";
 import * as userValidator from "../../utils/validators/user.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
+import {
+  mapFavourites,
+  type FavouriteResponse,
+} from "../../mappers/favourite.mappers.js";
 
 /* Add to favourites */
 export const addToMyFavourites = async (
@@ -33,18 +36,20 @@ export const addToMyFavourites = async (
 
 /* Get favourites */
 export const getMyFavourites = async (
-  req: Request<{}, ApiResponse<FavouriteInterface[]>, {}, {}>,
-  res: Response<ApiResponse<FavouriteInterface[]>>,
+  req: Request<{}, ApiResponse<FavouriteResponse[]>, {}, {}>,
+  res: Response<ApiResponse<FavouriteResponse[]>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
 
     const favourites = await favouriteServices.getFavourites(user.id);
-    const response: ApiResponse<FavouriteInterface[]> = {
+    const favouritesRes = mapFavourites(favourites);
+
+    const response: ApiResponse<FavouriteResponse[]> = {
       status: true,
       message: "Favourites retrieved successfully.",
-      data: favourites,
+      data: favouritesRes,
     };
 
     res.status(200).json(response);
