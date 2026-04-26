@@ -1,6 +1,6 @@
 import type { Response, Request, NextFunction } from "express";
 import logger from "../../utils/logger.js";
-import type { CreateUserBody } from "../userTypes.js";
+import type { CreateUserInput } from "../../services/auth.service.js";
 import * as authService from "../../services/auth.service.js";
 import type { ApiResponse } from "../responseInterface.js";
 import env from "../../configs/env.js";
@@ -11,12 +11,12 @@ import Session from "../../models/session.schema.js";
 
 /* Sign up new user */
 export const signUp = async (
-  req: Request<{}, {}, CreateUserBody, {}>,
+  req: Request<{}, {}, CreateUserInput, {}>,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const cleanSignupBody: CreateUserBody = validateAndSanitizeBody(
+    const cleanSignupBody: CreateUserInput = validateAndSanitizeBody(
       req.body,
       authValidator.signupBodySchema,
     );
