@@ -139,6 +139,7 @@ function validateItemsStatus(cartItems: PopulatedCartItem[]): void {
 }
 
 export async function retrieveCart(userId: string) {
+  // Populated productId to obtain track details to skip making more request when validating with cart items.
   const cart = await Cart.findOneAndUpdate(
     { userId },
     {

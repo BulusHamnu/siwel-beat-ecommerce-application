@@ -6,11 +6,11 @@ import type { userPayload } from "../../middlewares/requiredAuth.js";
 import OrderItem, {
   type OrderItemInterface,
 } from "../../models/orderItem.schema.js";
-import type { CartItem } from "../../models/cart.schema.js";
 import logger from "../../utils/logger.js";
+import type { PopulatedCartItem } from "../users/userCart.service.js";
 
 /* Create order */
-export async function createOrder(orderItems: CartItem[]) {
+export async function createOrder(orderItems: PopulatedCartItem[]) {
   logger.info("OrderItems", { orderItems });
 
   throw new AppError(

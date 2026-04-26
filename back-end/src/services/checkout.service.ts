@@ -1,16 +1,16 @@
 import AppError, { ErrorCodes } from "../errors/appError.js";
-import { type CartItem, type CartInterface } from "../models/cart.schema.js";
-import { retrieveCart } from "./users/userCart.service.js";
-import Track, { type TrackInterface } from "../models/track.schema.js";
+import {
+  retrieveCart,
+  type PopulatedCartItem,
+} from "./users/userCart.service.js";
 import { createOrder } from "./shared/ordersShared.service.js";
+import logger from "../utils/logger.js";
 
-/* Get checkout summary */
-function validateProductsStatus(
-  cartItems: CartItem[],
-  trackMap: Map<string, any>,
-) {
+/* Checkout */
+function validateProductsStatus(cartItems: PopulatedCartItem[]) {
   cartItems.forEach((item) => {
-    const track = trackMap.get(String(item.productId));
+    const track = item.productId; // Because the productId is populated with the track data
+
     if (!track || track.status !== "published") {
       throw new AppError(
         ErrorCodes.CART_INVALID,
@@ -31,6 +31,8 @@ function validateProductsStatus(
         { item: item.name },
       );
     }
+
+    logger.info("User's cart items are valid, procedding to create order.");
   });
 }
 
@@ -49,7 +51,7 @@ export const createCheckout = async (
   const selectedItems = cartItems.filter((product) => {
     for (const item of items) {
       return (
-        item.productId === String(product.productId) &&
+        item.productId === String(product.productId._id) &&
         item.license === product.license
       );
     }
@@ -64,18 +66,7 @@ export const createCheckout = async (
       null,
     );
 
-  const productIds = selectedItems.map((item) => item.productId);
-  const tracks = await Track.find({ _id: { $in: productIds } }).lean<
-    TrackInterface[]
-  >();
-
-  const trackMap = new Map<string, any>();
-  tracks.forEach((track) => {
-    trackMap.set(String(track._id), track);
-  });
-
-  validateProductsStatus(selectedItems, trackMap); // Items have to be valid for checkout
-
+  validateProductsStatus(selectedItems); // Items have to be valid for checkout
   await createOrder(selectedItems);
 
   return "url_not_available";
