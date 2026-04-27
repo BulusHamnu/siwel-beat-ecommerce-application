@@ -8,7 +8,7 @@ export interface PurchaseResponse {
     description: string;
     type: string;
     key: string;
-    status: string;
+    status?: string;
     bpm: number;
     tags: string[];
     genre: string;
@@ -29,7 +29,7 @@ export function toPurchaseRes(purchase: PopulatedPurchase): PurchaseResponse {
       description: track.description,
       type: track.type,
       key: track.key,
-      status: track.status,
+      // status: track.status,
       bpm: track.bpm,
       tags: track.tags,
       genre: track.genre,
