@@ -1,7 +1,7 @@
 import type { ObjectId } from "mongoose";
 import AppError, { ErrorCodes } from "../errors/appError.js";
 import Notification, {
-  type notification,
+  type NotificationInterface,
 } from "../models/notification.schema.js";
 import User, { type UserInterface } from "../models/user.schema.js";
 
@@ -19,7 +19,7 @@ export const postNewNotification = async ({
   resourceId: string | ObjectId;
   entityId: string | ObjectId | null;
 }) => {
-  const newNotification: notification = await Notification.create({
+  const newNotification: NotificationInterface = await Notification.create({
     userId,
     message,
     type,
@@ -34,7 +34,7 @@ export const postNewNotification = async ({
 export const getAllNotifications = async (
   userId: string,
   read: boolean,
-): Promise<notification[]> => {
+): Promise<NotificationInterface[]> => {
   const queries: { read?: Boolean; userId: string } = { userId };
   if (typeof read === "boolean") queries["read"] = read;
 
@@ -46,7 +46,7 @@ export const getAllNotifications = async (
 export const getNotification = async (
   userId: string,
   notificationId: string,
-): Promise<notification> => {
+): Promise<NotificationInterface> => {
   // Users can only retrive their notification
   const notification = await Notification.findOne({
     _id: notificationId,
@@ -69,8 +69,8 @@ export const updateNotificationStatus = async (
   userId: string,
   notificationId: string,
   read: boolean,
-): Promise<notification> => {
-  const updatedNotification: notification | null =
+): Promise<NotificationInterface> => {
+  const updatedNotification: NotificationInterface | null =
     await Notification.findOneAndUpdate(
       { _id: notificationId, userId },
       { $set: { read } },

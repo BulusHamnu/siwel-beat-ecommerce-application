@@ -12,7 +12,7 @@ export enum NotificationType {
   DOWNLOAD_STARTED = "DOWNLOAD_STARTED",
 }
 
-export interface notification extends Document {
+export interface NotificationInterface extends Document {
   userId: ObjectId;
   date: Date;
   message: string;
@@ -24,7 +24,7 @@ export interface notification extends Document {
   updatedAt: Date;
 }
 
-const notification = new mongoose.Schema<notification>(
+const notification = new mongoose.Schema<NotificationInterface>(
   {
     userId: {
       type: mongoose.Schema.ObjectId,
@@ -64,5 +64,8 @@ const notification = new mongoose.Schema<notification>(
 /* Indexes */
 notification.index({ userId: 1, read: 1, date: -1 });
 
-const Notification = mongoose.model<notification>("Notification", notification);
+const Notification = mongoose.model<NotificationInterface>(
+  "Notification",
+  notification,
+);
 export default Notification;

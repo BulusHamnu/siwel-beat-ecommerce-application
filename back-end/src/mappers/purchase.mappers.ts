@@ -41,7 +41,6 @@ export function mapPurchase(purchase: PopulatedPurchase): PurchaseResponse {
 }
 
 export function mapPurchases(purchases: PopulatedPurchase[]) {
-  console.log(purchases);
   return purchases.map((purchase) => {
     return mapPurchase(purchase);
   });
