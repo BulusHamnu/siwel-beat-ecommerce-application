@@ -96,37 +96,51 @@ export const removeFromCart = async (
 };
 
 /* Get user cart */
-interface CartItemUpdated extends CartItem {
+export interface PopulatedCartItem extends Omit<CartItem, "productId"> {
+  productId: {
+    _id: string | ObjectId;
+    coverImageUrl: string;
+    title: string;
+    basicPrice: number;
+    premiumPrice: number;
+    description: string;
+    key: string;
+    status: string;
+    bpm: number;
+    genre: string;
+  };
   status?: ItemStatus;
   newPrice?: number;
 }
 
-function validateItemsStatus(
-  cartItems: CartItem[],
-  trackMap: Map<string, any>,
-): void {
-  cartItems.forEach((product: CartItemUpdated) => {
-    const track = trackMap.get(String(product.productId));
+export interface PopulatedCart extends Omit<CartInterface, "items"> {
+  items: PopulatedCartItem[];
+}
+
+function validateItemsStatus(cartItems: PopulatedCartItem[]): void {
+  cartItems.forEach((item: PopulatedCartItem) => {
+    const track = item.productId; // Contains populated track details
 
     if (!track) {
-      product.status = ItemStatus.deleted;
+      item.status = ItemStatus.deleted;
     } else if (track.status !== "published") {
-      product.status = ItemStatus.inactive;
+      item.status = ItemStatus.inactive;
     } else if (
-      (product.license === "basic" && track.basicPrice !== product.price) ||
-      (product.license === "premium" && track.premiumPrice !== product.price)
+      (item.license === "basic" && track.basicPrice !== item.price) ||
+      (item.license === "premium" && track.premiumPrice !== item.price)
     ) {
-      product.status = ItemStatus.priceChanged;
-      product.newPrice =
-        product.license === "basic" ? track.basicPrice : track.premiumPrice;
+      item.status = ItemStatus.priceChanged;
+      item.newPrice =
+        item.license === "basic" ? track.basicPrice : track.premiumPrice;
     } else {
-      product.status = ItemStatus.active;
+      item.status = ItemStatus.active;
     }
   });
 }
 
-export async function retrieveCart(userId: string): Promise<CartInterface> {
-  const userCart: CartInterface = await Cart.findOneAndUpdate(
+export async function retrieveCart(userId: string) {
+  // Populated productId to obtain track details to skip making more request when validating with cart items.
+  const cart = await Cart.findOneAndUpdate(
     { userId },
     {
       $setOnInsert: {
@@ -138,26 +152,21 @@ export async function retrieveCart(userId: string): Promise<CartInterface> {
       upsert: true,
       new: true,
     },
-  ).lean<CartInterface>();
+  )
+    .populate(
+      "items.productId",
+      "_id coverImageUrl title basicPrice premiumPrice description key status bpm genre",
+    )
+    .lean<PopulatedCart>();
 
-  return userCart;
+  return cart;
 }
 
-export const getUserCart = async (userId: string): Promise<CartInterface> => {
+export const getUserCart = async (userId: string): Promise<PopulatedCart> => {
   const cart = await retrieveCart(userId);
   if (cart.items.length <= 0) return cart;
 
-  const productIds = cart.items.map((item) => item.productId);
-  const tracks = await Track.find({ _id: { $in: productIds } }).lean<
-    TrackInterface[]
-  >();
-
-  const trackMap = new Map<string, any>();
-  tracks.forEach((track) => {
-    trackMap.set(String(track._id), track);
-  });
-
-  validateItemsStatus(cart.items, trackMap); // User should know if product status or price has changed
+  validateItemsStatus(cart.items); // User should know if product status or price has changed
   const subTotal = cart.items.reduce(
     (sum, item) => sum + Number(item.price),
     0,

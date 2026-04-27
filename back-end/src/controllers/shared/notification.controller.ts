@@ -1,15 +1,20 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ApiResponse } from "../responseInterface.js";
 import * as notificationService from "../../services/notification.service.js";
-import type { notification } from "../../models/notification.schema.js";
+import type { NotificationInterface } from "../../models/notification.schema.js";
 import * as notificationValidator from "../../utils/validators/notification.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import Joi from "joi";
+import {
+  toNotificationResponse,
+  toNotificationsResponse,
+  type NotificationResponse,
+} from "../../mappers/notification.mappers.js";
 
 /* Get all notifications */
 export const getAllNotifications = async (
-  req: Request<{}, {}, {}, { read: string }>,
-  res: Response<ApiResponse<notification[]>>,
+  req: Request<{}, ApiResponse<NotificationResponse[]>, {}, { read: string }>,
+  res: Response<ApiResponse<NotificationResponse[]>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
@@ -21,10 +26,11 @@ export const getAllNotifications = async (
       read,
     );
 
-    const response: ApiResponse<notification[]> = {
+    const notificationsRes = toNotificationsResponse(notifications);
+    const response: ApiResponse<NotificationResponse[]> = {
       status: true,
       message: "Notifications retrieved succesfully.",
-      data: notifications,
+      data: notificationsRes,
     };
 
     res.status(200).json(response);
@@ -35,8 +41,8 @@ export const getAllNotifications = async (
 
 /* Get a notification */
 export const getNotification = async (
-  req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,
-  res: Response<ApiResponse<notification>>,
+  req: Request<{ id: string }, ApiResponse<NotificationResponse>, {}, {}>,
+  res: Response<ApiResponse<NotificationResponse>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
@@ -45,10 +51,11 @@ export const getNotification = async (
 
     const notification = await notificationService.getNotification(user.id, id);
 
-    const response: ApiResponse<notification> = {
+    const notificationRes = toNotificationResponse(notification);
+    const response: ApiResponse<NotificationResponse> = {
       status: true,
       message: "Notification retrieved succesfully.",
-      data: notification,
+      data: notificationRes,
     };
 
     res.status(200).json(response);
@@ -71,11 +78,11 @@ function validateNotificationUpdateBody(body: { read: boolean }): {
 export const updateNotificationStatus = async (
   req: Request<
     { id: string },
-    ApiResponse<notification>,
+    ApiResponse<NotificationResponse>,
     { read: boolean },
     {}
   >,
-  res: Response<ApiResponse<notification>>,
+  res: Response<ApiResponse<NotificationResponse>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
@@ -90,10 +97,33 @@ export const updateNotificationStatus = async (
       read,
     );
 
-    const response: ApiResponse<notification> = {
+    const notificationRes = toNotificationResponse(notification);
+    const response: ApiResponse<NotificationResponse> = {
       status: true,
       message: "Notification status updated succesfully.",
-      data: notification,
+      data: notificationRes,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* Mark all as read */
+export const readAllNotifications = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user!.id;
+
+    await notificationService.readAllNotifications(userId);
+
+    const response: ApiResponse<void> = {
+      status: true,
+      message: "All notifications marked as read successfully.",
     };
 
     res.status(200).json(response);
@@ -104,8 +134,8 @@ export const updateNotificationStatus = async (
 
 /* Delete notification  */
 export const deleteNotification = async (
-  req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,
-  res: Response<ApiResponse<notification>>,
+  req: Request<{ id: string }, ApiResponse<NotificationInterface>, {}, {}>,
+  res: Response<ApiResponse<NotificationInterface>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
@@ -114,7 +144,7 @@ export const deleteNotification = async (
 
     await notificationService.deleteNotification(user.id, id);
 
-    const response: ApiResponse<notification> = {
+    const response: ApiResponse<NotificationInterface> = {
       status: true,
       message: "Notification was deleted succesfully.",
     };

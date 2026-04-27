@@ -1,6 +1,6 @@
 import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "./responseInterface.js";
-import type { UserProfile } from "./userTypes.js";
+import type { UserProfile } from "../services/profile.service.js";
 import { type ProfileUpdatesInput } from "../services/profile.service.js";
 import * as userService from "../services/profile.service.js";
 import AppError, { ErrorCodes } from "../errors/appError.js";
@@ -11,28 +11,29 @@ import env from "../configs/env.js";
 import { checkAndResizeImgRatio } from "../utils/helpers.js";
 import mainQueue from "../queues/main.queue.js";
 import { getFavourites } from "../services/users/userFavourites.service.js";
-import type { FavouriteInterface } from "../models/favourite.schema.js";
 import type { ObjectId } from "mongoose";
+import { toProfileRes } from "../mappers/profile.mapper.js";
+import {
+  toFavouritesRes,
+  type FavouriteResponse,
+} from "../mappers/favourite.mappers.js";
 
 /* Get user profile  */
 export const getProfile = async (
-  req: Request<
-    {},
-    { status: boolean; message: string; data?: UserProfile },
-    { email: string },
-    {}
-  >,
-  res: Response<{ status: boolean; message: string; data?: UserProfile }>,
+  req: Request<{}, ApiResponse<UserProfile>, { email: string }, {}>,
+  res: Response<ApiResponse<UserProfile>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const userId: string = req.user!.id;
-    const profile: UserProfile = await userService.getProfile(userId);
+
+    const profile = await userService.getProfile(userId);
+    const profileRes = toProfileRes(profile);
 
     const response: ApiResponse<UserProfile> = {
       status: true,
       message: "Profile retrieved successfully.",
-      data: profile,
+      data: profileRes,
     };
 
     res.status(200).json(response);
@@ -43,13 +44,8 @@ export const getProfile = async (
 
 /* Update user profile  */
 export const updateProfile = async (
-  req: Request<
-    {},
-    { status: boolean; message: string; data?: UserProfile },
-    ProfileUpdatesInput,
-    {}
-  >,
-  res: Response<{ status: boolean; message: string; data?: UserProfile }>,
+  req: Request<{}, ApiResponse<UserProfile>, ProfileUpdatesInput, {}>,
+  res: Response<ApiResponse<UserProfile>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
@@ -59,15 +55,13 @@ export const updateProfile = async (
       userValidator.userUpdateBodySchema,
     );
 
-    const profile: UserProfile = await userService.updateProfile(
-      userId,
-      sanitizedUpdates,
-    );
+    const profile = await userService.updateProfile(userId, sanitizedUpdates);
+    const profileRes = toProfileRes(profile);
 
     const response: ApiResponse<UserProfile> = {
       status: true,
       message: "Profile updated successfully.",
-      data: profile,
+      data: profileRes,
     };
 
     res.status(200).json(response);
@@ -191,7 +185,7 @@ export const getUserPublicProfile = async (
       gender,
       bio,
       id,
-    }: UserProfile = await userService.getProfile(userId);
+    } = await userService.getProfile(userId);
 
     const response: ApiResponse<ProfileSnapshot> = {
       status: true,
@@ -217,19 +211,20 @@ export const getUserPublicProfile = async (
 
 /* Get user's favourites list */
 export const getUserFavourites = async (
-  req: Request<{ id: string }, ApiResponse<FavouriteInterface[]>, {}, {}>,
-  res: Response<ApiResponse<FavouriteInterface[]>>,
+  req: Request<{ id: string }, ApiResponse<FavouriteResponse[]>, {}, {}>,
+  res: Response<ApiResponse<FavouriteResponse[]>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const userId: string = req.params.id;
 
-    const userFavouriteList = await getFavourites(userId);
+    const userFavourites = await getFavourites(userId);
+    const favouritesRes = toFavouritesRes(userFavourites);
 
-    const response: ApiResponse<FavouriteInterface[]> = {
+    const response: ApiResponse<FavouriteResponse[]> = {
       status: true,
       message: "User's favourites retrieved successfully.",
-      data: userFavouriteList,
+      data: favouritesRes,
     };
 
     res.status(200).json(response);

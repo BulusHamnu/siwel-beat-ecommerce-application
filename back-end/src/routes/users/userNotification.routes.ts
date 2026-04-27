@@ -18,10 +18,16 @@ router.get(
 );
 
 router.patch(
-  "/notifications/:id/",
+  "/notifications/read-all",
   generalApiLimiter(),
-  notificationController.updateNotificationStatus,
+  notificationController.readAllNotifications,
 );
+
+// router.patch(
+//   "/notifications/:id/",
+//   generalApiLimiter(),
+//   notificationController.updateNotificationStatus,
+// );
 
 router.patch(
   "/notifications/:id/",

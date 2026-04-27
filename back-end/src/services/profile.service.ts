@@ -1,15 +1,41 @@
 import User, { type UserInterface } from "../models/user.schema.js";
 import Profile, { type ProfileInterface } from "../models/profile.schema.js";
-import type { UserProfile } from "../controllers/userTypes.js";
+// import type { UserProfile } from "../controllers/userTypes.js";
 import AppError, { ErrorCodes } from "../errors/appError.js";
 import supabase from "./supabase.js";
 import env from "../configs/env.js";
 import mongoose from "mongoose";
 import mainQueue from "../queues/main.queue.js";
+import { type ObjectId } from "mongoose";
+
+export interface UserProfile {
+  id: string | ObjectId;
+  email: string;
+  isVerified: boolean;
+  firstName: string;
+  lastName: string;
+  gender: string;
+  bio: string;
+  username: string;
+  role: string;
+  isActive: boolean;
+  avatar: string;
+  createdAt: string;
+  // updatedAt: Date;
+  notification: {
+    emailNotification: {
+      commentAndLikes: boolean;
+      orders: boolean;
+    };
+  };
+}
 
 /* Get profile */
 export const getProfile = async (id: string): Promise<UserProfile> => {
-  const user: UserInterface | null = await User.findOne({ _id: id });
+  const user = await User.findOne({
+    _id: id,
+  }).lean<UserInterface>();
+
   if (!user)
     throw new AppError(
       ErrorCodes.USER_NOT_FOUND,
@@ -19,9 +45,9 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
       null,
     );
 
-  const profile: ProfileInterface | null = await Profile.findOne({
+  const profile = await Profile.findOne({
     userId: user._id,
-  });
+  }).lean<ProfileInterface>();
 
   if (!profile)
     throw new AppError(
@@ -32,17 +58,16 @@ export const getProfile = async (id: string): Promise<UserProfile> => {
       null,
     );
 
-  const profileObj = profile?.toObject();
-
   return {
-    id: user._id,
+    id: user._id, // Result contains two different _ids, so we use `id` to represent the correct user id.
     username: user.username,
     isVerified: user.isVerified,
     email: user.email,
     role: user.role,
     isActive: user.isActive,
     avatar: user.avatar,
-    ...profileObj,
+    ...profile,
+    createdAt: profile.createdAt as any,
   };
 };
 
@@ -154,6 +179,8 @@ export const updateProfile = async (
       isVerified: user.isVerified,
       email: user.email,
       role: user.role,
+      isActive: user.isActive,
+      avatar: user.avatar,
       ...profileObj,
     };
   } finally {

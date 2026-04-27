@@ -2,8 +2,23 @@ import Purchase, {
   type PurchaseInterface,
 } from "../../models/purchase.schema.js";
 import { type Pagination } from "../../controllers/responseInterface.js";
-import type { FilterQuery } from "mongoose";
+import type { FilterQuery, ObjectId, Query } from "mongoose";
 import AppError, { ErrorCodes } from "../../errors/appError.js";
+
+export interface PopulatedPurchase extends Omit<PurchaseInterface, "trackId"> {
+  trackId: {
+    _id: ObjectId;
+    coverImageUrl: string;
+    title: string;
+    description: string;
+    key: string;
+    type: string;
+    status: string;
+    bpm: number;
+    tags: string[];
+    genre: string;
+  };
+}
 
 /* Get purchases */
 interface PurchaseQueries {
@@ -31,7 +46,7 @@ async function getPurchasesAndCounts(
   limit: number,
 ) {
   const countsQuery = Purchase.find(queries).countDocuments();
-  const purchasesQuery = Purchase.find(queries)
+  const purchasesQuery: any = Purchase.find(queries)
     .skip(skip)
     .limit(limit + 1)
     .sort({ createdAt: -1 })
@@ -39,28 +54,20 @@ async function getPurchasesAndCounts(
       path: "trackId",
       select:
         "_id coverImageUrl title description key type status bpm tags genre",
-      match: { status: "published" },
     });
 
-  const [purchaseCount, purchasesWithExtra] = await Promise.all([
-    countsQuery,
-    purchasesQuery,
-  ]);
+  const [purchaseCount, purchasesWithExtra]: [number, PopulatedPurchase[]] =
+    await Promise.all([countsQuery, purchasesQuery]);
 
   return { purchaseCount, purchasesWithExtra };
-}
-
-export interface PurchasesResult {
-  purchases: PurchaseInterface[];
-  pagination: Pagination;
 }
 
 export const getUserPurchases = async (
   userId: string,
   type: string,
-  page: number,
-  limit: number,
-): Promise<PurchasesResult> => {
+  page: number = 1,
+  limit: number = 10,
+): Promise<{ purchases: PopulatedPurchase[]; pagination: Pagination }> => {
   const skip = (page - 1) * limit;
 
   const queries = buildQueries(userId, type);
@@ -70,7 +77,6 @@ export const getUserPurchases = async (
     limit,
   );
 
-  // For easy navigation through purchases
   const hasNext = purchasesWithExtra.length > limit;
   const totalPage = Math.ceil(purchaseCount / limit);
   const purchases = purchasesWithExtra.slice(0, limit);
@@ -90,7 +96,7 @@ export const getUserPurchases = async (
 export const getPurchase = async (
   userId: string,
   purchaseId: string,
-): Promise<PurchaseInterface> => {
+): Promise<PopulatedPurchase> => {
   const purchase = await Purchase.findOne({
     _id: purchaseId,
     userId,
@@ -99,9 +105,8 @@ export const getPurchase = async (
       path: "trackId",
       select:
         "_id coverImageUrl title description key type status bpm tags genre",
-      match: { status: "published" },
     })
-    .lean<PurchaseInterface>();
+    .lean<PopulatedPurchase>();
 
   if (!purchase)
     throw new AppError(

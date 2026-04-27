@@ -9,127 +9,67 @@ import CommentLike, {
 } from "../../models/commentLike.schema.js";
 import mainQueue from "../../queues/main.queue.js";
 import logger from "../../utils/logger.js";
+import { postNewNotification, notifyAdmins } from "../notification.service.js";
+import { isSelfAction } from "../../utils/helpers.js";
 
-/* Post a comment */
-export interface parentComment extends Omit<CommentInterface, "userId"> {
-  userId: {
-    _id: string;
-    username: string;
-    email: string;
-    avatar: string;
-  };
-}
-
-function isSelfAction(
-  actorUserId: ObjectId | string | undefined,
-  targetUserId: ObjectId | undefined,
-): boolean {
-  if (!targetUserId || !actorUserId) return false;
-  return String(targetUserId) === String(actorUserId);
-}
-
-async function sendCommentNotification({
-  parentCommentId,
-  commentUserId = undefined,
-  likeUserId = undefined,
+/* Post comments notification */
+export async function sendCommentNotification({
+  type,
+  targetUserId,
+  actorUserId,
   resourceId,
   entityId,
-  type,
 }: {
-  parentCommentId: ObjectId | null;
-  commentUserId?: ObjectId | undefined;
-  likeUserId?: ObjectId | undefined;
-  resourceId: string;
-  entityId: string;
   type: string;
-}): Promise<void> {
+  targetUserId: string;
+  actorUserId: string | ObjectId;
+  resourceId: string | ObjectId;
+  entityId: string | ObjectId;
+}) {
+  if (isSelfAction(targetUserId, actorUserId)) return;
+
   switch (type) {
     case NotificationType.COMMENT_REPLIED: {
-      if (!parentCommentId) return;
+      const replyComment = (await Comment.findOne({
+        _id: entityId,
+      }).populate("userId", "username  _id")) as PopulatedComment | null;
 
-      const parentComment = (await Comment.findOne({
-        _id: parentCommentId,
-      }).populate("userId", "username  _id")) as parentComment | null;
-
-      if (isSelfAction(parentComment?.userId._id, commentUserId)) return;
-
-      await mainQueue.add(
-        "post-notification",
-        {
-          userId: parentComment?.userId._id!,
-          message: `${parentComment?.userId.username} replied to your comment.`,
-          type: NotificationType.COMMENT_REPLIED,
-          resourceId,
-          entityId,
-        },
-        {
-          attempts: 2,
-          backoff: {
-            type: "exponential",
-            delay: 2000,
-          },
-          removeOnComplete: 1000,
-          removeOnFail: 5000,
-        },
-      );
-
+      await postNewNotification({
+        userId: targetUserId,
+        message: `${replyComment?.userId.username || "Someone"} replied to your comment.`,
+        type,
+        resourceId,
+        entityId,
+      });
       break;
     }
 
-    case NotificationType.TRACK_COMMENTED: {
-      await mainQueue.add(
-        "post-notification",
-        {
-          userId: null,
-          message: "You have a new comment on your track.",
-          type: NotificationType.TRACK_COMMENTED,
-          resourceId,
-          entityId,
-        },
-        {
-          attempts: 2,
-          backoff: {
-            type: "exponential",
-            delay: 2000,
-          },
-          removeOnComplete: 1000,
-          removeOnFail: 5000,
-        },
-      );
+    case NotificationType.COMMENT_REPLIED: {
+      const comment = (await Comment.findOne({
+        _id: entityId,
+      }).populate("userId", "username  _id")) as PopulatedComment | null;
 
+      await notifyAdmins(
+        `${comment?.userId.username || "Someone"} commented on your track.`,
+        type,
+        resourceId,
+        entityId,
+      );
       break;
     }
 
     case NotificationType.COMMENT_LIKED: {
-      if (!entityId) return;
+      const commentLike = (await CommentLike.findOne({
+        userId: actorUserId,
+      }).populate("userId", "username _id")) as PopulatedLike | null;
 
-      const comment = (await Comment.findOne({
-        _id: entityId,
-      }).populate("userId", "username _id")) as populatedComment | null;
-
-      if (isSelfAction(comment?.userId._id, likeUserId)) return;
-
-      await mainQueue.add(
-        "post-notification",
-        {
-          userId: comment?.userId._id!,
-          message: `${comment?.userId.username} liked your comment on a track`,
-          type: NotificationType.COMMENT_LIKED,
-          resourceId,
-          entityId,
-        },
-        {
-          attempts: 2,
-          backoff: {
-            type: "exponential",
-            delay: 2000,
-          },
-          removeOnComplete: 1000,
-          removeOnFail: 5000,
-        },
-      );
-
-      break;
+      await postNewNotification({
+        userId: targetUserId,
+        message: `${commentLike?.userId.username || "Someone"} liked your comment on a track.`,
+        type,
+        resourceId,
+        entityId,
+      });
     }
 
     default: {
@@ -139,6 +79,7 @@ async function sendCommentNotification({
   }
 }
 
+/* Post a comment */
 export const postNewComment = async (
   trackId: string,
   userId: string,
@@ -154,13 +95,14 @@ export const postNewComment = async (
       null,
     );
 
+  let parentComment: CommentInterface | null = null;
   if (parentId) {
-    const parentComment = await Comment.findOne({ _id: parentId });
+    parentComment = await Comment.findOne({ _id: parentId });
 
     if (!parentComment)
       throw new AppError(
         ErrorCodes.PARENT_COMMENT_NOT_FOUND,
-        "Parent comment not found.",
+        "Comment not found.",
         404,
         true,
         null,
@@ -169,21 +111,38 @@ export const postNewComment = async (
 
   const comment = await Comment.create({ content, parentId, trackId, userId });
 
-  await sendCommentNotification({
-    type: parentId
-      ? NotificationType.COMMENT_REPLIED
-      : NotificationType.TRACK_COMMENTED,
-    parentCommentId: parentId,
-    commentUserId: comment.userId,
-    resourceId: trackId,
-    entityId: comment._id as string,
-  });
+  const targetUserId = parentComment?.userId || null;
+  const actorUserId = userId;
+
+  const notificationType = parentComment
+    ? NotificationType.COMMENT_REPLIED
+    : NotificationType.TRACK_COMMENTED;
+
+  await mainQueue.add(
+    "send-comments-notification",
+    {
+      targetUserId,
+      actorUserId,
+      type: notificationType,
+      resourceId: trackId,
+      entityId: comment._id,
+    },
+    {
+      attempts: 2,
+      backoff: {
+        type: "exponential",
+        delay: 2000,
+      },
+      removeOnComplete: 1000,
+      removeOnFail: 5000,
+    },
+  );
 
   return comment;
 };
 
 /* Get comment and replies */
-export interface populatedComment extends Omit<CommentInterface, "userId"> {
+export interface PopulatedComment extends Omit<CommentInterface, "userId"> {
   _id: Types.ObjectId;
   userId: {
     _id: string;
@@ -191,16 +150,16 @@ export interface populatedComment extends Omit<CommentInterface, "userId"> {
     isVerified: string;
     avatar: string;
   };
-  replies?: populatedComment[];
+  replies?: PopulatedComment[];
 }
 
-type commentsMap = Map<string, populatedComment>;
+type commentsMap = Map<string, PopulatedComment>;
 async function getTrackCommentsAndBuildTree(
   trackId: string,
 ): Promise<commentsMap> {
   let comments = await Comment.find({ trackId })
     .populate("userId", "_id username isVerified avatar")
-    .lean<populatedComment[]>();
+    .lean<PopulatedComment[]>();
 
   const commentsTree = new Map<string, any>();
   comments.forEach((comment) => {
@@ -223,7 +182,7 @@ async function getTrackCommentsAndBuildTree(
 export const getCommentAndReplies = async (
   commentId: string,
   trackId: string,
-): Promise<populatedComment> => {
+): Promise<PopulatedComment> => {
   const track = await Track.findOne({ _id: trackId });
   if (!track)
     throw new AppError(
@@ -236,7 +195,7 @@ export const getCommentAndReplies = async (
 
   const commentsTree = await getTrackCommentsAndBuildTree(trackId);
 
-  const comment: populatedComment | undefined = commentsTree.get(commentId);
+  const comment: PopulatedComment | undefined = commentsTree.get(commentId);
   if (!comment)
     throw new AppError(
       ErrorCodes.COMMENT_NOT_FOUND,
@@ -252,7 +211,7 @@ export const getCommentAndReplies = async (
 /* Get all comment */
 export const getAllComments = async (
   id: string,
-): Promise<populatedComment[]> => {
+): Promise<PopulatedComment[]> => {
   const track = await Track.findOne({ _id: id });
   if (!track)
     throw new AppError(
@@ -265,7 +224,7 @@ export const getAllComments = async (
 
   const commentsTree = await getTrackCommentsAndBuildTree(id);
 
-  const rootComments: populatedComment[] = [];
+  const rootComments: PopulatedComment[] = [];
   commentsTree.forEach((comment) => {
     if (comment.parentId) return;
     rootComments.push(comment);
@@ -280,8 +239,8 @@ export const updateComment = async (
   trackId: string,
   userId: string,
   content: string,
-): Promise<populatedComment> => {
-  const updatedComment: populatedComment | null =
+): Promise<PopulatedComment> => {
+  const updatedComment: PopulatedComment | null =
     await Comment.findOneAndUpdate(
       {
         _id: commentId,
@@ -344,6 +303,15 @@ export const deleteComment = async (
 };
 
 /* Like comment */
+export interface PopulatedLike extends Omit<CommentLikeInterface, "userId"> {
+  userId: {
+    _id: string | ObjectId;
+    username: string;
+    avatar: string;
+  };
+  commentId: ObjectId;
+}
+
 export const likeComment = async (
   userId: string,
   commentId: string,
@@ -376,18 +344,32 @@ export const likeComment = async (
       });
 
       await newCommentLike.save({ session });
+      likesCount = updatedComment.likes;
 
       if (newCommentLike) {
-        await sendCommentNotification({
-          type: NotificationType.COMMENT_LIKED,
-          parentCommentId: null,
-          likeUserId: newCommentLike.userId,
-          resourceId: trackId,
-          entityId: updatedComment._id as string,
-        });
-      }
+        const targetUserId = updatedComment.userId;
+        const actorUserId = newCommentLike.userId;
 
-      likesCount = updatedComment.likes;
+        await mainQueue.add(
+          "send-comments-notification",
+          {
+            targetUserId,
+            actorUserId,
+            type: NotificationType.COMMENT_LIKED,
+            resourceId: trackId,
+            entityId: updatedComment._id as string,
+          },
+          {
+            attempts: 2,
+            backoff: {
+              type: "exponential",
+              delay: 2000,
+            },
+            removeOnComplete: 1000,
+            removeOnFail: 5000,
+          },
+        );
+      }
     });
 
     return { likesCount };
@@ -406,7 +388,7 @@ export const likeComment = async (
 /* Get Comment likes */
 export interface CommentLikes {
   likesCount: number;
-  likedBy: FlattenMaps<CommentLikeInterface>[];
+  likedBy: PopulatedLike[];
 }
 
 export const getAllCommentLikes = async (
@@ -415,6 +397,7 @@ export const getAllCommentLikes = async (
   const comment: CommentInterface | null = await Comment.findOne({
     _id: commentId,
   }).lean<CommentInterface>();
+
   if (!comment)
     throw new AppError(
       ErrorCodes.COMMENT_NOT_FOUND,
@@ -424,9 +407,9 @@ export const getAllCommentLikes = async (
       null,
     );
 
-  const commentLikes = await CommentLike.find({ commentId })
-    .populate("userId", "username avatar _id")
-    .lean();
+  const commentLikes: any[] = await CommentLike.find({
+    commentId,
+  }).populate("userId", "username avatar _id"); //.lean();
 
   return { likesCount: comment.likes, likedBy: commentLikes };
 };

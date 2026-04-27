@@ -581,8 +581,8 @@ export async function retrieveTrackMedia(trackId: string): Promise<TrackMedia> {
   return trackMedia;
 }
 
-/* Delete track and files */
-export async function deleteTrackAndFiles(trackId: string) {
+/* Delete track and related resource */
+export async function deleteTrack(trackId: string) {
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {

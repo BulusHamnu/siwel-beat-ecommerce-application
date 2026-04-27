@@ -1,21 +1,26 @@
 import type { Request, Response, NextFunction } from "express";
 import { type ApiResponse } from "../responseInterface.js";
 import * as commentService from "../../services/tracks/trackComments.service.js";
-import { type populatedComment } from "../../services/tracks/trackComments.service.js";
+import { type PopulatedComment } from "../../services/tracks/trackComments.service.js";
 import { type CommentInterface } from "../../models/comment.schema.js";
 import { validateTrackidParam } from "../../utils/validators/track.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import * as trackValidator from "../../utils/validators/track.validator.js";
+import * as commentMapper from "../../mappers/comment.mappers.js";
+import {
+  type CommentResponse,
+  type CommentLikesResponse,
+} from "../../mappers/comment.mappers.js";
 
 /* Post new comment  */
 export const postComment = async (
   req: Request<
     { id: string },
-    ApiResponse<CommentInterface>,
+    ApiResponse<CommentResponse>,
     CommentInterface,
     {}
   >,
-  res: Response<ApiResponse<CommentInterface>>,
+  res: Response<ApiResponse<CommentResponse>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
@@ -33,10 +38,11 @@ export const postComment = async (
       commentBody,
     );
 
-    const response: ApiResponse<CommentInterface> = {
+    const commentRes = commentMapper.toCommentRes(comment);
+    const response: ApiResponse<CommentResponse> = {
       status: true,
       message: "Comment posted sucessfully.",
-      data: comment,
+      data: commentRes,
     };
 
     res.status(201).json(response);
@@ -52,8 +58,8 @@ interface getCommentParam {
 }
 
 export const getComment = async (
-  req: Request<{}, ApiResponse<populatedComment>, {}, {}>,
-  res: Response<ApiResponse<populatedComment>>,
+  req: Request<{}, ApiResponse<CommentResponse>, {}, {}>,
+  res: Response<ApiResponse<CommentResponse>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
@@ -62,16 +68,16 @@ export const getComment = async (
       trackValidator.getCommentParamBody,
     );
 
-    // get comment
-    const comment: populatedComment = await commentService.getCommentAndReplies(
+    const comment: PopulatedComment = await commentService.getCommentAndReplies(
       commentId,
       id,
     );
 
-    const response: ApiResponse<populatedComment> = {
+    const commentRes = commentMapper.toCommentResWithReplies(comment);
+    const response: ApiResponse<CommentResponse> = {
       status: true,
       message: "Comment retrieved successfully.",
-      data: comment,
+      data: commentRes,
     };
 
     res.status(200).json(response);
@@ -82,20 +88,21 @@ export const getComment = async (
 
 /* Get all comments */
 export const getAllComment = async (
-  req: Request<{ id: string }, ApiResponse<populatedComment[]>, {}, {}>,
-  res: Response<ApiResponse<populatedComment[]>>,
+  req: Request<{ id: string }, ApiResponse<CommentResponse[]>, {}, {}>,
+  res: Response<ApiResponse<CommentResponse[]>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const { id } = req.params;
 
-    const comments: populatedComment[] =
+    const comments: PopulatedComment[] =
       await commentService.getAllComments(id);
 
-    const response: ApiResponse<populatedComment[]> = {
+    const commentsMap = commentMapper.toCommentsResWithReplies(comments);
+    const response: ApiResponse<CommentResponse[]> = {
       status: true,
       message: "Comments retrieved successfully.",
-      data: comments,
+      data: commentsMap,
     };
 
     res.status(200).json(response);
@@ -108,11 +115,11 @@ export const getAllComment = async (
 export const updateComment = async (
   req: Request<
     { id: string; commentId: string },
-    ApiResponse<populatedComment>,
+    ApiResponse<CommentResponse>,
     { content: string },
     {}
   >,
-  res: Response<ApiResponse<populatedComment>>,
+  res: Response<ApiResponse<CommentResponse>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
@@ -134,10 +141,12 @@ export const updateComment = async (
       content,
     );
 
-    const response: ApiResponse<populatedComment> = {
+    const commentRes = commentMapper.toCommentResWithReplies(updatedComment);
+
+    const response: ApiResponse<CommentResponse> = {
       status: true,
       message: "Comment was updated sucessfully.",
-      data: updatedComment,
+      data: commentRes,
     };
 
     res.status(200).json(response);
@@ -214,22 +223,23 @@ export const likeComment = async (
 export const getCommentLikes = async (
   req: Request<
     { id: string; commentId: string },
-    ApiResponse<commentService.CommentLikes>,
+    ApiResponse<CommentLikesResponse>,
     {},
     {}
   >,
-  res: Response<ApiResponse<commentService.CommentLikes>>,
+  res: Response<ApiResponse<CommentLikesResponse>>,
   next: NextFunction,
 ) => {
   try {
     const commentId = req.params.commentId;
 
     const data = await commentService.getAllCommentLikes(commentId);
+    const commentLikedByRes = commentMapper.toCommentLikesRes(data);
 
-    const response: ApiResponse<commentService.CommentLikes> = {
+    const response: ApiResponse<CommentLikesResponse> = {
       status: true,
-      message: "Comment likedBy retrieved successfully.",
-      data: data,
+      message: "Comment likes retrieved successfully.",
+      data: commentLikedByRes,
     };
 
     res.status(200).json(response);

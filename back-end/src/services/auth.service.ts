@@ -1,5 +1,4 @@
 import User from "../models/user.schema.js";
-import type { CreateUserBody } from "../controllers/userTypes.js";
 import type { UserInterface } from "../models/user.schema.js";
 import Session, { type SessionInterface } from "../models/session.schema.js";
 import AppError, { ErrorCodes } from "../errors/appError.js";
@@ -13,6 +12,21 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 import mainQueue from "../queues/main.queue.js";
 
+export interface CreateUserInput {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  password: string;
+  gender?: string;
+  provider: string;
+  role: string;
+  isVerified: boolean;
+  googleId: string;
+  accessToken: string;
+  avatar: string;
+}
+
 /* Create new user */
 export const createNewUser = async ({
   username,
@@ -25,7 +39,7 @@ export const createNewUser = async ({
   avatar = "",
   accessToken,
   googleId,
-}: CreateUserBody): Promise<UserInterface> => {
+}: CreateUserInput): Promise<UserInterface> => {
   const hashedPassword = await hashPassword(password);
   const { hashedCode, code, expiresAt } = await createEmailVerificationCode(15);
 
@@ -202,7 +216,7 @@ export const resendVerificationEmail = async (email: string): Promise<void> => {
       "User is already verified.",
       400,
       true,
-      { identifier: email },
+      { email },
     );
 
   const { code, hashedCode, expiresAt } = await createEmailVerificationCode(15);

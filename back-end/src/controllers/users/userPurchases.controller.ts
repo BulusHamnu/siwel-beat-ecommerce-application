@@ -1,12 +1,21 @@
 import type { Response, Request, NextFunction } from "express";
 import type { ApiResponse } from "../responseInterface.js";
-import { type PurchasesResult } from "../../services/users/userPurchases.service.js";
 import * as purchaseService from "../../services/users/userPurchases.service.js";
-import { type PurchaseInterface } from "../../models/purchase.schema.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import * as userValidator from "../../utils/validators/user.validator.js";
+import {
+  toPurchaseRes,
+  toPurchasesRes,
+  type PurchaseResponse,
+} from "../../mappers/purchase.mappers.js";
+import { type Pagination } from "../responseInterface.js";
 
 /* Get user's purchases */
+export interface PurchasesResult {
+  purchases: PurchaseResponse[];
+  pagination: Pagination;
+}
+
 export const getAllPurchases = async (
   req: Request<{}, ApiResponse<PurchasesResult>, {}, {}>,
   res: Response<ApiResponse<PurchasesResult>>,
@@ -19,17 +28,21 @@ export const getAllPurchases = async (
       userValidator.getPurchaseQuerySchema,
     );
 
-    const purchases = await purchaseService.getUserPurchases(
+    const { purchases, pagination } = await purchaseService.getUserPurchases(
       user.id,
       type,
-      Number(page || 1),
-      Number(limit || 10),
+      Number(page),
+      Number(limit),
     );
 
+    const purchaseRes = toPurchasesRes(purchases);
     const response: ApiResponse<PurchasesResult> = {
       status: true,
       message: "Purchases retrieved successfully",
-      data: purchases,
+      data: {
+        purchases: purchaseRes,
+        pagination,
+      },
     };
 
     res.status(200).json(response);
@@ -40,8 +53,8 @@ export const getAllPurchases = async (
 
 /* Get user's purchase */
 export const getPurchase = async (
-  req: Request<{ id: string }, {}, {}, {}>,
-  res: Response<ApiResponse<PurchaseInterface>>,
+  req: Request<{ id: string }, ApiResponse<PurchaseResponse>, {}, {}>,
+  res: Response<ApiResponse<PurchaseResponse>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
@@ -49,11 +62,12 @@ export const getPurchase = async (
     const { id } = req.params;
 
     const purchase = await purchaseService.getPurchase(userId, id);
+    const purchaseRes = toPurchaseRes(purchase);
 
-    const response: ApiResponse<PurchaseInterface> = {
+    const response: ApiResponse<PurchaseResponse> = {
       status: true,
       message: "Purchase retrieved successfully",
-      data: purchase,
+      data: purchaseRes,
     };
 
     res.status(200).json(response);
