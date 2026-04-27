@@ -4,8 +4,8 @@ import * as purchaseService from "../../services/users/userPurchases.service.js"
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import * as userValidator from "../../utils/validators/user.validator.js";
 import {
-  mapPurchase,
-  mapPurchases,
+  toPurchaseRes,
+  toPurchasesRes,
   type PurchaseResponse,
 } from "../../mappers/purchase.mappers.js";
 import { type Pagination } from "../responseInterface.js";
@@ -35,7 +35,7 @@ export const getAllPurchases = async (
       Number(limit),
     );
 
-    const purchaseRes = mapPurchases(purchases);
+    const purchaseRes = toPurchasesRes(purchases);
     const response: ApiResponse<PurchasesResult> = {
       status: true,
       message: "Purchases retrieved successfully",
@@ -62,7 +62,7 @@ export const getPurchase = async (
     const { id } = req.params;
 
     const purchase = await purchaseService.getPurchase(userId, id);
-    const purchaseRes = mapPurchase(purchase);
+    const purchaseRes = toPurchaseRes(purchase);
 
     const response: ApiResponse<PurchaseResponse> = {
       status: true,

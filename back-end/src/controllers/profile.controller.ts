@@ -10,15 +10,11 @@ import * as userValidator from "../utils/validators/user.validator.js";
 import env from "../configs/env.js";
 import { checkAndResizeImgRatio } from "../utils/helpers.js";
 import mainQueue from "../queues/main.queue.js";
-import {
-  getFavourites,
-  type PopulatedFavourite,
-} from "../services/users/userFavourites.service.js";
-import type { FavouriteInterface } from "../models/favourite.schema.js";
+import { getFavourites } from "../services/users/userFavourites.service.js";
 import type { ObjectId } from "mongoose";
-import { mapUserProfile } from "../mappers/profile.mapper.js";
+import { toProfileRes } from "../mappers/profile.mapper.js";
 import {
-  mapFavourites,
+  toFavouritesRes,
   type FavouriteResponse,
 } from "../mappers/favourite.mappers.js";
 
@@ -32,7 +28,7 @@ export const getProfile = async (
     const userId: string = req.user!.id;
 
     const profile = await userService.getProfile(userId);
-    const profileRes = mapUserProfile(profile);
+    const profileRes = toProfileRes(profile);
 
     const response: ApiResponse<UserProfile> = {
       status: true,
@@ -60,7 +56,7 @@ export const updateProfile = async (
     );
 
     const profile = await userService.updateProfile(userId, sanitizedUpdates);
-    const profileRes = mapUserProfile(profile);
+    const profileRes = toProfileRes(profile);
 
     const response: ApiResponse<UserProfile> = {
       status: true,
@@ -223,7 +219,7 @@ export const getUserFavourites = async (
     const userId: string = req.params.id;
 
     const userFavourites = await getFavourites(userId);
-    const favouritesRes = mapFavourites(userFavourites);
+    const favouritesRes = toFavouritesRes(userFavourites);
 
     const response: ApiResponse<FavouriteResponse[]> = {
       status: true,

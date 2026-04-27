@@ -4,7 +4,7 @@ import * as favouriteServices from "../../services/users/userFavourites.service.
 import * as userValidator from "../../utils/validators/user.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import {
-  mapFavourites,
+  toFavouritesRes,
   type FavouriteResponse,
 } from "../../mappers/favourite.mappers.js";
 
@@ -44,7 +44,7 @@ export const getMyFavourites = async (
     const user = req.user!;
 
     const favourites = await favouriteServices.getFavourites(user.id);
-    const favouritesRes = mapFavourites(favourites);
+    const favouritesRes = toFavouritesRes(favourites);
 
     const response: ApiResponse<FavouriteResponse[]> = {
       status: true,

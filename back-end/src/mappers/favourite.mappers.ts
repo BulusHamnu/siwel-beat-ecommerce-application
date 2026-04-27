@@ -17,29 +17,31 @@ export interface FavouriteResponse {
 }
 
 /* Favourites response mapper */
-export function mapFavourite(favourite: PopulatedFavourite): FavouriteResponse {
+export function toFavouriteRes(
+  favourite: PopulatedFavourite,
+): FavouriteResponse {
   const track = favourite.trackId;
 
   return {
-    id: String(track._id),
-    coverImageUrl: track.coverImageUrl,
-    title: track.title,
-    basicPrice: track.basicPrice,
-    premiumPrice: track.premiumPrice,
-    description: track.description,
-    type: track.type,
-    key: track.key,
-    status: track.status,
-    bpm: track.bpm,
-    tags: track.tags,
-    genre: track.genre,
+    id: String(track?._id),
+    coverImageUrl: track?.coverImageUrl,
+    title: track?.title,
+    basicPrice: track?.basicPrice,
+    premiumPrice: track?.premiumPrice,
+    description: track?.description,
+    type: track?.type,
+    key: track?.key,
+    status: track?.status,
+    bpm: track?.bpm,
+    tags: track?.tags,
+    genre: track?.genre,
   };
 }
 
-export function mapFavourites(
+export function toFavouritesRes(
   favourites: PopulatedFavourite[],
 ): FavouriteResponse[] {
   return favourites.map((favourite) => {
-    return mapFavourite(favourite);
+    return toFavouriteRes(favourite);
   });
 }

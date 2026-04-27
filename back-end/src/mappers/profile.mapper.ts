@@ -1,9 +1,8 @@
 import type { UserProfile } from "../services/profile.service.js";
 
 /* User profile mapper */
-
 export interface ProfileResponse extends Omit<UserProfile, "_id"> {}
-export function mapUserProfile(profile: UserProfile): UserProfile {
+export function toProfileRes(profile: UserProfile): UserProfile {
   return {
     id: String(profile.id),
     username: profile.username,

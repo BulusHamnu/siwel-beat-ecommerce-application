@@ -19,7 +19,7 @@ export interface PurchaseResponse {
 }
 
 /* Purchase response mapper */
-export function mapPurchase(purchase: PopulatedPurchase): PurchaseResponse {
+export function toPurchaseRes(purchase: PopulatedPurchase): PurchaseResponse {
   const track = purchase.trackId;
   return {
     track: {
@@ -40,8 +40,8 @@ export function mapPurchase(purchase: PopulatedPurchase): PurchaseResponse {
   };
 }
 
-export function mapPurchases(purchases: PopulatedPurchase[]) {
+export function toPurchasesRes(purchases: PopulatedPurchase[]) {
   return purchases.map((purchase) => {
-    return mapPurchase(purchase);
+    return toPurchaseRes(purchase);
   });
 }
