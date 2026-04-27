@@ -89,6 +89,11 @@ export const updateNotificationStatus = async (
   return updatedNotification;
 };
 
+/* Read all notifications  */
+export const readAllNotifications = async (userId: string) => {
+  await Notification.updateMany({ userId }, { $set: { read: true } });
+};
+
 /* Delete notification */
 export const deleteNotification = async (
   userId: string,

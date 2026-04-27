@@ -102,6 +102,28 @@ export const updateNotificationStatus = async (
   }
 };
 
+/* Mark all as read */
+export const readAllNotifications = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user!.id;
+
+    await notificationService.readAllNotifications(userId);
+
+    const response: ApiResponse<void> = {
+      status: true,
+      message: "All notifications marked as read successfully.",
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
 /* Delete notification  */
 export const deleteNotification = async (
   req: Request<{ id: string }, ApiResponse<notification>, {}, {}>,

@@ -65,6 +65,7 @@ router.get(
   generalApiLimiter(),
   notificationController.getAllNotifications,
 );
+
 router.get(
   "/notifications/:id",
   generalApiLimiter(),
@@ -72,9 +73,9 @@ router.get(
 );
 
 router.patch(
-  "/notifications/:id",
+  "/notifications/read-all",
   generalApiLimiter(),
-  notificationController.updateNotificationStatus,
+  notificationController.readAllNotifications,
 );
 
 router.patch(
