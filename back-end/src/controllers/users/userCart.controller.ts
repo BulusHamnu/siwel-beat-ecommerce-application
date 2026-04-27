@@ -1,11 +1,10 @@
 import type { Response, Request, NextFunction } from "express";
 import { type ApiResponse } from "../responseInterface.js";
 import * as cartService from "../../services/users/userCart.service.js";
-import { type CartInterface } from "../../models/cart.schema.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
 import * as userValidator from "../../utils/validators/user.validator.js";
 import {
-  mapCartResponse,
+  toCartResponse,
   type CartResponse,
 } from "../../mappers/cart.mappers.js";
 
@@ -73,7 +72,7 @@ export const getCart = async (
     const user = req.user!;
 
     const cart = await cartService.getUserCart(user.id);
-    const cartRes = mapCartResponse(cart);
+    const cartRes = toCartResponse(cart);
 
     const response: ApiResponse<CartResponse> = {
       status: true,

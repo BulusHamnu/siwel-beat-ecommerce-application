@@ -24,26 +24,28 @@ export interface CartResponse {
 }
 
 /*  Cart mapper */
-export function mapCartResponse(cart: PopulatedCart): CartResponse {
+export function toCartResponse(cart: PopulatedCart): CartResponse {
   let cartItems: ModifiedCartItem[] = [];
 
   if (cart.items.length > 0) {
     cartItems = cart.items.map((item) => {
+      const track = item.productId;
+
       return {
         name: item.name,
-        productId: String(item.productId._id),
+        productId: String(track?._id),
         price: item.price,
         license: item.license,
         type: item.type,
         status: item.status,
         newPrice: item.newPrice || null,
         track: {
-          id: String(item.productId._id),
-          title: item.productId.title,
-          coverImageUrl: item.productId.coverImageUrl,
-          key: item.productId.key,
-          bpm: item.productId.bpm,
-          genre: item.productId.genre,
+          id: String(track?._id),
+          title: track?.title,
+          coverImageUrl: track?.coverImageUrl,
+          key: track?.key,
+          bpm: track?.bpm,
+          genre: track?.genre,
         },
       };
     });
