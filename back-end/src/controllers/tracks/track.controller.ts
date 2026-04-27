@@ -19,6 +19,7 @@ import type { MulterTrackFiles } from "../../middlewares/upload.js";
 import Audio from "../../models/audio.schema.js";
 import mainQueue from "../../queues/main.queue.js";
 import { NotificationType } from "../../models/notification.schema.js";
+import AppError from "../../errors/appError.js";
 
 /* Post new track  */
 const bundleTrackFilesPath = (files: uploadedTrackFiles): string[] => {
@@ -395,7 +396,16 @@ export async function deleteTrack(
   try {
     const trackId = req.params.id;
 
-    await trackService.deleteTrackAndFiles(trackId);
+    // Error is temporary, untill soft deletion is implemented
+    throw new AppError(
+      "ACTION_NOT_ALLOWED",
+      "Track cannot be deleted because it is currently in use.",
+      409,
+      true,
+      null,
+    );
+
+    await trackService.deleteTrack(trackId);
 
     const response: ApiResponse<null> = {
       status: true,
