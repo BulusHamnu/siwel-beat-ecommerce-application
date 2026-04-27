@@ -38,7 +38,7 @@ export const postComment = async (
       commentBody,
     );
 
-    const commentRes = commentMapper.mapSingle(comment);
+    const commentRes = commentMapper.toCommentRes(comment);
     const response: ApiResponse<CommentResponse> = {
       status: true,
       message: "Comment posted sucessfully.",
@@ -73,7 +73,7 @@ export const getComment = async (
       id,
     );
 
-    const commentRes = commentMapper.mapSingleWithReplies(comment);
+    const commentRes = commentMapper.toCommentResWithReplies(comment);
     const response: ApiResponse<CommentResponse> = {
       status: true,
       message: "Comment retrieved successfully.",
@@ -98,7 +98,7 @@ export const getAllComment = async (
     const comments: PopulatedComment[] =
       await commentService.getAllComments(id);
 
-    const commentsMap = commentMapper.mapMultipleWithReplies(comments);
+    const commentsMap = commentMapper.toCommentsResWithReplies(comments);
     const response: ApiResponse<CommentResponse[]> = {
       status: true,
       message: "Comments retrieved successfully.",
@@ -141,7 +141,7 @@ export const updateComment = async (
       content,
     );
 
-    const commentRes = commentMapper.mapSingleWithReplies(updatedComment);
+    const commentRes = commentMapper.toCommentResWithReplies(updatedComment);
 
     const response: ApiResponse<CommentResponse> = {
       status: true,
@@ -234,7 +234,7 @@ export const getCommentLikes = async (
     const commentId = req.params.commentId;
 
     const data = await commentService.getAllCommentLikes(commentId);
-    const commentLikedByRes = commentMapper.mapCommentLikes(data);
+    const commentLikedByRes = commentMapper.toCommentLikesRes(data);
 
     const response: ApiResponse<CommentLikesResponse> = {
       status: true,

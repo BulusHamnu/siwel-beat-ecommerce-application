@@ -1,4 +1,3 @@
-import type { ObjectId } from "mongoose";
 import type { CommentInterface } from "../models/comment.schema.js";
 import type {
   PopulatedComment,
@@ -23,7 +22,7 @@ export interface CommentResponse {
 }
 
 /* Comment mapper */
-export function mapSingle(comment: CommentInterface): CommentResponse {
+export function toCommentRes(comment: CommentInterface): CommentResponse {
   return {
     id: String(comment._id),
     likes: comment.likes,
@@ -33,14 +32,14 @@ export function mapSingle(comment: CommentInterface): CommentResponse {
   };
 }
 
-export function mapSingleWithReplies(
+export function toCommentResWithReplies(
   comment: PopulatedComment,
 ): CommentResponse {
   let repliesMap: any[] = [];
 
   if (comment.replies && comment.replies.length > 0) {
     repliesMap = comment.replies.map((reply) => {
-      return mapSingleWithReplies(reply);
+      return toCommentResWithReplies(reply);
     });
   }
 
@@ -59,9 +58,9 @@ export function mapSingleWithReplies(
   };
 }
 
-export function mapMultipleWithReplies(comments: PopulatedComment[]) {
+export function toCommentsResWithReplies(comments: PopulatedComment[]) {
   return comments.map((comment) => {
-    return mapSingleWithReplies(comment);
+    return toCommentResWithReplies(comment);
   });
 }
 
@@ -77,23 +76,23 @@ export interface CommentLikesResponse {
   likedBy: CommentLike[];
 }
 
-export function mapCommentLikedBy(commentLike: PopulatedLike) {
+export function toCommentLikedByRes(commentLike: PopulatedLike) {
   return {
     user: {
-      id: String(commentLike.userId._id),
-      username: commentLike.userId.username,
-      avatar: commentLike.userId.avatar,
+      id: String(commentLike.userId?._id),
+      username: commentLike.userId?.username,
+      avatar: commentLike.userId?.avatar,
     },
     commentId: String(commentLike._id),
     createdAt: commentLike.createdAt,
   };
 }
 
-export function mapCommentLikes(
+export function toCommentLikesRes(
   commentLikedBy: CommentLikes,
 ): CommentLikesResponse {
   const likes: CommentLike[] = commentLikedBy.likedBy.map((like) => {
-    return mapCommentLikedBy(like);
+    return toCommentLikedByRes(like);
   });
 
   return {
