@@ -22,41 +22,48 @@ export async function createOrder(orderItems: PopulatedCartItem[]) {
   );
 }
 
-export interface Queries {
+/* Get all orders */
+export interface OrderPlusItems extends OrderInterface {
+  items?: OrderItemInterface[];
+}
+
+export interface OrdersQuery {
   status?: string;
   userId?: string;
   createdAt?: any;
 }
 
-/* Construt order queries function */
-function buildQueries(status: string, date: string, userId?: string): Queries {
-  const queries: Queries = {};
+// Build order query
+function buildQuery(
+  status: string,
+  date: string,
+  user: userPayload,
+): OrdersQuery {
+  const query: OrdersQuery = {};
 
-  // Filter orders
-  if (userId) queries["userId"] = userId;
-  if (status) queries["status"] = status.toLowerCase();
+  if (user.role !== "admin") query["userId"] = user.id;
+  if (status) query["status"] = status.toLowerCase();
   if (date) {
     const { start, end } = getDateRange(date);
-    queries["createdAt"] = { $gte: start, $lte: end };
+    query["createdAt"] = { $gte: start, $lte: end };
   }
 
-  return queries;
+  return query;
 }
 
-/* get orders and order document counts  */
+// Get orders and order document counts
 export async function getOrdersAndCount(
   skip: number,
   limit: number,
-  queries: Queries,
+  query: OrdersQuery,
 ): Promise<{
   ordersCounts: number;
   ordersWithOverhead: OrderInterface[];
 }> {
-  // Get how many orders they are and to get all orders
-  const orderCountQuery = Order.find(queries).countDocuments();
-  const OrdersQuery = Order.find(queries)
+  const orderCountQuery = Order.find(query).countDocuments();
+  const OrdersQuery = Order.find(query)
     .skip(skip)
-    .limit(limit + 1) // Show if there is more
+    .limit(limit + 1)
     .sort({ createdAt: -1 })
     .lean<OrderInterface[]>();
 
@@ -68,19 +75,13 @@ export async function getOrdersAndCount(
   return { ordersCounts, ordersWithOverhead };
 }
 
-/* Get all orders */
-export interface OrderPlusItems extends OrderInterface {
-  // _id: Types.ObjectId;
-  items?: OrderItemInterface[];
-}
-
 async function attachItemsToOrders(
-  orders: OrderInterface[],
+  orders: OrderPlusItems[],
 ): Promise<OrderPlusItems[]> {
   const orderMap = new Map<string, any>();
 
-  type orderWithItems = OrderInterface & { items?: OrderItemInterface[] };
-  orders.forEach((order: orderWithItems) => {
+  // type orderWithItems = OrderInterface & { items?: OrderItemInterface[] };
+  orders.forEach((order) => {
     order.items = [];
     orderMap.set(String(order._id), order);
   });
@@ -91,40 +92,41 @@ async function attachItemsToOrders(
   }).lean<OrderItemInterface[]>();
 
   ordersItems.forEach((item) => {
-    const order: orderWithItems = orderMap.get(item.orderId.toString());
+    const order = orderMap.get(item.orderId.toString());
     if (!order) return;
-    order.items?.push(item);
+    order.items.push(item);
   });
 
   return [...orders];
 }
 
-export interface orderResult {
-  orders: OrderPlusItems[];
-  pagination: Pagination;
-}
+export const getAllOrders = async ({
+  page = 1,
+  limit = 10,
+  status,
+  date,
+  user,
+}: {
+  page: number;
+  limit: number;
+  status: string;
+  date: string;
+  user: userPayload;
+}): Promise<{ orders: OrderPlusItems[]; pagination: Pagination }> => {
+  const skip = (page - 1) * limit;
 
-export const getAllOrders = async (
-  page: number,
-  limit: number,
-  status: string,
-  date: string,
-  userId: string = "",
-): Promise<orderResult> => {
-  const skip = (page - 1) * limit; // calculate skip
-
-  const queries = buildQueries(status, date, userId);
+  const query = buildQuery(status, date, user);
   const { ordersCounts, ordersWithOverhead } = await getOrdersAndCount(
     skip,
     limit,
-    queries,
+    query,
   );
 
   const hasNext = ordersWithOverhead.length > limit;
   const totalPage = Math.ceil(ordersCounts / limit);
   const ordersX = ordersWithOverhead.slice(0, limit);
 
-  const orders = await attachItemsToOrders(ordersX); //
+  const orders = await attachItemsToOrders(ordersX);
   return {
     orders,
     pagination: {
@@ -133,7 +135,7 @@ export const getAllOrders = async (
       hasNext,
       totalPage,
     },
-  } as orderResult;
+  };
 };
 
 /* Get order */
@@ -145,9 +147,9 @@ export const getOrder = async (
     _id: id,
   };
 
-  if (user.role === "user") queries["userId"] = user.id; // For admin to get any order while user get their order
+  if (user.role !== "admin") queries["userId"] = user.id; // For admin to get any order while user get their order
 
-  const order: OrderInterface | null = await Order.findOne(queries);
+  const order = await Order.findOne(queries).lean<OrderPlusItems>();
   if (!order)
     throw new AppError(
       ErrorCodes.ORDER_NOT_FOUND,
@@ -161,8 +163,6 @@ export const getOrder = async (
     orderId: order._id,
   });
 
-  const orderObj: OrderPlusItems = order.toObject();
-  orderObj.items = orderItems;
-
-  return orderObj;
+  order.items = orderItems;
+  return order;
 };

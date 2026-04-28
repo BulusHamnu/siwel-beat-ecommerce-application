@@ -1,43 +1,54 @@
 import type { Request, Response, NextFunction } from "express";
-import { type ApiResponse } from "../responseInterface.js";
-import { type orderResult } from "../../services/shared/ordersShared.service.js";
+import { type ApiResponse, type Pagination } from "../responseInterface.js";
 import * as orderService from "../../services/shared/ordersShared.service.js";
-import { type OrderPlusItems } from "../../services/shared/ordersShared.service.js";
 import * as orderValidator from "../../utils/validators/order.validator.js";
 import validateAndSanitizeBody from "../../utils/validators/validateAndSanitize.js";
+import {
+  toOrderResponse,
+  toOrdersResponse,
+  type OrderResponse,
+} from "../../mappers/order.mappers.js";
 
 /* Get all user orders  */
-interface OrdersQueryBody {
+interface OrdersQueryParams {
   page: number;
   limit: number;
   status: string;
   date: string;
 }
 
+interface OrdersResult {
+  orders: OrderResponse[];
+  pagination: Pagination;
+}
+
 export const getAllOrders = async (
-  req: Request<{}, ApiResponse<orderResult>, {}>,
-  res: Response<ApiResponse<orderResult>>,
+  req: Request<{}, ApiResponse<OrdersResult>, {}>,
+  res: Response<ApiResponse<OrdersResult>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
 
-    const { page, limit, status, date }: OrdersQueryBody =
+    const { page, limit, status, date }: OrdersQueryParams =
       validateAndSanitizeBody(req.query, orderValidator.trackQueriesSchema);
 
-    const userId = user.role === "user" ? user.id : ""; // For admin get all order while user get all their order
-    const result = await orderService.getAllOrders(
-      Number(page || 1),
-      Number(limit || 10),
+    const { orders, pagination } = await orderService.getAllOrders({
+      page,
+      limit,
       status,
       date,
-      userId,
-    );
+      user,
+    });
 
-    const response: ApiResponse<orderResult> = {
+    const ordersRes = toOrdersResponse(orders);
+    const response: ApiResponse<OrdersResult> = {
       status: true,
       message: "Orders retrieved succesfully.",
-      data: result,
+      data: {
+        orders: ordersRes,
+        pagination,
+      },
     };
 
     res.status(200).json(response);
@@ -48,20 +59,21 @@ export const getAllOrders = async (
 
 /* Get an order  */
 export const getOrder = async (
-  req: Request<{ id: string }, ApiResponse<OrderPlusItems>, {}, {}>,
-  res: Response<ApiResponse<OrderPlusItems>>,
+  req: Request<{ id: string }, ApiResponse<OrderResponse>, {}, {}>,
+  res: Response<ApiResponse<OrderResponse>>,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const user = req.user!;
     const { id } = orderValidator.validateOrderParams(req.params);
 
-    const order: OrderPlusItems = await orderService.getOrder(id, user);
+    const order = await orderService.getOrder(id, user);
 
-    const response: ApiResponse<OrderPlusItems> = {
+    const orderRes = toOrderResponse(order);
+    const response: ApiResponse<OrderResponse> = {
       status: true,
       message: "Order retrieved successfully.",
-      data: order,
+      data: orderRes,
     };
 
     res.status(200).json(response);
