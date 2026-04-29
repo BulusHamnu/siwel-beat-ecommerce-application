@@ -45,8 +45,8 @@ const order = new mongoose.Schema<OrderInterface>(
     },
     paymentMethod: {
       type: String,
-      required: true,
-      default: "card",
+      // required: true,
+      default: null,
     },
     paymentProvider: {
       type: String,
