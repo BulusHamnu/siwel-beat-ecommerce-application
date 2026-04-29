@@ -98,7 +98,13 @@ The backend powers all core functionality including authentication, track manage
 
 ---
 
-## Current Status
+### API Documentation
+
+Link: [Postman Documentation](https://documenter.getpostman.com/view/44782397/2sBXqJJKoD)
+
+---
+
+## Current Project Status
 
 - Backend: actively in development
 - Frontend: not yet implemented

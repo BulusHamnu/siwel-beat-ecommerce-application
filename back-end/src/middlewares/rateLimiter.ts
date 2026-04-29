@@ -21,7 +21,8 @@ function getIdentifer(req: Request) {
 const limitOpts = {
   standardHeaders: false,
   handler: (req: Request, res: Response, next: NextFunction) => {
-    logger.warn("Too many requests", { identity: req.user?.id || req.ip });
+    logger.debug("Too many requests", { identity: req.user?.id || req.ip });
+
     next(
       new AppError(
         ErrorCodes.RATE_LIMIT_EXCEEDED,
@@ -43,11 +44,12 @@ const rateLimiter = (limit: number, window: number) => {
 
 export default rateLimiter;
 
-// General GET and GET all route rate limiter
+// General GET and GET all endpoint rate limiter
 export const generalApiLimiter = () => {
   return limiter({ ...limitOpts, limit: 60, windowMs: 10 * 60 * 1000 });
 };
-// PATCH AND POST route rate limiter
+
+// PATCH AND POST endpoint rate limiter
 export const creationApiLimiter = () => {
   return limiter({ ...limitOpts, limit: 30, windowMs: 10 * 60 * 1000 });
 };
