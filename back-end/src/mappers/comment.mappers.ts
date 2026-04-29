@@ -65,11 +65,7 @@ export function toCommentsResWithReplies(comments: PopulatedComment[]) {
 }
 
 /* Comment liked by mapper */
-interface CommentLike {
-  user: user;
-  commentId: string;
-  createdAt: Date;
-}
+interface CommentLike extends user {}
 
 export interface CommentLikesResponse {
   likesCount: number;
@@ -78,13 +74,9 @@ export interface CommentLikesResponse {
 
 export function toCommentLikedByRes(commentLike: PopulatedLike) {
   return {
-    user: {
-      id: String(commentLike.userId?._id),
-      username: commentLike.userId?.username,
-      avatar: commentLike.userId?.avatar,
-    },
-    commentId: String(commentLike._id),
-    createdAt: commentLike.createdAt,
+    id: String(commentLike.userId?._id),
+    username: commentLike.userId?.username,
+    avatar: commentLike.userId?.avatar,
   };
 }
 

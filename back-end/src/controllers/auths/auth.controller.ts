@@ -269,7 +269,7 @@ export const logout = async (
     res.clearCookie("refreshToken", env.LOGIN_COOKIE_OPTS);
     const response: ApiResponse<void> = {
       status: true,
-      message: "Logout successully.",
+      message: "Logout successfully.",
     };
 
     res.status(200).json(response);

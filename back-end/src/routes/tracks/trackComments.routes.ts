@@ -16,10 +16,17 @@ router.get(
   generalApiLimiter(),
   commentController.getComment,
 );
+
 router.get(
   "/:id/comments",
   generalApiLimiter(),
   commentController.getAllComment,
+);
+
+router.get(
+  "/:id/comments/:commentId/likes",
+  generalApiLimiter(),
+  commentController.getCommentLikes,
 );
 
 /* Only autheticated users can post, update and delete comment */
@@ -49,11 +56,7 @@ router.post(
   creationApiLimiter(),
   commentController.likeComment,
 );
-router.get(
-  "/:id/comments/:commentId/likes",
-  generalApiLimiter(),
-  commentController.getCommentLikes,
-);
+
 router.delete(
   "/:id/comments/:commentId/likes",
   generalApiLimiter(),
