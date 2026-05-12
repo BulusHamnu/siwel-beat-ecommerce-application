@@ -1,10 +1,15 @@
-/* Home landing page */
+import Header from "../components/header";
+
+/* Home page */
 function Home() {
   return (
-    <main>
-      <h1>Siwel Beats App</h1>
-      <p>Hello, Peterrr!!!</p>
-    </main>
+    <>
+      <Header />
+      <main className="">
+        <h1>Siwel Beats App</h1>
+        <p>Hello, Peterrr!!!</p>
+      </main>
+    </>
   );
 }
 
