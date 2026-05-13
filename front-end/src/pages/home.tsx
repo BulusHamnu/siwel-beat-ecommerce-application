@@ -1,7 +1,8 @@
 import Header from "../components/header";
-import { Search, Check } from "lucide-react";
+import { Search, Check, ArrowUpRight } from "lucide-react";
 import TrackCard from "../components/trackCard";
 import Button from "../components/button";
+import { Link } from "react-router-dom";
 
 function LicenseItem({ term }: { term: string }) {
   return (
@@ -31,9 +32,12 @@ function Home() {
         <p className="text-md md:text-lg">
           Find the right beat to make your next hit.
         </p>
-        <section className="lastest-tracks mt-14 mb-14 md:mt-20 bg-[rgba(110,172,218,0.05)] text-white p-5 lg:px-10">
+        <section
+          id="lastest-tracks"
+          className="lastest-tracks mt-14 mb-14 md:mt-20 bg-[rgba(110,172,218,0.05)] text-white p-5 lg:px-10"
+        >
           <h2 className="text-left pl-4 md:pl-14">
-            Latest Tracks from Siwel Beatz
+            Latest Tracks From Siwel Beatz
           </h2>
           <div className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center">
             <TrackCard />
@@ -78,6 +82,106 @@ function Home() {
                 Can Buy)"
               />
               <LicenseItem term="Full Ownership & Customization" />
+            </div>
+          </div>
+        </section>
+        <section id="services" className="services my-24 lg:my-28">
+          <h2 style={{ fontSize: "2.3rem" }} className="">
+            My Services
+          </h2>
+          <div className=" flex flex-row flex-wrap gap-6 py-7 px-5 md:px-10 lg:px-24 items-center justify-center md:justify-start lg:justify-center">
+            <div className="bg-white rounded-md w-full max-w-80 text-left h-full p-0.5">
+              <div className="cover-image w-full max-h-80 overflow-hidden relative rounded-md">
+                <img
+                  className="w-full h-full object-cover object-center"
+                  src="/custom-beat.png"
+                  alt="Custom Beat Production"
+                />
+              </div>
+              <div className="p-3">
+                <p
+                  style={{ color: "black", marginBottom: "0.6rem" }}
+                  className="text-lg lg:text-xl"
+                >
+                  🎵 Custom Beat Production
+                </p>
+                <p
+                  style={{ color: "black", marginBottom: "0.9rem" }}
+                  className="text-sm lg:text-md"
+                >
+                  I’ll craft high-quality, industry-standard beats tailored to
+                  your unique style. Whether you need hard-hitting trap, smooth
+                  R&B, or a unique blend, I’ve got you covered.
+                </p>
+                <Link
+                  to="#"
+                  className="flex flex-row flex-nowrap gap-1 items-center justify-end text-blue-700 text-right"
+                >
+                  Learn More <ArrowUpRight size={18} />
+                </Link>
+              </div>
+            </div>
+            <div className="bg-white rounded-md w-full max-w-80 text-left h-full p-0.5">
+              <div className="cover-image w-full max-h-80 overflow-hidden relative rounded-md">
+                <img
+                  className="w-full h-full object-cover object-center"
+                  src="/mixing-mastering.png"
+                  alt="Mixing & Mastering"
+                />
+              </div>
+              <div className="p-3">
+                <p
+                  style={{ color: "black", marginBottom: "0.6rem" }}
+                  className="text-lg lg:text-xl"
+                >
+                  🎚️ Mixing & Mastering
+                </p>
+                <p
+                  style={{ color: "black", marginBottom: "0.9rem" }}
+                  className="text-sm lg:text-md"
+                >
+                  I’ll craft high-quality, industry-standard beats tailored to
+                  your unique style. Whether you need hard-hitting trap, smooth
+                  R&B, or a unique blend, I’ve got you covered.
+                </p>
+                <Link
+                  to="#"
+                  className="flex flex-row flex-nowrap gap-1 items-center justify-end text-blue-700 text-right"
+                >
+                  Learn More <ArrowUpRight size={18} />
+                </Link>
+              </div>
+            </div>
+            <div className="bg-white rounded-md w-full max-w-80 text-left h-full p-0.5">
+              <div className="cover-image w-full max-h-80 overflow-hidden relative rounded-md">
+                <img
+                  className="w-full h-full object-cover object-center"
+                  src="/sound-design.png"
+                  alt="Sound Design"
+                />
+              </div>
+              <div className="p-3">
+                <p
+                  style={{ color: "black", marginBottom: "0.6rem" }}
+                  className="text-lg lg:text-xl"
+                >
+                  🎛️ Sound Design
+                </p>
+                <p
+                  style={{ color: "black", marginBottom: "0.9rem" }}
+                  className="text-sm lg:text-md"
+                >
+                  I’ll craft high-quality, industry-standard beats tailored to
+                  your unique style. Whether you need hard-hitting trap, smooth
+                  R&B, or a unique blend, I’ve got you covered.
+                </p>
+                <Link
+                  to="#"
+                  className="flex flex-row flex-nowrap gap-1 items-center justify-end text-blue-700 text-right"
+                >
+                  Learn More <ArrowUpRight size={18} />
+                </Link>
+              </div>
             </div>
           </div>
         </section>
