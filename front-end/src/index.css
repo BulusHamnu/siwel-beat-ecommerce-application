@@ -76,6 +76,7 @@ h2 {
   }
 }
 
+label,
 p {
   margin: 0;
   font-family: var(--body-font);

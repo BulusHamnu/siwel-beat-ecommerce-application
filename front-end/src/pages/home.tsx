@@ -1,8 +1,10 @@
 import Header from "../components/header";
 import { Search, Check, ArrowUpRight } from "lucide-react";
+import { Instagram, Youtube } from "@thesvg/react";
 import TrackCard from "../components/trackCard";
 import Button from "../components/button";
 import { Link } from "react-router-dom";
+import { SocialIcon } from "react-custom-social-icons";
 
 function LicenseItem({ term }: { term: string }) {
   return (
@@ -191,8 +193,8 @@ function Home() {
           </div>
         </section>
 
-        {/* About Me Section */}
-        <section id="about" className="my-24 lg:my-28">
+        {/* About Section */}
+        <section id="about" className="mt-24 mb-10 lg:my-28">
           <h2 style={{ fontSize: "2.3rem" }} className="">
             About Siwel Draxx
           </h2>
@@ -223,6 +225,104 @@ function Home() {
               </p>
             </div>
           </div>
+        </section>
+
+        {/* Contact Section */}
+        <section
+          id="contact"
+          className="grid grid-cols-1 md:grid-cols-2 place-items-center gap-10 p-4 md:p-7 mb-20"
+        >
+          <div className="w-full text-left place-self-start">
+            <p style={{ fontSize: "50px", marginBottom: "0.5rem" }}>
+              Get In Touch
+            </p>
+            <p style={{ marginBottom: "1rem" }}>
+              If you have any inquire or any project for me to work on just drop
+              me a message
+            </p>
+            <p style={{ fontSize: "20px", marginBottom: "1rem" }}>
+              Follow My Social
+            </p>
+            <div className="mb-8 flex flex-row flex-nowrap gap-8 items-center">
+              <a href="#" target="_blank">
+                <Instagram width={35} height={35} />
+              </a>
+              <a href="#" target="_blank">
+                <SocialIcon size={38} network="twitter" />
+              </a>
+              <a href="#" target="_blank">
+                <Youtube width={35} height={35} />
+              </a>
+              <a href="#" target="_blank">
+                <SocialIcon size={38} network="tiktok" />
+              </a>
+            </div>
+            <p style={{ marginBottom: "0.5rem" }} className="whitespace-nowrap">
+              Also message me if you want to play chess :)
+            </p>
+          </div>
+          <form
+            action="POST"
+            className="text-white flex flex-col flex-nowrap text-left gap-5 w-full"
+          >
+            <div className="form-group flex flex-col flex-nowrap gap-2">
+              <label htmlFor="name" className="text-lg">
+                Name
+              </label>
+              <input
+                required
+                className="bg-white text-black p-2 h-11"
+                type="text"
+                id="name"
+                placeholder="Your Name.."
+                name="name"
+              />
+            </div>
+            <div className="form-group flex flex-col flex-nowrap gap-2">
+              <label htmlFor="email" className="text-lg">
+                Email
+              </label>
+              <input
+                required
+                className="bg-white text-black p-2 h-11"
+                type="email"
+                id="email"
+                placeholder="Your Email.."
+                name="email"
+              />
+            </div>
+            <div className="form-group flex flex-col flex-nowrap gap-2">
+              <label htmlFor="subject" className="text-lg">
+                Subject
+              </label>
+              <input
+                required
+                className="bg-white text-black p-2 h-11"
+                type="text"
+                id="subject"
+                placeholder="State Your Subject.."
+                name="subject"
+              />
+            </div>
+            <div className="form-group flex flex-col flex-nowrap gap-2">
+              <label htmlFor="message" className="text-lg">
+                Message
+              </label>
+              <textarea
+                required
+                placeholder="Message.."
+                className="bg-white text-black p-2 h-75"
+                name="message"
+                id="message"
+              ></textarea>
+              <button
+                className="button-primary h-12 text-xl w-37.5 mt-3 ml-auto"
+                type="submit"
+              >
+                Send
+              </button>
+            </div>
+          </form>
         </section>
       </main>
     </>
