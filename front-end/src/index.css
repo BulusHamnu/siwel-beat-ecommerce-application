@@ -111,6 +111,10 @@ p {
   z-index: 2;
 }
 
+#lastest-tracks > h2 {
+  font-size: 1.5rem;
+}
+
 footer > div > p {
   font-family: "Oregano", cursive;
   font-weight: 600;
@@ -120,6 +124,10 @@ footer > div > p {
 @media (min-width: 768px) {
   header {
     max-width: var(--container-width);
+  }
+
+  #lastest-tracks > h2 {
+    font-size: 2rem;
   }
 }
 

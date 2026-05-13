@@ -54,7 +54,7 @@ function Header() {
           )}
         </ul>
       </nav>
-      <div className="user-icons text-white flex flex-row flex-nowrap gap-4 lg:gap-10">
+      <div className="user-icons text-white flex flex-row flex-nowrap gap-6 lg:gap-10">
         <Link
           to="/carts"
           className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"

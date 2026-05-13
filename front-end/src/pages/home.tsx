@@ -8,7 +8,10 @@ import SocialLinks from "../components/socialLinks";
 
 function LicenseItem({ term }: { term: string }) {
   return (
-    <p className="flex flex-row flex-wrap items-center gap-1.5 text-sm mb-1">
+    <p
+      style={{ marginBottom: "0.3rem" }}
+      className="flex flex-row flex-wrap items-center gap-1.5 text-sm"
+    >
       <Check size={20} /> {term}
     </p>
   );
@@ -21,7 +24,7 @@ function Home() {
       <Header />
       <main className="">
         <h1>Siwel Beats App</h1>
-        <div className="bg-white flex flex-row flex-nowrap items-center m-4 max-w-3xl md:mx-auto">
+        <div className="bg-white flex flex-row flex-nowrap items-center m-4 max-w-xl md:mx-auto">
           <input
             placeholder="Find the best beat for your song.."
             className="border border-white min-h-full w-full p-2 focus:outline-none"
@@ -42,7 +45,7 @@ function Home() {
           <h2 className="text-left pl-4 md:pl-14">
             Latest Tracks From Siwel Beatz
           </h2>
-          <div className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center">
+          <div className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center">
             <TrackCard />
             <TrackCard />
             <TrackCard />
@@ -57,7 +60,7 @@ function Home() {
             Licensing Terms
           </h2>
           <div className=" flex flex-row flex-wrap gap-4 py-7 px-5 md:px-10 lg:px-24 items-center justify-center lg:justify-start">
-            <div className="border border-white p-3 rounded-md w-full max-w-100 text-left h-full">
+            <div className="border border-white p-3 rounded-md w-full max-w-100 text-left h-64">
               <h3 className="license-heading relative pb-2 mb-5">
                 🎯 Basic License (Non-Exclusive)
               </h3>
@@ -74,7 +77,7 @@ function Home() {
                 Others)"
               />
             </div>
-            <div className="border border-white p-3 rounded-md w-full max-w-100 text-left h-full">
+            <div className="border border-white p-3 rounded-md w-full max-w-100 text-left h-64">
               <h3 className="license-heading relative pb-2 mb-5">
                 🚀 Premium License (Exclusive)
               </h3>
