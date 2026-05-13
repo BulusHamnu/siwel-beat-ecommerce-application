@@ -32,6 +32,7 @@ function Home() {
         <p className="text-md md:text-lg">
           Find the right beat to make your next hit.
         </p>
+        {/* Lastest Tracks Section */}
         <section
           id="lastest-tracks"
           className="lastest-tracks mt-14 mb-14 md:mt-20 bg-[rgba(110,172,218,0.05)] text-white p-5 lg:px-10"
@@ -47,6 +48,8 @@ function Home() {
           </div>
           <Button className="my-3 text-xl w-44" text="Browse more tracks" />
         </section>
+
+        {/* Licensing Terms Section */}
         <section className="licences-terms my-24 lg:my-28">
           <h2 style={{ fontSize: "2.3rem" }} className="">
             Licensing Terms
@@ -85,6 +88,8 @@ function Home() {
             </div>
           </div>
         </section>
+
+        {/* Services Section */}
         <section id="services" className="services my-24 lg:my-28">
           <h2 style={{ fontSize: "2.3rem" }} className="">
             My Services
@@ -182,6 +187,40 @@ function Home() {
                   Learn More <ArrowUpRight size={18} />
                 </Link>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* About Me Section */}
+        <section id="about" className="my-24 lg:my-28">
+          <h2 style={{ fontSize: "2.3rem" }} className="">
+            About Siwel Draxx
+          </h2>
+          <div className="grid place-items-center grid-cols-1 min-[600px]:grid-cols-2 gap-6 py-7 p-5 lg:mx-28">
+            <div className="place-self-start cover-image w-full overflow-hidden rounded-md">
+              <img
+                className="w-full h-full object-cover"
+                src="/profile.png"
+                alt="Siwel Draxx Profile"
+              />
+            </div>
+            <div className="bio place-self-start text-left">
+              <p style={{ marginBottom: "1rem" }}>
+                Siwel Drax is an 18-year-old beat producer and mixing engineer
+                based in the United States. While he’s mainly focused on drill,
+                Siwel is versatile across all genres, bringing his unique style
+                and professional touch to everything he works on.
+              </p>
+              <p style={{ marginBottom: "1rem" }}>
+                Known for his crisp mixes and hard-hitting beats, he’s already
+                collaborated with rising artists like Demy Thekidd, pushing the
+                boundaries of modern sound.
+              </p>
+              <p style={{ marginBottom: "1rem" }}>
+                Siwel’s goal is to help artists bring their vision to life,
+                whether through custom beats or top-tier mixing that makes every
+                track sound its best.
+              </p>
             </div>
           </div>
         </section>
