@@ -1,10 +1,10 @@
 import Header from "../components/header";
 import { Search, Check, ArrowUpRight } from "lucide-react";
-import { Instagram, Youtube } from "@thesvg/react";
 import TrackCard from "../components/trackCard";
 import Button from "../components/button";
 import { Link } from "react-router-dom";
-import { SocialIcon } from "react-custom-social-icons";
+import Footer from "../components/footer";
+import SocialLinks from "../components/socialLinks";
 
 function LicenseItem({ term }: { term: string }) {
   return (
@@ -243,20 +243,7 @@ function Home() {
             <p style={{ fontSize: "20px", marginBottom: "1rem" }}>
               Follow My Social
             </p>
-            <div className="mb-8 flex flex-row flex-nowrap gap-8 items-center">
-              <a href="#" target="_blank">
-                <Instagram width={35} height={35} />
-              </a>
-              <a href="#" target="_blank">
-                <SocialIcon size={38} network="twitter" />
-              </a>
-              <a href="#" target="_blank">
-                <Youtube width={35} height={35} />
-              </a>
-              <a href="#" target="_blank">
-                <SocialIcon size={38} network="tiktok" />
-              </a>
-            </div>
+            <SocialLinks />
             <p style={{ marginBottom: "0.5rem" }} className="whitespace-nowrap">
               Also message me if you want to play chess :)
             </p>
@@ -325,6 +312,7 @@ function Home() {
           </form>
         </section>
       </main>
+      <Footer />
     </>
   );
 }
