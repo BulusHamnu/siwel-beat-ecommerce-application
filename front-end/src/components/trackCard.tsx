@@ -32,8 +32,10 @@ function TrackCard() {
             "kfc-chicken-init",
             "siwelbeats",
             "shanky",
-          ].map((tag) => (
-            <span>#{tag}</span>
+          ].map((tag, index) => (
+            <span className="text-gray-700 font-semibold" key={index}>
+              #{tag}
+            </span>
           ))}
         </div>
         <div className="bg-[#04254D] mt-3 flex flex-row flex-nowrap items-center justify-between p-2.5 px-4">

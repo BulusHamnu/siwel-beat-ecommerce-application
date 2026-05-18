@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap");
-@import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Oregano:ital@0;1&display=swap");
+@import "tailwindcss";
 
 :root {
   --text-color: rgb(255, 255, 255);
