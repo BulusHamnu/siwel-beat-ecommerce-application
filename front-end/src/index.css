@@ -84,6 +84,15 @@ p {
   color: var(--text-color);
 }
 
+form input {
+  background-color: white;
+  color: black;
+  padding: 0.6rem 0.4rem;
+  font-family: var(--heading-font);
+  font-weight: 100;
+  font-size: 0.9rem;
+}
+
 .button-primary {
   background-color: #042e61;
   padding: 0.5rem;
