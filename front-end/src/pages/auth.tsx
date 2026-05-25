@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { useState } from "react";
-import { User2, Mail, LockKeyhole } from "lucide-react";
+import { User2, Mail, LockKeyhole, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
 function TabBtn({
@@ -30,6 +30,9 @@ function TabBtn({
 }
 
 function SignupPanel() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
     <div className="pb-5 px-2 md:px-3">
       <form
@@ -73,7 +76,7 @@ function SignupPanel() {
         <div className="row-group flex flex-col flex-nowrap gap-5 md:flex-row ">
           <div className="flex flex-col flex-nowrap gap-3 justify-center w-full">
             <label
-              htmlFor="firstname"
+              htmlFor="email"
               className="flex flex-row flex-nowrap gap-4 items-center"
             >
               <Mail /> Email
@@ -96,14 +99,27 @@ function SignupPanel() {
             >
               <LockKeyhole /> Password
             </label>
-            <input
-              required
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Password.."
-              className="rounded-sm h-12"
-            />
+            <div className="relative w-full">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                id="password"
+                name="password"
+                placeholder="Password.."
+                className="rounded-sm h-12 pr-10 w-full"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer"
+              >
+                {showPassword ? (
+                  <EyeOff color="black" size={20} />
+                ) : (
+                  <Eye color="black" size={20} />
+                )}
+              </button>
+            </div>
           </div>
         </div>
         <div className="row-group flex flex-col flex-nowrap gap-5 md:flex-row ">
@@ -114,14 +130,27 @@ function SignupPanel() {
             >
               <LockKeyhole /> Confirm Password
             </label>
-            <input
-              required
-              id="confirm-password"
-              name="confirmPassword"
-              type="password"
-              placeholder="Re-enter Password.."
-              className="rounded-sm h-12"
-            />
+            <div className="relative w-full">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                id="password"
+                name="password"
+                placeholder="Password.."
+                className="rounded-sm h-12 pr-10 w-full"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff color="black" size={20} />
+                ) : (
+                  <Eye color="black" size={20} />
+                )}
+              </button>
+            </div>
           </div>
         </div>
         <button type="submit" className="button-primary text-xl w-full h-14">
@@ -136,7 +165,81 @@ function SignupPanel() {
 }
 
 function LoginPanel() {
-  return <form id="login-panel">Login</form>;
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <div className="pb-5 px-2 md:px-3">
+      <form
+        id="login-panel"
+        className="mt-5 flex flex-nowrap flex-col gap-6 justify-center"
+      >
+        <div className="row-group flex flex-col flex-nowrap gap-5 md:flex-row ">
+          <div className="flex flex-col flex-nowrap gap-3 justify-center w-full">
+            <label
+              htmlFor="email"
+              className="flex flex-row flex-nowrap gap-4 items-center"
+            >
+              <Mail /> Email
+            </label>
+            <input
+              required
+              id="email"
+              name="email"
+              type="email"
+              placeholder="Email.."
+              className="rounded-sm h-12"
+            />
+          </div>
+        </div>
+        <div className="row-group flex flex-col flex-nowrap gap-5 md:flex-row ">
+          <div className="flex flex-col flex-nowrap gap-3 justify-center w-full">
+            <label
+              htmlFor="password"
+              className="flex flex-row flex-nowrap gap-4 items-center"
+            >
+              <LockKeyhole /> Password
+            </label>
+
+            <div className="relative w-full">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                id="password"
+                name="password"
+                placeholder="Password.."
+                className="rounded-sm h-12 pr-10 w-full"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer"
+              >
+                {showPassword ? (
+                  <EyeOff color="black" size={20} />
+                ) : (
+                  <Eye color="black" size={20} />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+        <button type="submit" className="button-primary text-xl w-full h-14">
+          Login
+        </button>
+      </form>
+      <button className="mt-4 button-primary text-xl w-full h-14 flex flex-row flex-nowrap gap-2 items-center justify-center">
+        <FcGoogle size={26} /> Login With Google
+      </button>
+      <span className="text-right mt-5 block">
+        <p className="whitespace-nowrap">
+          Forgotten your password?{" "}
+          <a className="text-blue-500 underline" href="#">
+            reset it here
+          </a>
+        </p>
+      </span>
+    </div>
+  );
 }
 
 /* Auth page */
