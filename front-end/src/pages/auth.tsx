@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { User2, Mail, LockKeyhole, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
+import { useSearchParams } from "react-router-dom";
 
 function TabBtn({
   placeholder,
@@ -234,7 +235,7 @@ function LoginPanel() {
         <p className="whitespace-nowrap">
           Forgotten your password?{" "}
           <a className="text-blue-500 underline" href="#">
-            reset it here
+            Reset it here.
           </a>
         </p>
       </span>
@@ -244,11 +245,21 @@ function LoginPanel() {
 
 /* Auth page */
 function Auth() {
-  const [activeTab, setActiveTab] = useState("signup");
+  const [searchParams] = useSearchParams();
+  const action = searchParams.get("action");
+
+  const [activeTab, setActiveTab] = useState(() => {
+    return action === "login" ? "login" : "signup";
+  });
 
   return (
     <main style={{ paddingTop: "20px" }} className="text-white p-2.5">
-      <h1>Hii, welcome to my website!</h1>
+      {activeTab === "signup" ? (
+        <h1>Hii, welcome to my website!</h1>
+      ) : (
+        <h1>Welcome back dawg!</h1>
+      )}
+
       <div className="bg-[rgba(46,109,155,0.5)] max-w-175 mx-auto rounded-md px-2 py-4 md:p-4">
         <div className="bg-[rgba(2,21,38,0.7)] max-w-175 mx-auto rounded-md grid grid-cols-2 items-center gap-2 p-1.5">
           <TabBtn
