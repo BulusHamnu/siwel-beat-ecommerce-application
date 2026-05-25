@@ -31,7 +31,7 @@ function TabBtn({
 
 function SignupPanel() {
   return (
-    <div className="pb-5">
+    <div className="pb-5 px-2 md:px-3">
       <form
         id="signup-panel"
         className="mt-5 flex flex-nowrap flex-col gap-6 justify-center"
@@ -161,7 +161,9 @@ function Auth() {
             style={`${activeTab === "login" ? "bg-[rgba(46,109,155,0.7)]" : ""}`}
           />
         </div>
-        {activeTab === "signup" ? <SignupPanel /> : <LoginPanel />}
+        <div className="p-1">
+          {activeTab === "signup" ? <SignupPanel /> : <LoginPanel />}
+        </div>
       </div>
     </main>
   );
