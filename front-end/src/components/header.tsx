@@ -1,5 +1,5 @@
 import { User, Bell, ShoppingCart, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 
 type To =
@@ -9,10 +9,40 @@ type To =
       search?: string;
     };
 
-function LinkItem({ text, to }: { text: string; to: To }) {
+function LinkItem({
+  text,
+  to,
+  type,
+  setIsOpen,
+}: {
+  text: string;
+  to: To;
+  type?: string;
+  setIsOpen: (value: boolean) => void;
+}) {
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  const handleLiClick = () => {
+    linkRef.current?.click();
+  };
+
   return (
-    <li className="cursor-pointer p-3 text-center max-md:text-lg md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300">
-      <Link to={to}>{text}</Link>
+    <li
+      onClick={() => handleLiClick()}
+      className="cursor-pointer p-3 py-5 text-center max-md:text-lg md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300"
+    >
+      {type === "normal" ? (
+        <a
+          ref={linkRef}
+          onClick={() => setIsOpen(false)}
+          href={typeof to === "string" ? to : "#"}
+        >
+          {text}
+        </a>
+      ) : (
+        <Link ref={linkRef} onClick={() => setIsOpen(false)} to={to}>
+          {text}
+        </Link>
+      )}
     </li>
   );
 }
@@ -33,24 +63,38 @@ function Header() {
         className={`${isOpen ? "right-0 border-t border-b-white" : "-right-full"} bg-[#2E6D9B] text-white fixed top-15 max-md:h-full max-sm:w-[60vw] max-md:w-[40vw] md:w-fit md:static md:block transition-all duration-500 ease-in-out`}
       >
         <ul className="flex flex-col md:flex-row md:flex-nowrap md:gap-7 text-md md:text-lg text-left md:text-center">
-          <LinkItem text="Home" to="/" />
-          <li className="cursor-pointer p-3 max-md:text-lg text-center md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300">
-            <a href="#services">Service</a>
-          </li>
-          <li className="cursor-pointer p-3 max-md:text-lg text-center md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300">
-            <a href="#about">About</a>
-          </li>
-          <LinkItem text="Tracks" to="/tracks" />
-          <li className="cursor-pointer p-3 max-md:text-lg text-center md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300">
-            <a href="#contact">Contact</a>
-          </li>
+          <LinkItem setIsOpen={setIsOpen} text="Home" to="/" />
+
+          <LinkItem
+            setIsOpen={setIsOpen}
+            text="Services"
+            to="#services"
+            type="normal"
+          />
+          <LinkItem
+            setIsOpen={setIsOpen}
+            text="About"
+            to="#about"
+            type="normal"
+          />
+
+          <LinkItem setIsOpen={setIsOpen} text="Tracks" to="/tracks" />
+          <LinkItem
+            setIsOpen={setIsOpen}
+            text="Contact"
+            to="#contact"
+            type="normal"
+          />
+
           {!isAutheticated ? (
             <>
               <LinkItem
+                setIsOpen={setIsOpen}
                 text="Sign Up"
                 to={{ pathname: "/auth", search: "?action=signup" }}
               />
               <LinkItem
+                setIsOpen={setIsOpen}
                 text="Login"
                 to={{ pathname: "/auth", search: "?action=login" }}
               />
