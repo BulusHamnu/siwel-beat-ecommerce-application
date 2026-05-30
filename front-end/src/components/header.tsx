@@ -11,7 +11,7 @@ type To =
 
 function LinkItem({ text, to }: { text: string; to: To }) {
   return (
-    <li className="cursor-pointer p-3 max-md:pl-7 md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300">
+    <li className="cursor-pointer p-3 text-center max-md:text-lg md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300">
       <Link to={to}>{text}</Link>
     </li>
   );
@@ -34,10 +34,16 @@ function Header() {
       >
         <ul className="flex flex-col md:flex-row md:flex-nowrap md:gap-7 text-md md:text-lg text-left md:text-center">
           <LinkItem text="Home" to="/" />
-          <LinkItem text="Service" to="/#service" />
-          <LinkItem text="About" to="/#about" />
-          <LinkItem text="Tracks" to="/#tracks" />
-          <LinkItem text="Contact" to="/#contact" />
+          <li className="cursor-pointer p-3 max-md:text-lg text-center md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300">
+            <a href="#services">Service</a>
+          </li>
+          <li className="cursor-pointer p-3 max-md:text-lg text-center md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300">
+            <a href="#about">About</a>
+          </li>
+          <LinkItem text="Tracks" to="/tracks" />
+          <li className="cursor-pointer p-3 max-md:text-lg text-center md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300">
+            <a href="#contact">Contact</a>
+          </li>
           {!isAutheticated ? (
             <>
               <LinkItem
