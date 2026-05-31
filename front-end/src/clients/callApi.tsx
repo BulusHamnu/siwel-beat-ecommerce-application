@@ -34,8 +34,9 @@ async function callApi<T>({
       params,
       headers: {
         Authorization: `Bearer ${authToken}`,
+        "Content-Type": "application/json",
       },
-      data: body,
+      data: JSON.stringify(body),
     });
 
     return res.data;
