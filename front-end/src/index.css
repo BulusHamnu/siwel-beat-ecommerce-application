@@ -112,6 +112,10 @@ form input {
   background-color: #083c7c;
 }
 
+.button-primary[disabled] {
+  cursor: not-allowed;
+}
+
 .license-heading::before {
   content: "";
   display: block;
