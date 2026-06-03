@@ -5,6 +5,9 @@ import Button from "../components/button";
 import { Link } from "react-router-dom";
 import Footer from "../components/footer";
 import SocialLinks from "../components/socialLinks";
+import useForm from "../hooks/useForm";
+import { useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 
 function LicenseItem({ term }: { term: string }) {
   return (
@@ -14,6 +17,157 @@ function LicenseItem({ term }: { term: string }) {
     >
       <Check size={20} /> {term}
     </p>
+  );
+}
+
+function ContactSection() {
+  const { submiting, sendMessage, errCode, status } = useForm();
+  const formRef = useRef<HTMLFormElement | null>(null);
+
+  async function handleFormSubmission(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+
+    await sendMessage(data);
+  }
+
+  useEffect(() => {
+    if (status === "success") {
+      toast.success("Sent! Appreciate you reaching out, gang.", {
+        duration: 3000,
+        id: "message-sent",
+        position: "top-center",
+      });
+      formRef.current?.reset();
+      //
+    } else if (status === "failed") {
+      switch (errCode) {
+        case "VALIDATION_ERROR": {
+          toast.error(
+            "Yo, message couldn't be sent. Make sure all fields are filled and valid.",
+            {
+              duration: 3000,
+              id: "message-failed",
+              position: "top-center",
+            },
+          );
+
+          break;
+        }
+
+        case "RATE_LIMIT_EXCEEDED": {
+          toast.error("Too many attempts. Please try again in a few minutes.", {
+            duration: 3000,
+            id: "too-many-request",
+            position: "bottom-right",
+          });
+
+          break;
+        }
+
+        default: {
+          toast.error("Something went wrong. Please try again in a moment.", {
+            duration: 3000,
+            id: "message-failed",
+            position: "top-center",
+          });
+
+          break;
+        }
+      }
+    }
+  }, [status, errCode]);
+
+  return (
+    <section
+      id="contact"
+      className="grid grid-cols-1 md:grid-cols-2 place-items-center gap-10 p-4 md:p-7 mb-20"
+    >
+      <div className="w-full text-left place-self-start">
+        <p style={{ fontSize: "50px", marginBottom: "0.5rem" }}>Get In Touch</p>
+        <p style={{ marginBottom: "1rem" }}>
+          If you have any inquire or any project for me to work on just drop me
+          a message
+        </p>
+        <p style={{ fontSize: "20px", marginBottom: "1rem" }}>
+          Follow My Social
+        </p>
+        <SocialLinks />
+        <p style={{ marginBottom: "0.5rem" }} className="whitespace-nowrap">
+          Also message me if you want to play chess :)
+        </p>
+      </div>
+      <form
+        ref={formRef}
+        onSubmit={(e) => handleFormSubmission(e)}
+        action="POST"
+        className="text-white flex flex-col flex-nowrap text-left gap-5 w-full"
+      >
+        <div className="form-group flex flex-col flex-nowrap gap-2">
+          <label htmlFor="name" className="text-lg">
+            Name
+          </label>
+          <input
+            required
+            className="bg-white text-black p-2 h-11"
+            type="text"
+            id="name"
+            placeholder="Your Name.."
+            name="name"
+          />
+        </div>
+        <div className="form-group flex flex-col flex-nowrap gap-2">
+          <label htmlFor="email" className="text-lg">
+            Email
+          </label>
+          <input
+            required
+            className="bg-white text-black p-2 h-11"
+            type="email"
+            id="email"
+            placeholder="Your Email.."
+            name="email"
+          />
+        </div>
+        <div className="form-group flex flex-col flex-nowrap gap-2">
+          <label htmlFor="subject" className="text-lg">
+            Subject
+          </label>
+          <input
+            required
+            className="bg-white text-black p-2 h-11"
+            type="text"
+            id="subject"
+            placeholder="State Your Subject.."
+            name="subject"
+          />
+        </div>
+        <div className="form-group flex flex-col flex-nowrap gap-2">
+          <label htmlFor="message" className="text-lg">
+            Message
+          </label>
+          <textarea
+            required
+            placeholder="Message.."
+            className="bg-white text-black p-2 h-75"
+            name="message"
+            id="message"
+          ></textarea>
+          <button
+            disabled={submiting}
+            className="button-primary h-12 text-xl w-37.5 mt-3 ml-auto"
+            type="submit"
+          >
+            {submiting ? "Sending.." : "Send"}
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }
 
@@ -231,89 +385,7 @@ function Home() {
         </section>
 
         {/* Contact Section */}
-        <section
-          id="contact"
-          className="grid grid-cols-1 md:grid-cols-2 place-items-center gap-10 p-4 md:p-7 mb-20"
-        >
-          <div className="w-full text-left place-self-start">
-            <p style={{ fontSize: "50px", marginBottom: "0.5rem" }}>
-              Get In Touch
-            </p>
-            <p style={{ marginBottom: "1rem" }}>
-              If you have any inquire or any project for me to work on just drop
-              me a message
-            </p>
-            <p style={{ fontSize: "20px", marginBottom: "1rem" }}>
-              Follow My Social
-            </p>
-            <SocialLinks />
-            <p style={{ marginBottom: "0.5rem" }} className="whitespace-nowrap">
-              Also message me if you want to play chess :)
-            </p>
-          </div>
-          <form
-            action="POST"
-            className="text-white flex flex-col flex-nowrap text-left gap-5 w-full"
-          >
-            <div className="form-group flex flex-col flex-nowrap gap-2">
-              <label htmlFor="name" className="text-lg">
-                Name
-              </label>
-              <input
-                required
-                className="bg-white text-black p-2 h-11"
-                type="text"
-                id="name"
-                placeholder="Your Name.."
-                name="name"
-              />
-            </div>
-            <div className="form-group flex flex-col flex-nowrap gap-2">
-              <label htmlFor="email" className="text-lg">
-                Email
-              </label>
-              <input
-                required
-                className="bg-white text-black p-2 h-11"
-                type="email"
-                id="email"
-                placeholder="Your Email.."
-                name="email"
-              />
-            </div>
-            <div className="form-group flex flex-col flex-nowrap gap-2">
-              <label htmlFor="subject" className="text-lg">
-                Subject
-              </label>
-              <input
-                required
-                className="bg-white text-black p-2 h-11"
-                type="text"
-                id="subject"
-                placeholder="State Your Subject.."
-                name="subject"
-              />
-            </div>
-            <div className="form-group flex flex-col flex-nowrap gap-2">
-              <label htmlFor="message" className="text-lg">
-                Message
-              </label>
-              <textarea
-                required
-                placeholder="Message.."
-                className="bg-white text-black p-2 h-75"
-                name="message"
-                id="message"
-              ></textarea>
-              <button
-                className="button-primary h-12 text-xl w-37.5 mt-3 ml-auto"
-                type="submit"
-              >
-                Send
-              </button>
-            </div>
-          </form>
-        </section>
+        <ContactSection />
       </main>
       <Footer />
     </>
