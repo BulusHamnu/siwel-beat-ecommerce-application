@@ -357,7 +357,7 @@ export const likeComment = async (
             actorUserId,
             type: NotificationType.COMMENT_LIKED,
             resourceId: trackId,
-            entityId: updatedComment._id as string,
+            entityId: updatedComment._id,
           },
           {
             attempts: 2,

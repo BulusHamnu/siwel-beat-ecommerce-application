@@ -31,7 +31,7 @@ export const addToCart = async (
 
   const productSnapShop: CartItem = {
     name: track.title,
-    productId: track._id as ObjectId,
+    productId: track._id as unknown as ObjectId,
     license,
     price: license === "premium" ? track.premiumPrice : track.basicPrice,
     type: track.type,

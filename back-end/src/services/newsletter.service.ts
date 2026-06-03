@@ -77,7 +77,7 @@ export const subscribeToNewsletter = async (email: string): Promise<void> => {
       userId: null,
       message: "Hurray! Someone just join the newsletter.",
       type: NotificationType.NEWSLETTER_SUBSCRIBED,
-      resourceId: sub._id as string,
+      resourceId: sub._id,
       entityId: null,
     },
     {

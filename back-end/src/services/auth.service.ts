@@ -178,7 +178,7 @@ export const validatePasswordAndSignTokens = async (
   const refreshToken = user.signToken("refreshToken", "7d");
 
   await Session.create({
-    userId: user._id as string,
+    userId: user._id,
     refreshToken,
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     lastUsed: new Date(),
@@ -187,7 +187,7 @@ export const validatePasswordAndSignTokens = async (
 
   return {
     user: {
-      id: user._id as string,
+      id: String(user._id),
       email: user.email,
       isVerified: user.isVerified,
       role: user.role,

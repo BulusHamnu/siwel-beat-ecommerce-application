@@ -44,7 +44,7 @@ async function retrieveRelatedTracks({
     .session(session);
 
   const relatedTrack: ObjectId[] = tracks.map(
-    (track): ObjectId => track._id as ObjectId,
+    (track): ObjectId => track._id as unknown as ObjectId,
   );
 
   return relatedTrack;

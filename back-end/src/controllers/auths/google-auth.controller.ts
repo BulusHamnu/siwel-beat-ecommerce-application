@@ -152,7 +152,7 @@ export const googleCallback = async (
 
     const deviceInfo = req.headers["user-agent"] || "Unidentified";
     await Session.create({
-      userId: user._id as string,
+      userId: user._id,
       refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       lastUsed: new Date(),
