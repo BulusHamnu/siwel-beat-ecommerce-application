@@ -42,6 +42,7 @@ interface Env {
   GOOGLE_OAUTH2_URL: string;
   HASH_SALT_NUMBER: number;
   GOOGLE_REDIRECT_URL: string;
+  RESEND_KEY: string;
   SIGNED_URL_TTL: number;
   REDIS_CONNECTION: { url: string } | { host: string; port: number };
 }
@@ -93,6 +94,7 @@ const env: Env = {
   HASH_SALT_NUMBER: 10,
   GOOGLE_REDIRECT_URL: process.env.GOOGLE_REDIRECT_URL || "",
 
+  RESEND_KEY: process.env.RESEND_KEY || "",
   SIGNED_URL_TTL: Number(process.env.SIGNED_URL_TTL) || 120,
 };
 
