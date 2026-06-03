@@ -4,7 +4,7 @@ import { Heart, ShoppingCart, Play } from "lucide-react";
 /* Track card */
 function TrackCard() {
   return (
-    <div className="border border-white max-w-87.5 w-full p-1 bg-[#4278B9] cursor-pointer">
+    <div className="border border-white max-w-87.5 w-full p-2 bg-[#4278B9] cursor-pointer rounded-lg">
       <div className="cover-image h-64 overflow-hidden relative">
         <img
           className="w-full h-full object-cover"
