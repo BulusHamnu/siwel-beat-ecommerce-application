@@ -1,4 +1,4 @@
-import callApi from "../clients/callApi";
+import callApi from "../lib/callApi";
 import { useState } from "react";
 
 function useNewsletter() {

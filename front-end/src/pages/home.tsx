@@ -1,6 +1,6 @@
 import Header from "../components/header";
 import { Search, Check, ArrowUpRight } from "lucide-react";
-import TrackCard from "../components/trackCard";
+import TrackCard, { type Track } from "../components/trackCard";
 import Button from "../components/button";
 import { Link } from "react-router-dom";
 import Footer from "../components/footer";
@@ -8,6 +8,8 @@ import SocialLinks from "../components/socialLinks";
 import useForm from "../hooks/useForm";
 import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
+import callApi from "../lib/callApi";
 
 function LicenseItem({ term }: { term: string }) {
   return (
@@ -172,6 +174,23 @@ function ContactSection() {
 }
 
 function LastestTracksSection() {
+  const {
+    isLoading,
+    data: tracks,
+    error,
+  } = useQuery({
+    queryKey: ["tracks"],
+    queryFn: async () => {
+      const res = await callApi<Track[]>({
+        method: "get",
+        endpoint: "/tracks",
+        withAuth: false,
+      });
+
+      return res.data;
+    },
+  });
+
   return (
     <section
       id="lastest-tracks"
@@ -180,13 +199,32 @@ function LastestTracksSection() {
       <h2 className="text-left pl-4 md:pl-14">
         Latest Tracks From Siwel Beatz
       </h2>
-      <div className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center">
-        <TrackCard />
-        <TrackCard />
-        <TrackCard />
-        <TrackCard />
+
+      {error ? (
+        <p className="p-5">Unable to load lastest tracks</p>
+      ) : isLoading ? (
+        <p className="p-5">Loading lastest tracks..</p>
+      ) : tracks && tracks.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center">
+            {tracks.map((track) => (
+              <TrackCard key={track._id} track={track} />
+            ))}
+          </div>
+          <Button className="my-3 text-xl w-44" text="Browse more tracks" />
+        </>
+      ) : (
+        "No tracks available."
+      )}
+
+      {/* <div className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center">
+        {isLoading
+          ? "Loading Lastest Tracks.."
+          : tracks && tracks.length > 0
+            ? tracks.map((track) => <TrackCard key={track._id} track={track} />)
+            : "No Tracks Available."}
       </div>
-      <Button className="my-3 text-xl w-44" text="Browse more tracks" />
+      <Button className="my-3 text-xl w-44" text="Browse more tracks" /> */}
     </section>
   );
 }
