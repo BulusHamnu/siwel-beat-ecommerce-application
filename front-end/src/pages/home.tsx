@@ -199,10 +199,6 @@ function LastestTracksSection() {
 
   return (
     <motion.section
-      // variants={onViewVariants}
-      // initial="hidden"
-      // whileInView="visible"
-      // viewport={{ once: true }}
       id="lastest-tracks"
       className="lastest-tracks mt-14 mb-14 md:mt-20 bg-[rgba(110,172,218,0.05)] text-white p-5 lg:px-10"
     >
@@ -247,6 +243,7 @@ function LastestTracksSection() {
                     visible: { opacity: 1, y: 0 },
                     exit: { opacity: 0, y: -30 },
                   }}
+                  key={track._id}
                 >
                   <TrackCard key={track._id} track={track} />
                 </motion.div>

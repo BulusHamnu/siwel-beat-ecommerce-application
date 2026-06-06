@@ -4,6 +4,7 @@ import Home from "./pages/home";
 import Auth from "./pages/auth";
 import { Toaster } from "react-hot-toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import AudioPlayerProvider from "./components/audioPlayerProvider";
 
 const queryClient = new QueryClient();
 
@@ -21,12 +22,14 @@ function App() {
         }}
       />
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
-          </Routes>
-        </BrowserRouter>
+        <AudioPlayerProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/auth" element={<Auth />} />
+            </Routes>
+          </BrowserRouter>
+        </AudioPlayerProvider>
       </QueryClientProvider>
     </div>
   );

@@ -1,6 +1,7 @@
-import { Heart, ShoppingCart, Play } from "lucide-react";
+import { Heart, ShoppingCart, Play, Pause } from "lucide-react";
 import { formatAmount } from "../helpers/helpers";
 // Download
+import usePlayer from "../hooks/usePlayer";
 
 export interface Track {
   _id: string;
@@ -23,6 +24,16 @@ export interface Track {
 
 /* Track card */
 function TrackCard({ track }: { track: Track }) {
+  const { playSong, isPlaying, currentSongId, stopSong } = usePlayer();
+
+  function toggleSong(songId: string) {
+    if (isPlaying && currentSongId === songId) {
+      stopSong();
+    } else {
+      playSong(songId);
+    }
+  }
+
   return (
     <div className="border border-white max-w-87.5 w-full p-2 bg-[#4278B9] cursor-pointer rounded-lg">
       <div className="cover-image h-64 overflow-hidden relative">
@@ -31,8 +42,17 @@ function TrackCard({ track }: { track: Track }) {
           src={track.coverImageUrl}
           alt="Track Cover"
         />
-        <div className="grid place-items-center absolute top-0 left-0 right-0 bottom-0">
-          <Play size={50} fill="white" className="cursor-pointer" />
+        <div
+          onClick={() => {
+            toggleSong(track._id);
+          }}
+          className="grid place-items-center absolute top-0 left-0 right-0 bottom-0 p-2 bg-[rgba(255,255,255,0.4)] rounded-full h-fit w-fit m-auto"
+        >
+          {isPlaying && currentSongId === track._id ? (
+            <Pause size={50} fill="black" className="cursor-pointer" />
+          ) : (
+            <Play size={50} fill="black" className="cursor-pointer" />
+          )}
         </div>
       </div>
       <div className="text-left p-4">
