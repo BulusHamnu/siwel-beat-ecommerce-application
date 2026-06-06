@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import audioPlayerContext from "../hooks/audioPlayerContext";
 import env from "../config/env";
 
@@ -6,6 +6,19 @@ export default function AudioPlayerProvider({ children }) {
   const audio = useRef<HTMLAudioElement>(new Audio());
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongId, setCurrentSongId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleEndedListener = () => {
+      setIsPlaying(false);
+    };
+
+    const audioElement = audio.current;
+    audioElement?.addEventListener("ended", handleEndedListener);
+
+    return () => {
+      audioElement?.removeEventListener("ended", handleEndedListener);
+    };
+  }, []);
 
   const playSong = async (songId: string) => {
     try {

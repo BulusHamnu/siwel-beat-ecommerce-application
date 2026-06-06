@@ -214,7 +214,6 @@ function LastestTracksSection() {
         <>
           <AnimatePresence>
             <motion.div
-              // key={currentPage}
               initial="hidden"
               animate="visible"
               exit="exit"
@@ -236,7 +235,7 @@ function LastestTracksSection() {
               }}
               className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center"
             >
-              {tracks.map((track) => (
+              {tracks.slice(0, 4).map((track) => (
                 <motion.div
                   variants={{
                     hidden: { opacity: 0, y: 30 },
@@ -250,20 +249,15 @@ function LastestTracksSection() {
               ))}
             </motion.div>
           </AnimatePresence>
-          <Button className="my-3 text-xl w-44" text="Browse more tracks" />
+          {tracks.length > 4 ? (
+            <Button className="my-3 text-xl w-44" text="Browse more tracks" />
+          ) : (
+            ""
+          )}
         </>
       ) : (
         "No tracks available."
       )}
-
-      {/* <div className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center">
-        {isLoading
-          ? "Loading Lastest Tracks.."
-          : tracks && tracks.length > 0
-            ? tracks.map((track) => <TrackCard key={track._id} track={track} />)
-            : "No Tracks Available."}
-      </div>
-      <Button className="my-3 text-xl w-44" text="Browse more tracks" /> */}
     </motion.section>
   );
 }
