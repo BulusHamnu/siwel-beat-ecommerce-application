@@ -10,6 +10,8 @@ import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import callApi from "../lib/callApi";
+import { motion, AnimatePresence } from "motion/react";
+import { onViewVariants } from "../config/animation";
 
 function LicenseItem({ term }: { term: string }) {
   return (
@@ -86,7 +88,11 @@ function ContactSection() {
   }, [status, errCode]);
 
   return (
-    <section
+    <motion.section
+      variants={onViewVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
       id="contact"
       className="grid grid-cols-1 md:grid-cols-2 place-items-center gap-10 p-4 md:p-7 mb-20"
     >
@@ -169,7 +175,7 @@ function ContactSection() {
           </button>
         </div>
       </form>
-    </section>
+    </motion.section>
   );
 }
 
@@ -192,7 +198,11 @@ function LastestTracksSection() {
   });
 
   return (
-    <section
+    <motion.section
+      // variants={onViewVariants}
+      // initial="hidden"
+      // whileInView="visible"
+      // viewport={{ once: true }}
       id="lastest-tracks"
       className="lastest-tracks mt-14 mb-14 md:mt-20 bg-[rgba(110,172,218,0.05)] text-white p-5 lg:px-10"
     >
@@ -206,11 +216,43 @@ function LastestTracksSection() {
         <p className="p-5">Loading lastest tracks..</p>
       ) : tracks && tracks.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center">
-            {tracks.map((track) => (
-              <TrackCard key={track._id} track={track} />
-            ))}
-          </div>
+          <AnimatePresence>
+            <motion.div
+              // key={currentPage}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1,
+                  },
+                },
+                exit: {
+                  opacity: 0,
+                  transition: {
+                    staggerChildren: 0.05,
+                    staggerDirection: -1,
+                  },
+                },
+              }}
+              className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center"
+            >
+              {tracks.map((track) => (
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 30 },
+                    visible: { opacity: 1, y: 0 },
+                    exit: { opacity: 0, y: -30 },
+                  }}
+                >
+                  <TrackCard key={track._id} track={track} />
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
           <Button className="my-3 text-xl w-44" text="Browse more tracks" />
         </>
       ) : (
@@ -225,13 +267,20 @@ function LastestTracksSection() {
             : "No Tracks Available."}
       </div>
       <Button className="my-3 text-xl w-44" text="Browse more tracks" /> */}
-    </section>
+    </motion.section>
   );
 }
 
 function AboutSection() {
   return (
-    <section id="about" className="mt-24 mb-10 lg:my-28">
+    <motion.section
+      variants={onViewVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      id="about"
+      className="mt-24 mb-10 lg:my-28"
+    >
       <h2 style={{ fontSize: "2.3rem" }} className="">
         About Siwel Draxx
       </h2>
@@ -262,13 +311,19 @@ function AboutSection() {
           </p>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
 function LicensesSection() {
   return (
-    <section className="licences-terms my-24 lg:my-28">
+    <motion.section
+      variants={onViewVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      className="licences-terms my-24 lg:my-28"
+    >
       <h2 style={{ fontSize: "2.3rem" }} className="">
         Licensing Terms
       </h2>
@@ -305,13 +360,20 @@ function LicensesSection() {
           <LicenseItem term="Full Ownership & Customization" />
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
 function ServicesSection() {
   return (
-    <section id="services" className="services my-24 lg:my-28">
+    <motion.section
+      variants={onViewVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      id="services"
+      className="services my-24 lg:my-28"
+    >
       <h2 style={{ fontSize: "2.3rem" }} className="">
         My Services
       </h2>
@@ -410,7 +472,7 @@ function ServicesSection() {
           </div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 

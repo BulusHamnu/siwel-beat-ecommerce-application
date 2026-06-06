@@ -2,6 +2,8 @@ import SocialLinks from "./socialLinks";
 import useNewsletter from "../hooks/subscribeNewsletter";
 import toast from "react-hot-toast";
 import { useEffect, useRef } from "react";
+import { motion } from "motion/react";
+import { onViewVariants } from "../config/animation";
 
 /* Footer */
 function Footer() {
@@ -68,7 +70,13 @@ function Footer() {
   }, [status, errCode]);
 
   return (
-    <footer className="bg-[#2E6D9B] p-6 lg:px-14 grid grid-cols-1 md:grid-cols-2 gap-4 ">
+    <motion.footer
+      variants={onViewVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      className="bg-[#2E6D9B] p-6 lg:px-14 grid grid-cols-1 md:grid-cols-2 gap-4 "
+    >
       <div className="flex flex-col flex-nowrap gap-3 items-center md:items-start">
         <p style={{ fontSize: "1.5rem" }} className="md:text-left">
           Follow My Social
@@ -102,7 +110,7 @@ function Footer() {
           </button>
         </form>
       </div>
-    </footer>
+    </motion.footer>
   );
 }
 

@@ -35,7 +35,12 @@ function SignupPanel() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
-    <div className="pb-5 px-2 md:px-3">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className="pb-5 px-2 md:px-3"
+    >
       <form
         id="signup-panel"
         className="mt-5 flex flex-nowrap flex-col gap-6 justify-center"
@@ -161,7 +166,7 @@ function SignupPanel() {
       <button className="mt-4 button-primary text-xl w-full h-14 flex flex-row flex-nowrap gap-2 items-center justify-center">
         <FcGoogle size={26} /> Sign Up With Google
       </button>
-    </div>
+    </motion.div>
   );
 }
 
@@ -169,7 +174,12 @@ function LoginPanel() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="pb-5 px-2 md:px-3">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className="pb-5 px-2 md:px-3"
+    >
       <form
         id="login-panel"
         className="mt-5 flex flex-nowrap flex-col gap-6 justify-center"
@@ -239,7 +249,7 @@ function LoginPanel() {
           </a>
         </p>
       </span>
-    </div>
+    </motion.div>
   );
 }
 
