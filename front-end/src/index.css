@@ -139,6 +139,19 @@ footer > div > p {
   font-style: italic;
 }
 
+.license-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  min-height: 350px;
+  min-width: 300px;
+  transform: translate(-50%, -50%);
+
+  @media (min-height: 600px) {
+    top: 40%;
+  }
+}
+
 @media (min-width: 768px) {
   header {
     max-width: var(--container-width);
