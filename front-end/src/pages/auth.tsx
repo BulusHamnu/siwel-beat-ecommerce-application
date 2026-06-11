@@ -1,8 +1,11 @@
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { User2, Mail, LockKeyhole, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 function TabBtn({
   placeholder,
@@ -172,6 +175,74 @@ function SignupPanel() {
 
 function LoginPanel() {
   const [showPassword, setShowPassword] = useState(false);
+  const { login, isLoading, errCode, status, action } = useAuth();
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const navigate = useNavigate();
+
+  async function handleLoginSubmision(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const data = new FormData(e.target);
+
+    await login({
+      email: data.get("email"),
+      password: data.get("password"),
+    });
+  }
+
+  useEffect(() => {
+    if (status === "success") {
+      if (action === "login") {
+        toast.success("You're in, gang! Welcome back.", {
+          duration: 3000,
+          id: "login-succesfully",
+          position: "top-center",
+        });
+      }
+
+      formRef.current?.reset();
+      navigate("/");
+      //
+    } else if (status === "failed") {
+      switch (errCode) {
+        case "INCORRECT_PASSWORD": {
+          toast.error("Hmm, that password doesn't match. Want to try again?", {
+            duration: 3000,
+            id: "incorrect-password",
+            position: "top-center",
+          });
+          break;
+        }
+
+        case "USER_NOT_FOUND": {
+          toast.error("Invalid email or password. Please try again.", {
+            duration: 3000,
+            id: "user-not-found",
+            position: "top-center",
+          });
+          break;
+        }
+
+        case "RATE_LIMIT_EXCEEDED": {
+          toast.error("Too many attempts. Please try again in a few minutes.", {
+            duration: 3000,
+            id: "too-many-request",
+            position: "top-center",
+          });
+          break;
+        }
+
+        default: {
+          toast.error("Something went wrong. Please try again in a moment.", {
+            duration: 3000,
+            id: "message-failed",
+            position: "top-center",
+          });
+          break;
+        }
+      }
+    }
+  }, [errCode, status, action, navigate]);
 
   return (
     <motion.div
@@ -181,6 +252,10 @@ function LoginPanel() {
       className="pb-5 px-2 md:px-3"
     >
       <form
+        ref={formRef}
+        onSubmit={async (e) => {
+          await handleLoginSubmision(e);
+        }}
         id="login-panel"
         className="mt-5 flex flex-nowrap flex-col gap-6 justify-center"
       >
@@ -234,19 +309,26 @@ function LoginPanel() {
             </div>
           </div>
         </div>
-        <button type="submit" className="button-primary text-xl w-full h-14">
-          Login
+        <button
+          disabled={isLoading}
+          type="submit"
+          className="button-primary text-xl w-full h-14"
+        >
+          {isLoading ? "Logging.." : "Login"}
         </button>
       </form>
-      <button className="mt-4 button-primary text-xl w-full h-14 flex flex-row flex-nowrap gap-2 items-center justify-center">
+      <button
+        disabled
+        className="mt-4 button-primary text-xl w-full h-14 flex flex-row flex-nowrap gap-2 items-center justify-center"
+      >
         <FcGoogle size={26} /> Login With Google
       </button>
       <span className="text-right mt-5 block">
         <p className="whitespace-nowrap">
-          Forgotten your password?{" "}
-          <a className="text-blue-500 underline" href="#">
+          Forgotten your password?
+          <Link className="text-blue-500 underline" to="/auth/forgot-password">
             Reset it here.
-          </a>
+          </Link>
         </p>
       </span>
     </motion.div>

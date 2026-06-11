@@ -1,6 +1,7 @@
 import { User, Bell, ShoppingCart, Menu, X } from "lucide-react";
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 
 type To =
   | string
@@ -50,7 +51,7 @@ function LinkItem({
 /* Header */
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isAutheticated] = useState(false);
+  const { isAutheticated } = useAuth();
 
   return (
     <header

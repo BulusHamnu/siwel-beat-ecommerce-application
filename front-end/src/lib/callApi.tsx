@@ -36,7 +36,7 @@ async function callApi<T>({
 }: ApiRequest): Promise<ApiResponse<T>> {
   try {
     const url = env.BACKEND_URL + "/api/v1" + endpoint;
-    const authToken = localStorage.getItem("token");
+    const authToken = localStorage.getItem("accessToken");
 
     const headers = {
       "Content-Type": "application/json",

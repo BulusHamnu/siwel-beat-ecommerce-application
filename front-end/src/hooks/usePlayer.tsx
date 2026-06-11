@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import audioPlayerContext from "./audioPlayerContext";
+import audioPlayerContext from "./contexts/audioPlayerContext";
 
 function usePlayer() {
   const context = useContext(audioPlayerContext);

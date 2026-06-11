@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import audioPlayerContext from "../hooks/audioPlayerContext";
+import audioPlayerContext from "../hooks/contexts/audioPlayerContext";
 import env from "../config/env";
 
 export default function AudioPlayerProvider({ children }) {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import licenseModalContext from "../hooks/licenseModalContext";
+import licenseModalContext from "../hooks/contexts/licenseModalContext";
 import type { Track } from "./trackCard";
 
 export default function LicenseModalProvider({ children }) {

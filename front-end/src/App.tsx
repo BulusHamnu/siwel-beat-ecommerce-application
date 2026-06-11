@@ -7,6 +7,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AudioPlayerProvider from "./components/audioPlayerProvider";
 import LicenseModal from "./components/licenseModal";
 import LicenseModalProvider from "./components/licenseModalProvider";
+import AuthContextProvider from "./components/authProvider";
+// import ProtectedRoute from "./components/protectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -29,10 +31,12 @@ function App() {
           <LicenseModalProvider>
             <LicenseModal />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/auth" element={<Auth />} />
-              </Routes>
+              <AuthContextProvider>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/auth" element={<Auth />} />
+                </Routes>
+              </AuthContextProvider>
             </BrowserRouter>
           </LicenseModalProvider>
         </AudioPlayerProvider>

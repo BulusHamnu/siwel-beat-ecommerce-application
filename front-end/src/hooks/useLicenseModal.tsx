@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import licenseModalContext from "./licenseModalContext";
+import licenseModalContext from "./contexts/licenseModalContext";
 
 function useLicenseModal() {
   const context = useContext(licenseModalContext);
