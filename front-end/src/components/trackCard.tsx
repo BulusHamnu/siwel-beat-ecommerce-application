@@ -2,8 +2,7 @@ import { Heart, ShoppingCart, Play, Pause } from "lucide-react";
 import { formatAmount } from "../helpers/helpers";
 // Download
 import usePlayer from "../hooks/usePlayer";
-import LicenseModal from "./licenseModal";
-import { useState } from "react";
+import useLicenseModal from "../hooks/useLicenseModal";
 
 export interface Track {
   _id: string;
@@ -27,7 +26,7 @@ export interface Track {
 /* Track card */
 function TrackCard({ track }: { track: Track }) {
   const { playSong, isPlaying, currentSongId, stopSong } = usePlayer();
-  const [isOpen, setIsOpen] = useState(false);
+  const { showLicenseModal } = useLicenseModal();
 
   function toggleSong(songId: string) {
     if (isPlaying && currentSongId === songId) {
@@ -39,7 +38,6 @@ function TrackCard({ track }: { track: Track }) {
 
   return (
     <>
-      <LicenseModal isOpen={isOpen} setIsOpen={setIsOpen} track={track} />
       <div className="border border-white max-w-87.5 w-full p-2 bg-[#4278B9] cursor-pointer rounded-lg">
         <div className="cover-image h-64 overflow-hidden relative">
           <img
@@ -83,7 +81,7 @@ function TrackCard({ track }: { track: Track }) {
                 <Heart size={22} />
               </span>
               <span
-                onClick={() => setIsOpen(true)}
+                onClick={() => showLicenseModal(track)}
                 className="p-1 border border-white rounded cursor-pointer hover:bg-[#10458a] transition-colors duration-300"
               >
                 <ShoppingCart size={22} />

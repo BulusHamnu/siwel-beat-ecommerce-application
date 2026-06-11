@@ -5,6 +5,8 @@ import Auth from "./pages/auth";
 import { Toaster } from "react-hot-toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AudioPlayerProvider from "./components/audioPlayerProvider";
+import LicenseModal from "./components/licenseModal";
+import LicenseModalProvider from "./components/licenseModalProvider";
 
 const queryClient = new QueryClient();
 
@@ -21,14 +23,18 @@ function App() {
           },
         }}
       />
+
       <QueryClientProvider client={queryClient}>
         <AudioPlayerProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/auth" element={<Auth />} />
-            </Routes>
-          </BrowserRouter>
+          <LicenseModalProvider>
+            <LicenseModal />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/auth" element={<Auth />} />
+              </Routes>
+            </BrowserRouter>
+          </LicenseModalProvider>
         </AudioPlayerProvider>
       </QueryClientProvider>
     </div>
