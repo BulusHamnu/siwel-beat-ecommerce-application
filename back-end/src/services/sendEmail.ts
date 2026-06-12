@@ -28,7 +28,7 @@ const sendEmail = async (
   // });
 
   const { data, error } = await resend.emails.send({
-    from: "siwelbeats-app@bulushamnu.com",
+    from: `"Siwel Beats App" <no-reply@bulushamnu.com>`,
     to: [receiver],
     subject: subject,
     html: template,

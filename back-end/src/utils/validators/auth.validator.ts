@@ -16,7 +16,7 @@ export const signupBodySchema = Joi.object({
     .required()
     .min(5)
     .pattern(
-      new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")
+      new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$"),
     )
     .messages({
       "string.pattern.base":
@@ -26,7 +26,7 @@ export const signupBodySchema = Joi.object({
   confirmPassword: Joi.string().required().valid(Joi.ref("password")).messages({
     "any.only": "Confirm password must be the same with password.",
   }),
-  gender: Joi.string().required().valid("male", "female"),
+  gender: Joi.string().optional().valid("male", "female"),
 });
 
 /* Login validator */
@@ -51,7 +51,7 @@ export const resetPasswordBodySchema = Joi.object({
     .required()
     .min(5)
     .pattern(
-      new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")
+      new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$"),
     )
     .messages({
       "string.pattern.base":
