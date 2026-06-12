@@ -22,12 +22,17 @@ const app: Express = express();
 
 /* Middlewares */
 app.use(
+  cors({
+    origin: ["http://localhost:3000/", "https://siwel-beats.vercel.app/"],
+    credentials: true,
+  }),
+);
+app.use(
   helmet({
     contentSecurityPolicy: false,
   }),
 );
 app.use(express.json());
-app.use(cors({ origin: "*", credentials: true }));
 app.use(
   morgan("dev", {
     stream: {
