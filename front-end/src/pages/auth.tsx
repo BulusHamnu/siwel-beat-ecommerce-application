@@ -6,6 +6,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import callApi from "../lib/callApi";
 
 function TabBtn({
   placeholder,
@@ -36,6 +38,71 @@ function TabBtn({
 function SignupPanel() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+
+  const signupMutation = useMutation({
+    mutationFn: async (data) => {
+      const res = await callApi<null>({
+        endpoint: "/auth/register",
+        method: "post",
+        body: data,
+      });
+
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("User created successfully! You can log in now, gang.", {
+        duration: 3000,
+        id: "user-created",
+        position: "top-center",
+      });
+
+      formRef.current?.reset();
+    },
+    onError: (error: any) => {
+      const errCode: string = error.response.data.error.code;
+      switch (errCode) {
+        case "VALIDATION_ERROR": {
+          toast.error(
+            "Hey, please fill out the form and make sure all fields are valid.",
+            {
+              duration: 3000,
+              id: "validation-error",
+              position: "top-center",
+            },
+          );
+          break;
+        }
+
+        case "USER_ALREADY_EXISTS": {
+          toast.error("User already exists. Please log in instead.", {
+            duration: 3000,
+            id: "user-exists",
+            position: "top-center",
+          });
+          break;
+        }
+
+        case "RATE_LIMIT_EXCEEDED": {
+          toast.error("Too many attempts. Please try again in a few minutes.", {
+            duration: 3000,
+            id: "too-many-request",
+            position: "top-center",
+          });
+          break;
+        }
+
+        default: {
+          toast.error("Something went wrong. Please try again in a moment.", {
+            duration: 3000,
+            id: "message-failed",
+            position: "top-center",
+          });
+          break;
+        }
+      }
+    },
+  });
 
   return (
     <motion.div
@@ -45,6 +112,18 @@ function SignupPanel() {
       className="pb-5 px-2 md:px-3"
     >
       <form
+        onSubmit={(e) => {
+          e.preventDefault();
+
+          const formData = new FormData(e.currentTarget);
+          const data: any = {};
+          formData.forEach((value, key) => {
+            data[key] = value;
+          });
+
+          signupMutation.mutate(data);
+        }}
+        ref={formRef}
         id="signup-panel"
         className="mt-5 flex flex-nowrap flex-col gap-6 justify-center"
       >
@@ -59,7 +138,7 @@ function SignupPanel() {
             <input
               required
               id="firstname"
-              name="firstname"
+              name="firstName"
               type="text"
               placeholder="Your First Name.."
               className="rounded-sm h-12"
@@ -75,9 +154,27 @@ function SignupPanel() {
             <input
               required
               id="lastname"
-              name="lastname"
+              name="lastName"
               type="text"
               placeholder="Your Last Name.."
+              className="rounded-sm h-12"
+            />
+          </div>
+        </div>
+        <div className="row-group flex flex-col flex-nowrap gap-5 md:flex-row ">
+          <div className="flex flex-col flex-nowrap gap-3 justify-center w-full">
+            <label
+              htmlFor="username"
+              className="flex flex-row flex-nowrap gap-4 items-center"
+            >
+              <User2 /> Username
+            </label>
+            <input
+              required
+              id="username"
+              name="username"
+              type="text"
+              placeholder="Your Username.."
               className="rounded-sm h-12"
             />
           </div>
@@ -143,9 +240,9 @@ function SignupPanel() {
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 required
-                id="password"
-                name="password"
-                placeholder="Password.."
+                id="confirm-password"
+                name="confirmPassword"
+                placeholder="Confirm password.."
                 className="rounded-sm h-12 pr-10 w-full"
               />
               <button
@@ -162,8 +259,12 @@ function SignupPanel() {
             </div>
           </div>
         </div>
-        <button type="submit" className="button-primary text-xl w-full h-14">
-          Sign Up
+        <button
+          disabled={signupMutation.isPending}
+          type="submit"
+          className="button-primary text-xl w-full h-14"
+        >
+          {signupMutation.isPending ? "Signing up.." : "Sign Up"}
         </button>
       </form>
       <button className="mt-4 button-primary text-xl w-full h-14 flex flex-row flex-nowrap gap-2 items-center justify-center">
