@@ -334,9 +334,10 @@ function LoginPanel() {
         }
 
         default: {
+          if (action === "verification" || action === "logout") return;
           toast.error("Something went wrong. Please try again in a moment.", {
             duration: 3000,
-            id: "message-failed",
+            id: "request-failed",
             position: "top-center",
           });
           break;

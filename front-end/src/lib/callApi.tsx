@@ -50,6 +50,7 @@ async function callApi<T>({
       params,
       headers,
       data: JSON.stringify(body),
+      withCredentials: true,
     });
 
     return res.data;

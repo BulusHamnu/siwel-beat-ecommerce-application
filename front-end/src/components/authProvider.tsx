@@ -42,14 +42,13 @@ export default function AuthContextProvider({ children }) {
   const executeApiCall = async <T,>(
     method: "get" | "post",
     endpoint: string,
-    body: any = null,
+    body?: any,
   ) => {
     try {
       setIsLoading(true);
       setData(null);
       setErrCode(null);
       setStatus("idle");
-      setIsAutheticated(false);
 
       const res = await callApi<T>({
         endpoint,
@@ -59,12 +58,10 @@ export default function AuthContextProvider({ children }) {
       });
 
       setStatus("success");
-      setIsAutheticated(true);
-
       return res.data;
       //
     } catch (error: any) {
-      setErrCode(error.response.data.error.code);
+      setErrCode(error.response.data?.error.code);
       setStatus("failed");
     } finally {
       setIsLoading(false);
@@ -78,9 +75,26 @@ export default function AuthContextProvider({ children }) {
         return;
       }
 
+      setIsAutheticated(false);
       setAction("verification"); // So we can verify if it's logging, logout or token verification.
-      const data = await executeApiCall<UserProfile>("get", "/users/me");
-      setData(data);
+
+      let profile: any;
+      profile = await executeApiCall<UserProfile>("get", "/users/me");
+
+      if (!profile) {
+        const data = await executeApiCall<{ accessToken: string }>(
+          "post",
+          "/auth/refresh-token",
+        );
+
+        localStorage.setItem("accessToken", data?.accessToken || "");
+        profile = await executeApiCall<UserProfile>("get", "/users/me");
+      }
+
+      if (profile) {
+        setIsAutheticated(true);
+        setData(profile);
+      }
     };
 
     verifyToken();
@@ -88,6 +102,7 @@ export default function AuthContextProvider({ children }) {
 
   const login = async (body: { email: string; password: string }) => {
     setAction("login");
+    setIsAutheticated(false);
 
     const data = await executeApiCall<{
       user: UserSnapshot;
@@ -95,6 +110,8 @@ export default function AuthContextProvider({ children }) {
     }>("post", "/auth/login", body);
 
     setData(data?.user);
+    setIsAutheticated(true);
+
     localStorage.setItem("accessToken", data?.accessToken || "");
   };
 
@@ -104,6 +121,7 @@ export default function AuthContextProvider({ children }) {
     await executeApiCall<null>("post", "/auth/log-out");
 
     setData(null);
+    setIsAutheticated(false);
     localStorage.setItem("accessToken", "");
   };
 
