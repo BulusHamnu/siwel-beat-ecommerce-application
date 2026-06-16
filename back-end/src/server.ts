@@ -23,10 +23,14 @@ const app: Express = express();
 /* Middlewares */
 app.use(
   cors({
-    origin: ["http://localhost:3000/", "https://siwel-beats.vercel.app/"],
+    origin: function (origin, callback) {
+      console.log(`Origin: ${origin}`);
+      callback(null, true);
+    },
     credentials: true,
   }),
 );
+// ["http://localhost:3000", "https://siwel-beats.vercel.app"]
 app.use(
   helmet({
     contentSecurityPolicy: false,
