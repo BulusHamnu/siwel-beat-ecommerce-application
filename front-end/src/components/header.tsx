@@ -1,8 +1,19 @@
-import { User, Bell, ShoppingCart, Menu, X } from "lucide-react";
+import {
+  User,
+  Bell,
+  ShoppingCart,
+  Menu,
+  X,
+  Heart,
+  LogOut,
+  ShoppingBag,
+  CreditCard,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { motion } from "motion/react";
+import toast from "react-hot-toast";
 
 type To =
   | string
@@ -10,6 +21,87 @@ type To =
       pathname?: string;
       search?: string;
     };
+
+function MenuItem({ to, children }: { to: To; children: any }) {
+  return (
+    <li>
+      <Link
+        className="p-2 hover:bg-[#4278B9] transition duration-300 whitespace-nowrap flex flex-row flex-nowrap gap-2.5"
+        to={to}
+      >
+        {children}
+      </Link>
+    </li>
+  );
+}
+
+function ProfileIcon() {
+  const [isOpen, setIsOpen] = useState(false);
+  const { logout, isLoading, status, action, isAutheticated, resetAuthAction } =
+    useAuth();
+
+  const handleLogout = () => logout();
+
+  useEffect(() => {
+    if (action === "logout") {
+      const closeMenu = () => setIsOpen(false);
+
+      if (status === "success") {
+        toast.success("Logged out successfully.", {
+          duration: 3000,
+          id: "logout-successful",
+          position: "top-center",
+        });
+
+        closeMenu();
+      } else if (status === "failed") {
+        toast.error("An error occurred while logging out.", {
+          duration: 3000,
+          id: "logout-failed",
+          position: "top-center",
+        });
+      }
+    }
+  }, [status, action, resetAuthAction]);
+
+  return (
+    <span className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
+      <User onClick={() => setIsOpen(!isOpen)} size={25} />
+      {isOpen && (
+        <motion.ul
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="absolute h-fit w-56 border-2 border-white right-[50%] top-[115%] rounded-md bg-[#28415F] p-1.5"
+        >
+          <MenuItem to={"/profile"}>
+            <User size={25} /> My Profile
+          </MenuItem>
+
+          <MenuItem to={"/orders"}>
+            <CreditCard size={25} /> My Orders
+          </MenuItem>
+
+          <MenuItem to={"/favourites"}>
+            <Heart size={25} /> Favourites
+          </MenuItem>
+
+          <MenuItem to={"/purchases"}>
+            <ShoppingBag size={25} /> Purchases
+          </MenuItem>
+
+          <li
+            onClick={isAutheticated ? handleLogout : undefined}
+            className={`${isAutheticated ? "" : "cursor-not-allowed"} p-2 hover:bg-[#4278B9] transition duration-300 whitespace-nowrap flex flex-row flex-nowrap gap-2.5`}
+          >
+            <LogOut size={25} />
+            {isLoading && action === "logout" ? "Logging out.." : "Logout"}
+          </li>
+        </motion.ul>
+      )}
+    </span>
+  );
+}
 
 function LinkItem({
   text,
@@ -74,7 +166,7 @@ function Header() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.1 }}
           onClick={() => setIsOpen(false)}
-          className={`fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.7)] z-30`}
+          className={`fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.7)] z-40`}
         ></motion.div>
       ) : (
         ""
@@ -144,9 +236,8 @@ function Header() {
           <span className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300">
             <Bell size={25} />
           </span>
-          <span className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300">
-            <User size={25} />
-          </span>
+          {/* Profile Icon */}
+          <ProfileIcon />
           <span
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"

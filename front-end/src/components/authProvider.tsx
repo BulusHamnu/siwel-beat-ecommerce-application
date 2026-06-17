@@ -134,7 +134,6 @@ export default function AuthContextProvider({ children }) {
     errCode,
     status,
     action,
-    resetAuthAction: () => setAction(null),
   };
 
   return <authContext.Provider value={value}>{children}</authContext.Provider>;
