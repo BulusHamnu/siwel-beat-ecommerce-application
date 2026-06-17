@@ -292,19 +292,17 @@ function LoginPanel() {
   }
 
   useEffect(() => {
-    if (status === "success") {
-      if (action === "login") {
-        toast.success("You're in, gang! Welcome back.", {
-          duration: 3000,
-          id: "login-succesfully",
-          position: "top-center",
-        });
-      }
+    if (status === "success" && action === "login") {
+      toast.success("You're in, gang! Welcome back.", {
+        duration: 3000,
+        id: "login-succesfully",
+        position: "top-center",
+      });
 
       formRef.current?.reset();
       navigate("/");
       //
-    } else if (status === "failed") {
+    } else if (status === "failed" && action === "login") {
       switch (errCode) {
         case "INCORRECT_PASSWORD": {
           toast.error("Hmm, that password doesn't match. Want to try again?", {
@@ -334,10 +332,9 @@ function LoginPanel() {
         }
 
         default: {
-          if (action === "verification" || action === "logout") return;
           toast.error("Something went wrong. Please try again in a moment.", {
             duration: 3000,
-            id: "request-failed",
+            id: "login-failed",
             position: "top-center",
           });
           break;
