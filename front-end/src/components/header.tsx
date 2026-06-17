@@ -1,7 +1,8 @@
 import { User, Bell, ShoppingCart, Menu, X } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import { motion } from "motion/react";
 
 type To =
   | string
@@ -53,79 +54,108 @@ function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const { isAutheticated } = useAuth();
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
   return (
-    <header
-      className={`whitespace-nowrap h-15 bg-[#2E6D9B] flex flex-row flex-nowrap gap-3 p-4 md:px-6 lg:px-10 items-center justify-between fixed top-0 w-full`}
-    >
-      <div className="logo h-9 w-9 border border-white rounded">
-        <img className="w-full h-full" src="logo.png" alt="Siwel Beats Logo" />
-      </div>
-      <nav
-        className={`${isOpen ? "right-0 border-t border-b-white" : "-right-full"} bg-[#2E6D9B] text-white fixed top-15 max-md:h-full max-sm:w-[60vw] max-md:w-[40vw] md:w-fit md:static md:block transition-all duration-500 ease-in-out`}
+    <>
+      {isOpen ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.1 }}
+          onClick={() => setIsOpen(false)}
+          className={`fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.7)] z-30`}
+        ></motion.div>
+      ) : (
+        ""
+      )}
+      <header
+        className={`whitespace-nowrap h-15 bg-[#2E6D9B] flex flex-row flex-nowrap gap-3 p-4 md:px-6 lg:px-10 items-center justify-between fixed top-0 w-full`}
       >
-        <ul className="flex flex-col md:flex-row md:flex-nowrap md:gap-7 text-md md:text-lg text-left md:text-center">
-          <LinkItem setIsOpen={setIsOpen} text="Home" to="/" />
-
-          <LinkItem
-            setIsOpen={setIsOpen}
-            text="Services"
-            to="#services"
-            type="normal"
+        <div className="logo h-9 w-9 border border-white rounded">
+          <img
+            className="w-full h-full"
+            src="logo.png"
+            alt="Siwel Beats Logo"
           />
-          <LinkItem
-            setIsOpen={setIsOpen}
-            text="About"
-            to="#about"
-            type="normal"
-          />
-
-          <LinkItem setIsOpen={setIsOpen} text="Tracks" to="/tracks" />
-          <LinkItem
-            setIsOpen={setIsOpen}
-            text="Contact"
-            to="#contact"
-            type="normal"
-          />
-
-          {!isAutheticated ? (
-            <>
-              <LinkItem
-                setIsOpen={setIsOpen}
-                text="Sign Up"
-                to={{ pathname: "/auth", search: "?action=signup" }}
-              />
-              <LinkItem
-                setIsOpen={setIsOpen}
-                text="Login"
-                to={{ pathname: "/auth", search: "?action=login" }}
-              />
-            </>
-          ) : (
-            ""
-          )}
-        </ul>
-      </nav>
-      <div className="user-icons text-white flex flex-row flex-nowrap gap-6 lg:gap-10">
-        <Link
-          to="/carts"
-          className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
+        </div>
+        <nav
+          className={`${isOpen ? "right-0 border-t border-b-white" : "-right-full"} bg-[#2E6D9B] text-white fixed top-15 max-md:h-full max-sm:w-[60vw] max-md:w-[40vw] md:w-fit md:static md:block transition-all duration-500 ease-in-out`}
         >
-          <ShoppingCart size={25} />
-        </Link>
-        <span className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300">
-          <Bell size={25} />
-        </span>
-        <span className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300">
-          <User size={25} />
-        </span>
-        <span
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
-        >
-          {isOpen ? <X size={25} /> : <Menu size={25} />}
-        </span>
-      </div>
-    </header>
+          <ul className="flex flex-col md:flex-row md:flex-nowrap md:gap-7 text-md md:text-lg text-left md:text-center">
+            <LinkItem setIsOpen={setIsOpen} text="Home" to="/" />
+
+            <LinkItem
+              setIsOpen={setIsOpen}
+              text="Services"
+              to="#services"
+              type="normal"
+            />
+            <LinkItem
+              setIsOpen={setIsOpen}
+              text="About"
+              to="#about"
+              type="normal"
+            />
+
+            <LinkItem setIsOpen={setIsOpen} text="Tracks" to="/tracks" />
+            <LinkItem
+              setIsOpen={setIsOpen}
+              text="Contact"
+              to="#contact"
+              type="normal"
+            />
+
+            {!isAutheticated ? (
+              <>
+                <LinkItem
+                  setIsOpen={setIsOpen}
+                  text="Sign Up"
+                  to={{ pathname: "/auth", search: "?action=signup" }}
+                />
+                <LinkItem
+                  setIsOpen={setIsOpen}
+                  text="Login"
+                  to={{ pathname: "/auth", search: "?action=login" }}
+                />
+              </>
+            ) : (
+              ""
+            )}
+          </ul>
+        </nav>
+        <div className="user-icons text-white flex flex-row flex-nowrap gap-6 lg:gap-10">
+          <Link
+            to="/carts"
+            className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
+          >
+            <ShoppingCart size={25} />
+          </Link>
+          <span className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300">
+            <Bell size={25} />
+          </span>
+          <span className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300">
+            <User size={25} />
+          </span>
+          <span
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
+          >
+            {isOpen ? <X size={25} /> : <Menu size={25} />}
+          </span>
+        </div>
+      </header>
+    </>
   );
 }
 
