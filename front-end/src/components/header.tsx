@@ -26,7 +26,7 @@ function MenuItem({ to, children }: { to: To; children: any }) {
   return (
     <li>
       <Link
-        className="p-2 hover:bg-[#4278B9] transition duration-300 whitespace-nowrap flex flex-row flex-nowrap gap-2.5"
+        className="p-3 hover:bg-[#4278B9] transition duration-300 whitespace-nowrap flex flex-row flex-nowrap gap-2.5"
         to={to}
       >
         {children}
@@ -35,11 +35,15 @@ function MenuItem({ to, children }: { to: To; children: any }) {
   );
 }
 
-function ProfileIcon() {
-  const [isOpen, setIsOpen] = useState(false);
-  const { logout, isLoading, status, action, isAutheticated, resetAuthAction } =
-    useAuth();
-
+function ProfileMenu({
+  isOpen,
+  setIsOpen,
+}: {
+  isOpen: boolean;
+  setIsOpen: (value: boolean) => void;
+}) {
+  const { status, action, logout, isLoading, isAutheticated } = useAuth();
+  const menuRef = useRef<HTMLUListElement | null>(null);
   const handleLogout = () => logout();
 
   useEffect(() => {
@@ -62,44 +66,56 @@ function ProfileIcon() {
         });
       }
     }
-  }, [status, action, resetAuthAction]);
+  }, [status, action, setIsOpen]);
+
+  useEffect(() => {
+    const handleBodyClick = (e: any) => {
+      if (menuRef.current && menuRef.current.contains(e.target)) {
+        return;
+      }
+
+      if (isOpen) setIsOpen(false);
+    };
+
+    document.body.addEventListener("click", handleBodyClick);
+
+    return () => {
+      document.body.removeEventListener("click", handleBodyClick);
+    };
+  }, [isOpen, setIsOpen]);
 
   return (
-    <span className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
-      <User onClick={() => setIsOpen(!isOpen)} size={25} />
-      {isOpen && (
-        <motion.ul
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="absolute h-fit w-56 border-2 border-white right-[50%] top-[115%] rounded-md bg-[#28415F] p-1.5"
-        >
-          <MenuItem to={"/profile"}>
-            <User size={25} /> My Profile
-          </MenuItem>
+    <motion.ul
+      ref={menuRef}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="absolute h-fit w-60 border-2 border-white right-[50%] top-[115%] rounded-md bg-[#28415F] p-1.5"
+    >
+      <MenuItem to={"/profile"}>
+        <User size={25} /> My Profile
+      </MenuItem>
 
-          <MenuItem to={"/orders"}>
-            <CreditCard size={25} /> My Orders
-          </MenuItem>
+      <MenuItem to={"/orders"}>
+        <CreditCard size={25} /> My Orders
+      </MenuItem>
 
-          <MenuItem to={"/favourites"}>
-            <Heart size={25} /> Favourites
-          </MenuItem>
+      <MenuItem to={"/favourites"}>
+        <Heart size={25} /> Favourites
+      </MenuItem>
 
-          <MenuItem to={"/purchases"}>
-            <ShoppingBag size={25} /> Purchases
-          </MenuItem>
+      <MenuItem to={"/purchases"}>
+        <ShoppingBag size={25} /> Purchases
+      </MenuItem>
 
-          <li
-            onClick={isAutheticated ? handleLogout : undefined}
-            className={`${isAutheticated ? "" : "cursor-not-allowed"} p-2 hover:bg-[#4278B9] transition duration-300 whitespace-nowrap flex flex-row flex-nowrap gap-2.5`}
-          >
-            <LogOut size={25} />
-            {isLoading && action === "logout" ? "Logging out.." : "Logout"}
-          </li>
-        </motion.ul>
-      )}
-    </span>
+      <li
+        onClick={isAutheticated ? handleLogout : undefined}
+        className={`${isAutheticated ? "" : "cursor-not-allowed"} p-3 hover:bg-[#4278B9] transition duration-300 whitespace-nowrap flex flex-row flex-nowrap gap-2.5`}
+      >
+        <LogOut size={25} />
+        {isLoading && action === "logout" ? "Logging out.." : "Logout"}
+      </li>
+    </motion.ul>
   );
 }
 
@@ -144,6 +160,7 @@ function LinkItem({
 /* Header */
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAutheticated } = useAuth();
 
   useEffect(() => {
@@ -237,7 +254,18 @@ function Header() {
             <Bell size={25} />
           </span>
           {/* Profile Icon */}
-          <ProfileIcon />
+          <span className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
+            <User
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMenuOpen(!isMenuOpen);
+              }}
+              size={25}
+            />
+            {isMenuOpen && (
+              <ProfileMenu isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} />
+            )}
+          </span>
           <span
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
