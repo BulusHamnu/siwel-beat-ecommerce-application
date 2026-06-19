@@ -10,7 +10,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { motion } from "motion/react";
 import toast from "react-hot-toast";
@@ -24,13 +24,13 @@ type To =
 
 function MenuItem({ to, children }: { to: To; children: any }) {
   return (
-    <li>
-      <Link
+    <li className="profile-menu-item">
+      <NavLink
         className="p-3 hover:bg-[#4278B9] transition duration-300 whitespace-nowrap flex flex-row flex-nowrap gap-2.5"
         to={to}
       >
         {children}
-      </Link>
+      </NavLink>
     </li>
   );
 }
@@ -90,7 +90,7 @@ function ProfileMenu({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="absolute h-fit w-60 border-2 border-white right-[50%] top-[115%] rounded-md bg-[#28415F] p-1.5"
+      className="profile-menu absolute h-fit w-60 border-2 border-white right-[50%] top-[115%] rounded-md bg-[#28415F] p-1.5"
     >
       <MenuItem to={"/profile"}>
         <User size={25} /> My Profile
@@ -149,9 +149,9 @@ function LinkItem({
           {text}
         </a>
       ) : (
-        <Link ref={linkRef} onClick={() => setIsOpen(false)} to={to}>
+        <NavLink ref={linkRef} onClick={() => setIsOpen(false)} to={to}>
           {text}
-        </Link>
+        </NavLink>
       )}
     </li>
   );

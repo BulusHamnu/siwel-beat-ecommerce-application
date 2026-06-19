@@ -40,6 +40,16 @@ header {
   }
 }
 
+header nav a.active {
+  font-weight: bold;
+  border-bottom: 2px solid white;
+}
+
+.profile-menu a.active {
+  font-weight: bold;
+  background-color: #4278b9;
+}
+
 body {
   margin: 0;
   background-color: var(--background-color);

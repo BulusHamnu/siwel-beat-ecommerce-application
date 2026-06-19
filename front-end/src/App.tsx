@@ -8,6 +8,7 @@ import AudioPlayerProvider from "./components/audioPlayerProvider";
 import LicenseModal from "./components/licenseModal";
 import LicenseModalProvider from "./components/licenseModalProvider";
 import AuthContextProvider from "./components/authProvider";
+import NotFound from "./pages/notFound";
 // import ProtectedRoute from "./components/protectedRoute";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,8 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/auth" element={<Auth />} />
+                  {/* Not found page */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthContextProvider>
             </BrowserRouter>
