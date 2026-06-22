@@ -8,16 +8,13 @@ import {
   LogOut,
   ShoppingBag,
   CreditCard,
-  XIcon,
-  RotateCwIcon,
-  ArrowUpRight,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { motion } from "motion/react";
 import toast from "react-hot-toast";
-import formatTimeAgo from "../helpers/helpers";
+import NotificationPanel from "./NotificationPanel";
 
 type To =
   | string
@@ -162,130 +159,6 @@ function ProfileMenu({
   );
 }
 
-/* Notification Panel */
-function NotificationPanel({
-  isOpen,
-  setIsOpen,
-}: {
-  isOpen: boolean;
-  setIsOpen: (value: boolean) => void;
-}) {
-  // const { status, action, logout, isLoading, isAutheticated } = useAuth();
-  const panelRef = useRef<HTMLDivElement | null>(null);
-
-  interface Notification {
-    id: string;
-    type: string;
-    message: string;
-    read: boolean;
-    resourceId: string;
-    entityId: string;
-    date: string | Date;
-  }
-
-  const [notifications] = useState<Notification[] | null>(null);
-
-  useEffect(() => {
-    const handleBodyClick = (e: any) => {
-      if (panelRef.current && panelRef.current.contains(e.target)) {
-        return;
-      }
-
-      if (isOpen) setIsOpen(false);
-    };
-
-    document.body.addEventListener("click", handleBodyClick);
-
-    return () => {
-      document.body.removeEventListener("click", handleBodyClick);
-    };
-  }, [isOpen, setIsOpen]);
-
-  return (
-    <motion.div
-      ref={panelRef}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      id="notification-panel"
-      className="bg-[rgba(2,21,38,1)] absolute border-2 border-white rounded-md p-1.5 h-fit w-[320px] min-[500px]:w-100  right-[-350%] min-[360px]:right-[-310%] top-[115%] min-[690px]:right-[50%] "
-    >
-      <div
-        id="notification-panel-header"
-        className="flex flex-row flex-nowrap justify-between items-center py-0.5 px-1.5 mt-1"
-      >
-        <h2 style={{ margin: 0 }} className="">
-          Notifications
-        </h2>
-        <div className="flex flex-row flex-nowrap items-center gap-4">
-          {notifications && notifications.length > 0 && (
-            <button className="button-primary text-xs">Mark All As Read</button>
-          )}
-          <span className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300">
-            <RotateCwIcon size={25} />
-          </span>
-          <span
-            onClick={() => setIsOpen(false)}
-            className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
-          >
-            <XIcon size={25} />
-          </span>
-        </div>
-      </div>
-      {notifications && notifications.length > 0 ? (
-        <ul className="mt-5 max-h-112.5 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
-          {notifications.map((notification) => (
-            <li
-              key={notification.id}
-              className={`${notification.read ? "bg-[rgba(6,43,88,0.3)]" : "bg-[rgba(6,43,88,0.6)]"} py-1.5 px-3 border border-gray-600 rounded mb-2`}
-            >
-              <div>
-                <a
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    alert(notification.type);
-                  }}
-                  href="#"
-                  className="flex flex-row justify-between items-center hover:underline"
-                >
-                  <p
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                    className="text-lg whitespace-break-spaces text-left"
-                  >
-                    {notification.message}
-                  </p>
-                  <ArrowUpRight size={20} />
-                </a>
-              </div>
-              <div className="flex flex-row flex-nowrap justify-between items-center mt-3">
-                <span className="text-sm">
-                  {formatTimeAgo(notification.date)}
-                </span>
-                <div className="flex flex-row flex-nowrap gap-2">
-                  <button
-                    onClick={() => alert("Deleted!")}
-                    className="cursor-pointer text-sm py-1 px-2 bg-blue-700 rounded hover:bg-blue-800 transition duration-300 w-22.5"
-                  >
-                    {notification.read ? "Mark Unread" : "Mark Read"}
-                  </button>
-                  <button
-                    onClick={() => alert("Deleted!")}
-                    className="cursor-pointer text-sm py-1 px-2 bg-red-700 rounded hover:bg-red-800 transition duration-300 w-22.5"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <span className="block p-4 text-lg">No Notification Found.</span>
-      )}
-    </motion.div>
-  );
-}
-
 /* Header */
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -355,7 +228,7 @@ function Header() {
               type="normal"
             />
 
-            {!isAutheticated ? (
+            {!isAutheticated && (
               <>
                 <LinkItem
                   setIsOpen={setIsOpen}
@@ -368,8 +241,6 @@ function Header() {
                   to={{ pathname: "/auth", search: "?action=login" }}
                 />
               </>
-            ) : (
-              ""
             )}
           </ul>
         </nav>
@@ -394,6 +265,7 @@ function Header() {
               <NotificationPanel
                 isOpen={isNotificationOpen}
                 setIsOpen={setIsNotificationOpen}
+                entity="users"
               />
             )}
           </span>
