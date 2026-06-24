@@ -84,11 +84,19 @@ function ProfileMenu({
 }) {
   const { status, action, logout, isLoading, isAutheticated } = useAuth();
   const menuRef = useRef<HTMLUListElement | null>(null);
-  const handleLogout = () => logout();
+  const [logoutLoading, setLogoutLoading] = useState(false); // Need this to prevent menu from showing toast and snap closing when auth status and action state never change from 'logout'.
+
+  const handleLogout = () => {
+    setLogoutLoading(true);
+    logout();
+  };
 
   useEffect(() => {
-    if (action === "logout") {
-      const closeMenu = () => setIsOpen(false);
+    if (action === "logout" && logoutLoading) {
+      const closeMenu = () => {
+        setIsOpen(false);
+        setLogoutLoading(false);
+      };
 
       if (status === "success") {
         toast.success("Logged out successfully.", {
@@ -106,7 +114,7 @@ function ProfileMenu({
         });
       }
     }
-  }, [status, action, setIsOpen]);
+  }, [status, action, setIsOpen, logoutLoading]);
 
   useEffect(() => {
     const handleBodyClick = (e: any) => {
@@ -150,7 +158,7 @@ function ProfileMenu({
 
       <li
         onClick={isAutheticated ? handleLogout : undefined}
-        className={`${isAutheticated ? "" : "cursor-not-allowed"} p-3 hover:bg-[#4278B9] transition duration-300 whitespace-nowrap flex flex-row flex-nowrap gap-2.5`}
+        className={`${isAutheticated ? "cursor-pointer" : "cursor-not-allowed"} p-3 hover:bg-[#4278B9] transition duration-300 whitespace-nowrap flex flex-row flex-nowrap gap-2.5`}
       >
         <LogOut size={25} />
         {isLoading && action === "logout" ? "Logging out.." : "Logout"}
@@ -164,7 +172,7 @@ function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const { isAutheticated, data: user, isLoading } = useAuth();
+  const { isAutheticated, data: user, isLoading, action } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -218,13 +226,13 @@ function Header() {
             <LinkItem
               setIsOpen={setIsOpen}
               text="Services"
-              to="#services"
+              to="/#services"
               type="normal"
             />
             <LinkItem
               setIsOpen={setIsOpen}
               text="About"
-              to="#about"
+              to="/#about"
               type="normal"
             />
 
@@ -232,7 +240,7 @@ function Header() {
             <LinkItem
               setIsOpen={setIsOpen}
               text="Contact"
-              to="#contact"
+              to="/#contact"
               type="normal"
             />
 
@@ -254,8 +262,8 @@ function Header() {
         </motion.nav>
 
         {/* Action Icons */}
-        {isLoading ? (
-          <div className="h-10 w-37.5 rounded bg-[#4f79b8]/50 animate-pulse border border-gray-200" />
+        {isLoading && action !== "logout" ? (
+          <div className="h-10 w-37.5 rounded bg-[#4f79b8]/55 animate-pulse" />
         ) : (
           <motion.div
             layout

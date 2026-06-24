@@ -43,7 +43,7 @@ function TrackCard({ track }: { track: Track }) {
           <img
             className="w-full h-full object-cover"
             src={track.coverImageUrl}
-            alt="Track Cover"
+            alt={`${track.title} track cover`}
           />
           <div
             onClick={() => {
