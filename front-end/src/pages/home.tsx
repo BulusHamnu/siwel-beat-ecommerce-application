@@ -10,8 +10,10 @@ import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import callApi from "../lib/callApi";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { onViewVariants } from "../config/animation";
+import TrackCardSkeleton from "../components/trackCardSkeleton";
+import TracksContainer from "../components/tracksContainer";
 
 function LicenseItem({ term }: { term: string }) {
   return (
@@ -207,52 +209,33 @@ function LastestTracksSection() {
       </h2>
 
       {error ? (
-        <p className="p-5">Unable to load lastest tracks</p>
+        <p className="p-5">Unable to load lastest tracks.</p>
       ) : isLoading ? (
-        <p className="p-5">Loading lastest tracks..</p>
+        <TracksContainer>
+          <TrackCardSkeleton />
+          <TrackCardSkeleton />
+          <TrackCardSkeleton />
+          <TrackCardSkeleton />
+        </TracksContainer>
       ) : tracks && tracks.length > 0 ? (
         <>
-          <AnimatePresence>
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: {
-                    staggerChildren: 0.1,
-                  },
-                },
-                exit: {
-                  opacity: 0,
-                  transition: {
-                    staggerChildren: 0.05,
-                    staggerDirection: -1,
-                  },
-                },
-              }}
-              className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center"
-            >
-              {tracks.slice(0, 4).map((track) => (
-                <motion.div
-                  variants={{
-                    hidden: { opacity: 0, y: 30 },
-                    visible: { opacity: 1, y: 0 },
-                    exit: { opacity: 0, y: -30 },
-                  }}
-                  key={track._id}
-                >
-                  <TrackCard key={track._id} track={track} />
-                </motion.div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
-          {tracks.length > 4 ? (
+          <TracksContainer>
+            {tracks.slice(0, 4).map((track) => (
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 30 },
+                  visible: { opacity: 1, y: 0 },
+                  exit: { opacity: 0, y: -30 },
+                }}
+                key={track._id}
+              >
+                <TrackCard key={track._id} track={track} />
+              </motion.div>
+            ))}
+          </TracksContainer>
+
+          {tracks.length > 4 && (
             <Button className="my-3 text-xl w-44" text="Browse more tracks" />
-          ) : (
-            ""
           )}
         </>
       ) : (

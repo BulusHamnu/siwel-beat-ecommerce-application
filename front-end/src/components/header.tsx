@@ -164,7 +164,7 @@ function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const { isAutheticated, data: user } = useAuth();
+  const { isAutheticated, data: user, isLoading } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -254,73 +254,80 @@ function Header() {
         </motion.nav>
 
         {/* Action Icons */}
-        <motion.div
-          layout
-          layoutId="action-icons"
-          className="user-icons text-white flex flex-row flex-nowrap gap-6 lg:gap-10"
-        >
-          {isAutheticated && user?.role === "admin" ? (
-            <motion.button
-              onClick={() => alert("hii")}
-              className="text-white button-primary text-sm md:text-md"
-            >
-              Admin Dashboard
-            </motion.button>
-          ) : (
-            <>
-              {/* Cart Icon */}
-              <Link
-                to="/carts"
-                className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
-              >
-                <ShoppingCart size={25} />
-              </Link>
-              {/* Notification Icon */}
-              <span className="p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
-                <Bell
-                  className="cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsNotificationOpen(!isNotificationOpen);
-                  }}
-                  size={25}
-                />
-                {isNotificationOpen && (
-                  <NotificationPanel
-                    isOpen={isNotificationOpen}
-                    setIsOpen={setIsNotificationOpen}
-                    entity={
-                      isAutheticated && user.role === "admin"
-                        ? "admin"
-                        : "users"
-                    }
-                  />
-                )}
-              </span>
-              {/* Profile Icon */}
-              <span className="p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
-                <User
-                  className="cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsMenuOpen(!isMenuOpen);
-                  }}
-                  size={25}
-                />
-                {isMenuOpen && (
-                  <ProfileMenu isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} />
-                )}
-              </span>
-            </>
-          )}
-
-          <span
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
+        {isLoading ? (
+          <div className="h-10 w-37.5 rounded bg-[#4f79b8]/50 animate-pulse border border-gray-200" />
+        ) : (
+          <motion.div
+            layout
+            layoutId="action-icons"
+            className="user-icons text-white flex flex-row flex-nowrap gap-6 lg:gap-10"
           >
-            {isOpen ? <X size={25} /> : <Menu size={25} />}
-          </span>
-        </motion.div>
+            {isAutheticated && user?.role === "admin" ? (
+              <motion.button
+                onClick={() => alert("hii")}
+                className="text-white button-primary text-sm md:text-md"
+              >
+                Admin Dashboard
+              </motion.button>
+            ) : (
+              <>
+                {/* Cart Icon */}
+                <Link
+                  to="/carts"
+                  className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
+                >
+                  <ShoppingCart size={25} />
+                </Link>
+                {/* Notification Icon */}
+                <span className="p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
+                  <Bell
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsNotificationOpen(!isNotificationOpen);
+                    }}
+                    size={25}
+                  />
+                  {isNotificationOpen && (
+                    <NotificationPanel
+                      isOpen={isNotificationOpen}
+                      setIsOpen={setIsNotificationOpen}
+                      entity={
+                        isAutheticated && user.role === "admin"
+                          ? "admin"
+                          : "users"
+                      }
+                    />
+                  )}
+                </span>
+                {/* Profile Icon */}
+                <span className="p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
+                  <User
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMenuOpen(!isMenuOpen);
+                    }}
+                    size={25}
+                  />
+                  {isMenuOpen && (
+                    <ProfileMenu
+                      isOpen={isMenuOpen}
+                      setIsOpen={setIsMenuOpen}
+                    />
+                  )}
+                </span>
+              </>
+            )}
+
+            <span
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 grid items-center"
+            >
+              {isOpen ? <X size={25} /> : <Menu size={25} />}
+            </span>
+          </motion.div>
+        )}
       </motion.header>
     </>
   );
