@@ -164,7 +164,7 @@ function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const { isAutheticated } = useAuth();
+  const { isAutheticated, data: user } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -180,7 +180,7 @@ function Header() {
 
   return (
     <>
-      {isOpen ? (
+      {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -188,20 +188,28 @@ function Header() {
           onClick={() => setIsOpen(false)}
           className={`fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.7)] z-40`}
         ></motion.div>
-      ) : (
-        ""
       )}
-      <header
+      <motion.header
+        layout
         className={`whitespace-nowrap h-15 bg-[#2E6D9B] flex flex-row flex-nowrap gap-3 p-4 md:px-6 lg:px-10 items-center justify-between fixed top-0 w-full`}
       >
-        <div className="logo h-9 w-9 border border-white rounded">
+        {/* Logo */}
+        <motion.div
+          layoutId="logo"
+          layout
+          className="logo h-9 w-9 border border-white rounded"
+        >
           <img
             className="w-full h-full"
             src="logo.png"
             alt="Siwel Beats Logo"
           />
-        </div>
-        <nav
+        </motion.div>
+
+        {/* NavBar */}
+        <motion.nav
+          layoutId="navbar"
+          layout
           className={`${isOpen ? "right-0 border-t border-b-white" : "-right-full"} bg-[#2E6D9B] text-white fixed top-15 max-md:h-full max-sm:w-[60vw] max-md:w-[40vw] md:w-fit md:static md:block transition-all duration-500 ease-in-out`}
         >
           <ul className="flex flex-col md:flex-row md:flex-nowrap md:gap-7 text-md md:text-lg text-left md:text-center">
@@ -243,54 +251,77 @@ function Header() {
               </>
             )}
           </ul>
-        </nav>
-        <div className="user-icons text-white flex flex-row flex-nowrap gap-6 lg:gap-10">
-          <Link
-            to="/carts"
-            className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
-          >
-            <ShoppingCart size={25} />
-          </Link>
-          {/* Notification Icon */}
-          <span className="p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
-            <Bell
-              className="cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsNotificationOpen(!isNotificationOpen);
-              }}
-              size={25}
-            />
-            {isNotificationOpen && (
-              <NotificationPanel
-                isOpen={isNotificationOpen}
-                setIsOpen={setIsNotificationOpen}
-                entity="users"
-              />
-            )}
-          </span>
-          {/* Profile Icon */}
-          <span className="p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
-            <User
-              className="cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMenuOpen(!isMenuOpen);
-              }}
-              size={25}
-            />
-            {isMenuOpen && (
-              <ProfileMenu isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} />
-            )}
-          </span>
+        </motion.nav>
+
+        {/* Action Icons */}
+        <motion.div
+          layout
+          layoutId="action-icons"
+          className="user-icons text-white flex flex-row flex-nowrap gap-6 lg:gap-10"
+        >
+          {isAutheticated && user?.role === "admin" ? (
+            <motion.button
+              onClick={() => alert("hii")}
+              className="text-white button-primary text-sm md:text-md"
+            >
+              Admin Dashboard
+            </motion.button>
+          ) : (
+            <>
+              {/* Cart Icon */}
+              <Link
+                to="/carts"
+                className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
+              >
+                <ShoppingCart size={25} />
+              </Link>
+              {/* Notification Icon */}
+              <span className="p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
+                <Bell
+                  className="cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsNotificationOpen(!isNotificationOpen);
+                  }}
+                  size={25}
+                />
+                {isNotificationOpen && (
+                  <NotificationPanel
+                    isOpen={isNotificationOpen}
+                    setIsOpen={setIsNotificationOpen}
+                    entity={
+                      isAutheticated && user.role === "admin"
+                        ? "admin"
+                        : "users"
+                    }
+                  />
+                )}
+              </span>
+              {/* Profile Icon */}
+              <span className="p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
+                <User
+                  className="cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMenuOpen(!isMenuOpen);
+                  }}
+                  size={25}
+                />
+                {isMenuOpen && (
+                  <ProfileMenu isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} />
+                )}
+              </span>
+            </>
+          )}
+
           <span
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
           >
             {isOpen ? <X size={25} /> : <Menu size={25} />}
           </span>
-        </div>
-      </header>
+        </motion.div>
+      </motion.header>
     </>
   );
 }

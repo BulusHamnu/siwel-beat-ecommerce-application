@@ -18,17 +18,17 @@ interface Notification {
 
 function NotificationList({
   notifications,
-  entity,
+  domain,
 }: {
   notifications: Notification[];
-  entity: "users" | "admin";
+  domain: string;
 }) {
   const queryClient = useQueryClient();
 
   const { mutate: updateNotificationStatus } = useMutation({
     mutationFn: async ({ id, read }: { id: string; read: boolean }) => {
       const res = await callApi<Notification>({
-        endpoint: `/${entity}/me/notifications/${id}`,
+        endpoint: `${domain}/notifications/${id}`,
         method: "patch",
         body: {
           read,
@@ -79,7 +79,7 @@ function NotificationList({
   const { mutate: deleteNotification, isPending: isDeleting } = useMutation({
     mutationFn: async (id: string) => {
       const res = await callApi<Notification>({
-        endpoint: `/${entity}/me/notifications/${id}`,
+        endpoint: `${domain}/notifications/${id}`,
         method: "delete",
       });
 
@@ -99,7 +99,6 @@ function NotificationList({
     },
     onError: (error: any) => {
       const errCode: string = error.response.data.error.code;
-      console.log(errCode);
       switch (errCode) {
         case "NOTIFICATION_NOT_FOUND": {
           toast.error("Notification not found.", {
@@ -126,9 +125,13 @@ function NotificationList({
   });
 
   return (
-    <ul className="mt-5 max-h-112.5 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
+    <motion.ul
+      layout
+      className="mt-5 max-h-112.5 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden"
+    >
       {notifications.map((notification) => (
-        <li
+        <motion.li
+          layout
           key={notification.id}
           className={`${notification.read ? "bg-[rgba(6,43,88,0.3)]" : "bg-[rgba(6,43,88,0.6)]"} py-1.5 px-3 border border-gray-600 rounded mb-2`}
         >
@@ -172,9 +175,9 @@ function NotificationList({
               </button>
             </div>
           </div>
-        </li>
+        </motion.li>
       ))}
-    </ul>
+    </motion.ul>
   );
 }
 
@@ -190,6 +193,7 @@ export default function NotificationPanel({
 }) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
+  const domain = entity === "admin" ? "/admin" : "/users/me";
 
   const {
     isLoading,
@@ -199,7 +203,7 @@ export default function NotificationPanel({
     queryKey: ["notifications"],
     queryFn: async () => {
       const res = await callApi<Notification[]>({
-        endpoint: `/${entity}/me/notifications`,
+        endpoint: `${domain}/notifications`,
         method: "get",
         withAuth: true,
       });
@@ -212,7 +216,7 @@ export default function NotificationPanel({
     useMutation({
       mutationFn: async () => {
         const res = await callApi<Notification>({
-          endpoint: `/${entity}/me/notifications/read-all`,
+          endpoint: `${domain}/notifications/read-all`,
           method: "patch",
         });
 
@@ -298,7 +302,7 @@ export default function NotificationPanel({
       {isLoading ? (
         <span className="block p-4 text-lg">Loading..</span>
       ) : notifications && notifications.length > 0 ? (
-        <NotificationList notifications={notifications} entity={entity} />
+        <NotificationList notifications={notifications} domain={domain} />
       ) : (
         <span className="block p-4 text-lg">No Notification Found.</span>
       )}
