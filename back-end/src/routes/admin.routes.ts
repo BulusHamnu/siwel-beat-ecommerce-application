@@ -18,11 +18,7 @@ router.use(requiredAuth);
 router.use(allowRole("admin"));
 
 /* Admin profile */
-router.get(
-  "/me",
-  rateLimiter(20, 10 * 60 * 1000),
-  profileController.getProfile,
-);
+router.get("/me", generalApiLimiter(), profileController.getProfile);
 
 router.patch("/me", creationApiLimiter(), profileController.updateProfile);
 

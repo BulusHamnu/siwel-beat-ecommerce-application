@@ -58,6 +58,7 @@ router.get(
   allowRole("user"),
   sessionController.getSessions,
 );
+
 router.delete(
   "/me/sessions/:id",
   generalApiLimiter(),
@@ -78,6 +79,7 @@ router.get(
   allowRole("user"),
   orderController.getAllOrders,
 );
+
 router.get(
   "/me/orders/:id",
   generalApiLimiter(),
@@ -94,6 +96,7 @@ router.get(
   allowRole("user"),
   purchaseController.getAllPurchases,
 );
+
 router.get(
   "/me/purchases/:id",
   generalApiLimiter(),

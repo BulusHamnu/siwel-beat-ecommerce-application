@@ -11,22 +11,50 @@ router.post(
   rateLimiter(30, 10 * 60 * 1000),
   authController.refreshToken,
 );
+
 router.post("/log-out", authController.logout);
+
 /* Google oauth callback */
 router.get("/oauth/google/callback", googleAuthController.googleCallback);
 
-router.use(rateLimiter(10, 15 * 60 * 1000)); // Protect all risky auth routes
-router.post("/register", authController.signUp);
-router.post("/login", authController.logIn);
-router.post("/verify-email", authController.verifyEmail);
+router.post(
+  "/register",
+  rateLimiter(10, 15 * 60 * 1000),
+  authController.signUp,
+);
+
+router.post("/login", rateLimiter(10, 15 * 60 * 1000), authController.logIn);
+
+router.post(
+  "/verify-email",
+  rateLimiter(5, 15 * 60 * 1000),
+  authController.verifyEmail,
+);
+
 router.post(
   "/resend-verification-email",
+  rateLimiter(5, 15 * 60 * 1000),
   requiredAuth,
   authController.resendVeficationEmail,
 );
-router.post("/forget-password", authController.forgetPassword);
-router.post("/verify-password-otp-code", authController.verifyResetPasswordOtp);
-router.post("/reset-password", authController.resetpassword);
+
+router.post(
+  "/forget-password",
+  rateLimiter(10, 15 * 60 * 1000),
+  authController.forgetPassword,
+);
+
+router.post(
+  "/verify-password-otp-code",
+  rateLimiter(10, 15 * 60 * 1000),
+  authController.verifyResetPasswordOtp,
+);
+
+router.post(
+  "/reset-password",
+  rateLimiter(10, 15 * 60 * 1000),
+  authController.resetpassword,
+);
 
 /* Google 0auth2 endpoints */
 router.get("/oauth/google", googleAuthController.getGoogleOauthUrl);
