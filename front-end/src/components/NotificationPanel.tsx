@@ -5,6 +5,7 @@ import { XIcon, RotateCwIcon, ArrowUpRight } from "lucide-react";
 import { useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import toast from "react-hot-toast";
+import useAuth from "../hooks/useAuth";
 
 interface Notification {
   id: string;
@@ -76,7 +77,7 @@ function NotificationList({
     },
   });
 
-  const { mutate: deleteNotification, isPending: isDeleting } = useMutation({
+  const { mutate: deleteNotification } = useMutation({
     mutationFn: async (id: string) => {
       const res = await callApi<Notification>({
         endpoint: `${domain}/notifications/${id}`,
@@ -127,7 +128,7 @@ function NotificationList({
   return (
     <motion.ul
       layout
-      className="mt-5 max-h-112.5 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden"
+      className="mt-5 h-112.5 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden"
     >
       {notifications.map((notification) => (
         <motion.li
@@ -171,7 +172,7 @@ function NotificationList({
                 onClick={() => deleteNotification(notification.id)}
                 className="cursor-pointer text-sm py-1 px-2 bg-red-700 rounded hover:bg-red-800 transition duration-300 w-22.5"
               >
-                {isDeleting ? "Deleting.." : "Delete"}
+                Delete
               </button>
             </div>
           </div>
@@ -185,15 +186,14 @@ function NotificationList({
 export default function NotificationPanel({
   isOpen,
   setIsOpen,
-  entity,
 }: {
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
-  entity: "users" | "admin";
 }) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
-  const domain = entity === "admin" ? "/admin" : "/users/me";
+  const { isAutheticated, data: user } = useAuth();
+  const domain = user?.role === "admin" ? "/admin" : "/users/me";
 
   const {
     isLoading,
@@ -210,6 +210,7 @@ export default function NotificationPanel({
 
       return res.data;
     },
+    enabled: isAutheticated,
   });
 
   const { mutate: markAllAsRead, isPending: updatingNotifications } =
@@ -266,7 +267,7 @@ export default function NotificationPanel({
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
       id="notification-panel"
-      className="bg-[rgba(2,21,38,1)] absolute border-2 border-white rounded-md p-1.5 h-fit w-[90vw] min-[500px]:w-100  right-[-350%] min-[360px]:right-[-310%] top-[115%] min-[690px]:right-[50%] "
+      className="bg-[rgba(2,21,38,1)] min-h-112.5 max-h-132.5 absolute border-2 border-white rounded-md p-1.5  w-[90vw] min-[500px]:w-100  right-[-350%] min-[360px]:right-[-310%] top-[115%] min-[690px]:right-[50%] "
     >
       <div
         id="notification-panel-header"
@@ -304,7 +305,7 @@ export default function NotificationPanel({
       ) : notifications && notifications.length > 0 ? (
         <NotificationList notifications={notifications} domain={domain} />
       ) : (
-        <span className="block p-4 text-lg">No Notification Found.</span>
+        <span className="block p-4 text-lg mt-3">No Notification Found.</span>
       )}
     </motion.div>
   );

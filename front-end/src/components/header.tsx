@@ -292,11 +292,6 @@ function Header() {
                     <NotificationPanel
                       isOpen={isNotificationOpen}
                       setIsOpen={setIsNotificationOpen}
-                      entity={
-                        isAutheticated && user.role === "admin"
-                          ? "admin"
-                          : "users"
-                      }
                     />
                   )}
                 </span>
