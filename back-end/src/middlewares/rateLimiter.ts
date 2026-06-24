@@ -46,10 +46,10 @@ export default rateLimiter;
 
 // General GET and GET all endpoint rate limiter
 export const generalApiLimiter = () => {
-  return limiter({ ...limitOpts, limit: 200, windowMs: 10 * 60 * 1000 });
+  return limiter({ ...limitOpts, limit: 300, windowMs: 10 * 60 * 1000 });
 };
 
 // PATCH AND POST endpoint rate limiter
 export const creationApiLimiter = () => {
-  return limiter({ ...limitOpts, limit: 30, windowMs: 10 * 60 * 1000 });
+  return limiter({ ...limitOpts, limit: 50, windowMs: 10 * 60 * 1000 });
 };
