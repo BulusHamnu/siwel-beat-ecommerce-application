@@ -10,7 +10,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { motion } from "motion/react";
 import toast from "react-hot-toast";
@@ -173,6 +173,15 @@ function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const { isAutheticated, data: user, isLoading, action } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    const sectionId = location.hash.replace("#", "");
+    if (sectionId) {
+      const section = document.getElementById(sectionId);
+      if (section) section.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [location.hash]);
 
   useEffect(() => {
     if (isOpen) {
