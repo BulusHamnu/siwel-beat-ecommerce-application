@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import authContext from "../hooks/contexts/authContext";
 import callApi from "../lib/callApi";
+import { jwtDecode, type JwtPayload } from "jwt-decode";
+
+interface TokenPayload extends JwtPayload {
+  email: string;
+  id: string;
+  isActive: boolean;
+  role: "admin" | "user";
+  type: string;
+}
 
 interface UserSnapshot {
   id: string;
@@ -75,11 +84,16 @@ export default function AuthContextProvider({ children }) {
         return;
       }
 
+      const payload: TokenPayload = jwtDecode(token);
+      if (!payload.role) return;
+
+      const domain = payload.role === "admin" ? "admin" : "users";
+
       setIsAutheticated(false);
       setAction("verification"); // So we can verify if it's logging, logout or token verification.
 
       let profile: any;
-      profile = await executeApiCall<UserProfile>("get", "/users/me");
+      profile = await executeApiCall<UserProfile>("get", `/${domain}/me`);
 
       if (!profile) {
         const data = await executeApiCall<{ accessToken: string }>(
@@ -88,7 +102,7 @@ export default function AuthContextProvider({ children }) {
         );
 
         localStorage.setItem("accessToken", data?.accessToken || "");
-        profile = await executeApiCall<UserProfile>("get", "/users/me");
+        profile = await executeApiCall<UserProfile>("get", `/${domain}/me"`);
       }
 
       if (profile) {
