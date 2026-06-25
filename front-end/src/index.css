@@ -62,7 +62,8 @@ body {
 main {
   padding-top: 5rem;
   text-align: center;
-  min-height: 100svh;
+  /* min-height: 100svh; */
+  flex: 1;
 }
 
 h1,

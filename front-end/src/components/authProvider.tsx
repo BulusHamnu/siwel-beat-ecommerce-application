@@ -41,7 +41,7 @@ export default function AuthContextProvider({ children }) {
     UserSnapshot | UserProfile | undefined | null
   >(null);
   const [isAutheticated, setIsAutheticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [errCode, setErrCode] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("idle");
   const [action, setAction] = useState<
@@ -102,7 +102,7 @@ export default function AuthContextProvider({ children }) {
         );
 
         localStorage.setItem("accessToken", data?.accessToken || "");
-        profile = await executeApiCall<UserProfile>("get", `/${domain}/me"`);
+        profile = await executeApiCall<UserProfile>("get", `/${domain}/me`);
       }
 
       if (profile) {

@@ -9,13 +9,14 @@ import LicenseModal from "./components/licenseModal";
 import LicenseModalProvider from "./components/licenseModalProvider";
 import AuthContextProvider from "./components/authProvider";
 import NotFound from "./pages/notFound";
-// import ProtectedRoute from "./components/protectedRoute";
+import Cart from "./pages/cart";
+import UserRoutesGuard from "./components/userRoutesGuard";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <div className="container">
+    <div className="container flex flex-col">
       <Toaster
         toastOptions={{
           className: "",
@@ -34,8 +35,15 @@ function App() {
             <BrowserRouter>
               <AuthContextProvider>
                 <Routes>
+                  {/* Public Routes */}
                   <Route path="/" element={<Home />} />
                   <Route path="/auth" element={<Auth />} />
+
+                  {/* User Routes */}
+                  <Route element={<UserRoutesGuard />}>
+                    <Route path="/cart" element={<Cart />} />
+                  </Route>
+
                   {/* Not found page */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

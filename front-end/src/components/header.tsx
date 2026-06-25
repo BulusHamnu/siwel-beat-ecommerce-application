@@ -290,7 +290,7 @@ function Header() {
               <>
                 {/* Cart Icon */}
                 <Link
-                  to="/carts"
+                  to="/cart"
                   className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
                 >
                   <ShoppingCart size={25} />

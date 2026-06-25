@@ -409,11 +409,11 @@ function LoginPanel() {
           </div>
         </div>
         <button
-          disabled={isLoading}
+          disabled={isLoading && action === "login"}
           type="submit"
           className="button-primary text-xl w-full h-14"
         >
-          {isLoading ? "Logging.." : "Login"}
+          {isLoading && action === "login" ? "Logging.." : "Login"}
         </button>
       </form>
       <button
