@@ -148,6 +148,27 @@ form input {
   font-size: 1.5rem;
 }
 
+.page-label {
+  text-align: left;
+  display: block;
+  font-size: 35px;
+  position: relative;
+  width: fit-content;
+}
+
+.page-label::before {
+  content: "";
+  display: block;
+  width: 80%;
+  height: 7%;
+  background-color: var(--text-color);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  border-radius: 0.1rem 0;
+  z-index: 2;
+}
+
 footer > div > p {
   font-family: "Oregano", cursive;
   font-weight: 600;
