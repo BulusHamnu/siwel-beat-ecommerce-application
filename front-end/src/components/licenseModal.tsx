@@ -3,6 +3,9 @@ import { motion } from "motion/react";
 import { formatAmount } from "../helpers/helpers";
 import { X } from "lucide-react";
 import useLicenseModal from "../hooks/useLicenseModal";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import callApi from "../lib/callApi";
+import { toast } from "react-hot-toast";
 
 function TabBtn({
   placeholder,
@@ -31,6 +34,69 @@ function TabBtn({
 }
 
 function LicenseTerm({ type }: { type: "basic" | "premium" }) {
+  const { data: track, hideLicenseModal } = useLicenseModal();
+  const queryClient = useQueryClient();
+
+  const { mutate: addTrackToCart, isPending } = useMutation({
+    mutationFn: async (data: { trackId: string; license: string }) => {
+      const res = await callApi<null>({
+        endpoint: "/users/me/cart",
+        body: data,
+        method: "post",
+      });
+
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Track has been added to your cart.", {
+        duration: 3000,
+        id: "item-added-to-cart",
+        position: "top-center",
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["cart"],
+      });
+
+      hideLicenseModal();
+    },
+    onError: (err: any) => {
+      const errCode = err.response.data?.error.code;
+
+      switch (errCode) {
+        case "TRACK_NOT_FOUND": {
+          toast.error("Track is currently unavailable.", {
+            duration: 3000,
+            id: "track-unavailable",
+            position: "top-center",
+          });
+          break;
+        }
+
+        case "PRODUCT_ALREADY_EXISTS": {
+          toast.error("A track with this license is already in your cart.", {
+            duration: 3000,
+            id: "track-license-exists",
+            position: "top-center",
+          });
+          break;
+        }
+
+        default: {
+          toast.error(
+            "Couldn't add track to your cart. Please try again later.",
+            {
+              duration: 3000,
+              id: "add-to-cart-failed",
+              position: "top-center",
+            },
+          );
+          break;
+        }
+      }
+    },
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -67,11 +133,17 @@ function LicenseTerm({ type }: { type: "basic" | "premium" }) {
           opacity: 0.8,
           transition: { duration: 0.3 },
         }}
-        onClick={() => console.log(type)}
+        onClick={() => {
+          addTrackToCart({ trackId: track._id, license: type });
+        }}
         style={{ background: "#2E6D9B" }}
         className="button-primary w-full mt-4"
       >
-        {type === "premium" ? "Add premium to cart" : "Add basic to cart"}
+        {isPending
+          ? "Adding Track.."
+          : type === "premium"
+            ? "Add premium to cart"
+            : "Add basic to cart"}
       </motion.button>
     </motion.div>
   );

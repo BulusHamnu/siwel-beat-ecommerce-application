@@ -425,7 +425,10 @@ function LoginPanel() {
       <span className="text-right mt-5 block">
         <p className="whitespace-nowrap">
           Forgotten your password?
-          <Link className="text-blue-500 underline" to="/auth/forgot-password">
+          <Link
+            className="text-blue-500 underline ml-1"
+            to="/auth/forgot-password"
+          >
             Reset it here.
           </Link>
         </p>
