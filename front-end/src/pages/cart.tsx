@@ -2,6 +2,10 @@ import { ChevronDown, Play, Pause } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { formatAmount } from "../helpers/helpers";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import callApi from "../lib/callApi";
+import CartProductSkeleton from "../components/cartProductSkeleton";
+import toast from "react-hot-toast";
 
 interface CartItem {
   name: string;
@@ -21,14 +25,32 @@ interface CartItem {
   };
 }
 
-function Product({ product }: { product: CartItem }) {
+interface Cart {
+  items: CartItem[];
+  subTotal: number;
+}
+
+interface SelectedItem {
+  productId: string;
+  license: string;
+}
+
+function Product({
+  product,
+  addToSelectedItems,
+  removeFromSelectedItems,
+}: {
+  product: CartItem;
+  addToSelectedItems: (value: SelectedItem) => void;
+  removeFromSelectedItems: (value: SelectedItem) => void;
+}) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongId, setCurrentSongId] = useState<string | null>(null);
 
   return (
     <div className="bg-[#6EACDA]/10 grid  grid-cols-1 sm:grid-cols-[230px_auto] sm:gap-4 md:gap-5 h-fit p-5">
       {/* Product Image */}
-      <div className="max-h-75 w-full border border-gray-400 relative overflow-hidden">
+      <div className="max-h-75 w-full border border-gray-400 relative overflow-hidden aspect-square sm:aspect-auto">
         <img
           src={product.track.coverImageUrl}
           alt={product.name}
@@ -62,6 +84,19 @@ function Product({ product }: { product: CartItem }) {
             {product.name}
           </h2>
           <input
+            onChange={(e) => {
+              if (e.target.checked) {
+                addToSelectedItems({
+                  productId: product.productId,
+                  license: product.license,
+                });
+              } else {
+                removeFromSelectedItems({
+                  productId: product.productId,
+                  license: product.license,
+                });
+              }
+            }}
             className="h-5 w-5 cursor-pointer"
             type="checkbox"
             value={product.productId}
@@ -116,112 +151,249 @@ function Product({ product }: { product: CartItem }) {
 }
 
 //
+export function CartSummarySkeleton() {
+  return (
+    <div className="bg-[#04254D] p-4 pb-8 h-fit animate-pulse">
+      <div className="h-8 w-40 rounded bg-[#4f79b8]/40" />
+
+      <div className="flex justify-between items-center mt-5">
+        <div className="h-6 w-16 rounded bg-[#4f79b8]/40" />
+        <div className="h-7 w-28 rounded bg-[#4f79b8]/40" />
+      </div>
+
+      <div className="mt-7">
+        <div className="flex justify-between items-center">
+          <div className="h-5 w-56 rounded bg-[#4f79b8]/30" />
+          <div className="h-7 w-7 rounded-full bg-[#4f79b8]/40" />
+        </div>
+      </div>
+
+      <div className="h-11 w-full mt-7 rounded border border-white/30 bg-[#4278B9]/40" />
+
+      <div className="mt-5 space-y-2">
+        <div className="h-4 w-full rounded bg-[#4f79b8]/30" />
+        <div className="h-4 w-11/12 rounded bg-[#4f79b8]/30" />
+        <div className="h-4 w-8/12 rounded bg-[#4f79b8]/30" />
+      </div>
+    </div>
+  );
+}
+
 export default function Cart() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [items] = useState<CartItem[]>([
-    {
-      name: "Niggas tryna play for keeps (Prod. Siwel beats)",
-      productId: "69e61f5f183bb3f54a43ba0c",
-      price: 4000,
-      license: "basic",
-      type: "single",
-      status: "active",
-      newPrice: null,
-      track: {
-        id: "69e61f5f183bb3f54a43ba0c",
-        title: "Sunrise",
-        coverImageUrl:
-          "https://alztamolvzjflmxlmiyq.supabase.co/storage/v1/object/public/images/cover-images/c21dfb7c4c83154f1db0ddcb049d1619-file_000000008230720aaf81cd92011ad5a5.png",
-        key: "B minor",
-        bpm: 150,
-        genre: "drill",
-      },
+  const [isOpen] = useState(false); //setIsOpen
+  const [selectedItems, setSelectedItems] = useState(
+    new Map<string, SelectedItem>(),
+  );
+
+  const addToSelectedItems = (item: SelectedItem) => {
+    setSelectedItems((prev) => {
+      const key = item.productId + ":" + item.license;
+      if (prev.has(key)) {
+        return prev;
+      }
+
+      const next = new Map(prev);
+      next.set(key, item);
+
+      return next;
+    });
+  };
+
+  const removeFromSelectedItems = (item: SelectedItem) => {
+    setSelectedItems((prev) => {
+      const key = `${item.productId}:${item.license}`;
+
+      const next = new Map(prev);
+      next.delete(key);
+
+      return next;
+    });
+  };
+
+  const { isLoading, data: cart } = useQuery({
+    queryKey: ["cart"],
+    queryFn: async () => {
+      const res = await callApi<Cart>({
+        endpoint: "/users/me/cart",
+        method: "get",
+      });
+      return res.data;
     },
-    {
-      name: "Uk roadman drill type (Prod. Siwel beats)",
-      productId: "69e3980bfc25c1b2a4edb897",
-      price: 4500,
-      license: "premium",
-      type: "single",
-      status: "inactive",
-      newPrice: null,
-      track: {
-        id: "69e3980bfc25c1b2a4edb897",
-        title: "Forever My Own",
-        coverImageUrl:
-          "https://alztamolvzjflmxlmiyq.supabase.co/storage/v1/object/public/images/cover-images/952d5dd95261bb5f3e70d88693d7935b-file_00000000afec720a8216b0a6f7c7e533.png",
-        key: "C minor",
-        bpm: 200,
-        genre: "drill",
-      },
+  });
+
+  const { mutate: checkOut, isPending } = useMutation({
+    mutationFn: async (data: SelectedItem[]) => {
+      const res = await callApi<{ url: string }>({
+        endpoint: "/checkouts",
+        method: "post",
+        body: {
+          items: data,
+        },
+      });
+
+      return res.data;
     },
-    {
-      name: "US roadman drill type (Prod. Siwel beats)",
-      productId: "69e3980bfc25c1b2a4edb8s97",
-      price: 4500,
-      license: "premium",
-      type: "single",
-      status: "price_changed",
-      newPrice: 5000,
-      track: {
-        id: "69e3980bfc25c1b2a4edb897",
-        title: "Forever My Own",
-        coverImageUrl: "public/track-cover-image.png",
-        key: "C minor",
-        bpm: 200,
-        genre: "drill",
-      },
+    onSuccess: (data) => {
+      // This will not run because checkout has not been implemented yet.
+      console.log(data);
     },
-  ]);
+    onError: (err: any) => {
+      const errCode = err.response.data?.error.code;
+
+      switch (errCode) {
+        case "CHECKOUT_ERROR": {
+          toast.error("Nothing selected! Pick at least one item to checkout.", {
+            duration: 3000,
+            id: "no-items-selected",
+            position: "top-center",
+          });
+          break;
+        }
+
+        case "CART_INVALID": {
+          const msg = err.response.data.message;
+          toast.error(msg, {
+            duration: 3000,
+            id: "items-invalid",
+            position: "top-center",
+          });
+          break;
+        }
+
+        case "NOT_IMPLEMENTED": {
+          toast.error("Checkout is not available yet.", {
+            duration: 3000,
+            id: "checkout-not-available",
+            position: "top-center",
+          });
+          break;
+        }
+      }
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <main className="mx-4 md:mx-10 mb-20 text-white">
+        <h1 className="page-label">Cart (0)</h1>
+        <section className={`grid grid-cols-1 lg:grid-cols-[auto_400px] gap-7`}>
+          <div className="grid grid-col-1 md:grid-col-[200px_auto] gap-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <CartProductSkeleton key={index} />
+            ))}
+          </div>
+          <CartSummarySkeleton />
+        </section>
+      </main>
+    );
+  }
+
+  if (cart && cart.items.length > 0) {
+    return (
+      <main className="mx-4 md:mx-10 mb-20 text-white">
+        <h1 className="page-label">Cart ({cart.items.length})</h1>
+        <AnimatePresence>
+          <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className={`grid grid-cols-1 lg:grid-cols-[auto_400px] gap-7`}
+          >
+            <div className="grid grid-col-1 md:grid-col-[200px_auto] gap-3">
+              {cart?.items.map((item) => (
+                <Product
+                  addToSelectedItems={addToSelectedItems}
+                  removeFromSelectedItems={removeFromSelectedItems}
+                  key={item.productId + item.license}
+                  product={item}
+                />
+              ))}
+            </div>
+
+            <div className="bg-[#04254D] p-4 pb-8  h-fit">
+              <h2 className="text-left">Cart Summary</h2>
+              <div className="flex flex-row justify-between items-center mt-3">
+                <span className="font-bold text-lg">Total</span>
+                <span className="text-xl">{formatAmount(cart.subTotal)}</span>
+              </div>
+              <div className="mt-7">
+                <div
+                  // onClick={() => setIsOpen(!isOpen)}
+                  className="flex flex-row flex-nowrap justify-between items-center cursor-not-allowed"
+                >
+                  <p className="text-left">
+                    Do you have a coupons? Applied now
+                  </p>
+                  <span>
+                    <ChevronDown fill="currentColor" stroke="none" size={30} />
+                  </span>
+                </div>
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.input
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      placeholder="Coupon.."
+                      type="text"
+                      className="bg-white border border-white min-h-full w-full p-2 focus:outline-none mt-2 text-black"
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+              <button
+                onClick={() => {
+                  const products = Array.from(selectedItems.values());
+
+                  if (products.length <= 0) {
+                    toast.error(
+                      "Nothing selected! Pick at least one item to checkout.",
+                      {
+                        duration: 3000,
+                        id: "no-items-selected",
+                        position: "top-center",
+                      },
+                    );
+
+                    return;
+                  }
+
+                  checkOut(products);
+                }}
+                className="bg-[#4278B9] cursor-pointer p-2 w-full mt-7 mb-4 border border-white rounded font-bold"
+              >
+                {isPending ? "Checking out.." : "Check Out"}
+              </button>
+              <p className="text-left">
+                By clicking the button, you agree to the product(s) License
+                Agreement(s) and the policy of Siwel Drax Beats.
+              </p>
+            </div>
+          </motion.section>
+        </AnimatePresence>
+      </main>
+    );
+  }
 
   return (
-    <main className="mx-4 md:mx-10 mb-20 text-white">
-      <h1 className="page-label">Cart ({items.length})</h1>
-      <section className="grid grid-cols-1 lg:grid-cols-[auto_400px]  gap-7">
-        <div className="grid grid-col-1 md:grid-col-[200px_auto] gap-3">
-          {items.map((item) => (
-            <Product key={item.productId} product={item} />
-          ))}
-        </div>
-        <div className="bg-[#04254D] p-4 pb-8  h-fit">
-          <h2 className="text-left">Cart Summary</h2>
-          <div className="flex flex-row justify-between items-center mt-3">
-            <span className="font-bold text-lg">Sub-Total</span>
-            <span className="text-lg">$123</span>
-          </div>
-          <div className="mt-7">
-            <div
-              onClick={() => setIsOpen(!isOpen)}
-              className="flex flex-row flex-nowrap justify-between items-center cursor-pointer"
-            >
-              <p className="text-left">Do you have a coupons? Applied now</p>
-              <span>
-                <ChevronDown fill="currentColor" stroke="none" size={30} />
-              </span>
-            </div>
-            <AnimatePresence>
-              {isOpen && (
-                <motion.input
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  placeholder="Coupon.."
-                  type="text"
-                  className="bg-white border border-white min-h-full w-full p-2 focus:outline-none mt-2 text-black"
-                />
-              )}
-            </AnimatePresence>
-          </div>
-          <button className="bg-[#4278B9] cursor-pointer p-2 w-full mt-7 mb-4 border border-white rounded font-bold">
-            Check Out
-          </button>
-          <p className="text-left">
-            By clicking the button, you agree to the product(s) License
-            Agreement(s) and the policy of Siwel Drax Beats.
-          </p>
-        </div>
-      </section>
+    <main className="mx-4 md:mx-10 mb-20 text-white max-md:min-h-svh">
+      <h1 className="page-label">Cart (0)</h1>
+      <AnimatePresence>
+        <motion.h3
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          style={{
+            fontSize: "2rem",
+            textAlign: "left",
+            marginBottom: "auto",
+            display: "block",
+          }}
+        >
+          Your cart is empty.
+        </motion.h3>
+      </AnimatePresence>
     </main>
   );
 }
