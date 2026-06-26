@@ -212,10 +212,9 @@ function LastestTracksSection() {
         <p className="p-5">Unable to load lastest tracks.</p>
       ) : isLoading ? (
         <TracksContainer>
-          <TrackCardSkeleton />
-          <TrackCardSkeleton />
-          <TrackCardSkeleton />
-          <TrackCardSkeleton />
+          {Array.from({ length: 4 }).map((_, index) => (
+            <TrackCardSkeleton key={index} />
+          ))}
         </TracksContainer>
       ) : tracks && tracks.length > 0 ? (
         <>

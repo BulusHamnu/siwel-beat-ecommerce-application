@@ -2,7 +2,7 @@ import { ChevronDown, Play, Pause } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { formatAmount } from "../helpers/helpers";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import callApi from "../lib/callApi";
 import CartProductSkeleton from "../components/cartProductSkeleton";
 import toast from "react-hot-toast";
@@ -46,6 +46,38 @@ function Product({
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongId, setCurrentSongId] = useState<string | null>(null);
+  const [itemBeenRemoved, setItemBeenRemoved] = useState<null | string>(null);
+  const queryClient = useQueryClient();
+
+  const { mutate: removeItemFromCart, isPending } = useMutation({
+    mutationFn: async (data: { trackId: string; license: string }) => {
+      const res = await callApi<null>({
+        endpoint: "/users/me/cart",
+        body: data,
+        method: "patch",
+      });
+
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["cart"],
+      });
+
+      toast.success("Item removed from your cart.", {
+        duration: 3000,
+        id: "item-removed",
+        position: "top-center",
+      });
+    },
+    onError: () => {
+      toast.error("Failed to remove item from cart. Please try again.", {
+        duration: 3000,
+        id: "cart-remove-failed",
+        position: "top-center",
+      });
+    },
+  });
 
   return (
     <div className="bg-[#6EACDA]/10 grid  grid-cols-1 sm:grid-cols-[230px_auto] sm:gap-4 md:gap-5 h-fit p-5">
@@ -139,10 +171,18 @@ function Product({
             </p>
           </div>
           <button
-            onClick={() => alert(`${product.productId} was removed.`)}
+            onClick={() => {
+              setItemBeenRemoved(product.productId);
+              removeItemFromCart({
+                trackId: product.productId,
+                license: product.license,
+              });
+            }}
             className="bg-red-600 p-2 w-24 h-10 text-md rounded cursor-pointer hover:bg-red-800 transition duration-300"
           >
-            Remove
+            {isPending && itemBeenRemoved === product.productId
+              ? "Removing.."
+              : "Remove"}
           </button>
         </div>
       </div>
@@ -267,6 +307,17 @@ export default function Cart() {
             position: "top-center",
           });
           break;
+        }
+
+        default: {
+          toast.error(
+            "An error occurred during checkout. Please try again later.",
+            {
+              duration: 3000,
+              id: "checkout-failed",
+              position: "top-center",
+            },
+          );
         }
       }
     },

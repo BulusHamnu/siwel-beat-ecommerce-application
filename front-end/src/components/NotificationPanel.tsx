@@ -2,7 +2,7 @@ import formatTimeAgo from "../helpers/helpers";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import callApi from "../lib/callApi";
 import { XIcon, RotateCwIcon, ArrowUpRight } from "lucide-react";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion } from "motion/react";
 import toast from "react-hot-toast";
 import useAuth from "../hooks/useAuth";
@@ -25,6 +25,7 @@ function NotificationList({
   domain: string;
 }) {
   const queryClient = useQueryClient();
+  const [removedId, setRemoveId] = useState<null | string>(null);
 
   const { mutate: updateNotificationStatus } = useMutation({
     mutationFn: async ({ id, read }: { id: string; read: boolean }) => {
@@ -77,7 +78,7 @@ function NotificationList({
     },
   });
 
-  const { mutate: deleteNotification } = useMutation({
+  const { mutate: deleteNotification, isPending: isDeleting } = useMutation({
     mutationFn: async (id: string) => {
       const res = await callApi<Notification>({
         endpoint: `${domain}/notifications/${id}`,
@@ -169,10 +170,15 @@ function NotificationList({
                 {notification.read ? "Mark Unread" : "Mark Read"}
               </button>
               <button
-                onClick={() => deleteNotification(notification.id)}
+                onClick={() => {
+                  setRemoveId(notification.id);
+                  deleteNotification(notification.id);
+                }}
                 className="cursor-pointer text-sm py-1 px-2 bg-red-700 rounded hover:bg-red-800 transition duration-300 w-22.5"
               >
-                Delete
+                {isDeleting && removedId === notification.id
+                  ? "Deleting.."
+                  : "Delete"}
               </button>
             </div>
           </div>
