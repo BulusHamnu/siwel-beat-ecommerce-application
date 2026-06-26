@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import callApi from "../lib/callApi";
 import CartProductSkeleton from "../components/cartProductSkeleton";
 import toast from "react-hot-toast";
+import usePlayer from "../hooks/usePlayer";
 
 interface CartItem {
   name: string;
@@ -44,10 +45,17 @@ function Product({
   addToSelectedItems: (value: SelectedItem) => void;
   removeFromSelectedItems: (value: SelectedItem) => void;
 }) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentSongId, setCurrentSongId] = useState<string | null>(null);
+  const { playSong, isPlaying, currentSongId, stopSong } = usePlayer();
   const [itemBeenRemoved, setItemBeenRemoved] = useState<null | string>(null);
   const queryClient = useQueryClient();
+
+  function toggleSong(songId: string) {
+    if (isPlaying && currentSongId === songId) {
+      stopSong();
+    } else {
+      playSong(songId);
+    }
+  }
 
   const { mutate: removeItemFromCart, isPending } = useMutation({
     mutationFn: async (data: { trackId: string; license: string }) => {
@@ -90,8 +98,7 @@ function Product({
         />
         <div
           onClick={() => {
-            setIsPlaying(true);
-            setCurrentSongId(product.productId);
+            toggleSong(product.productId);
           }}
           className="grid place-items-center absolute top-0 left-0 right-0 bottom-0 p-2 bg-[rgba(255,255,255,0.4)] rounded-full h-fit w-fit m-auto"
         >
