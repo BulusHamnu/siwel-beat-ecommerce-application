@@ -81,11 +81,15 @@ export default function AuthContextProvider({ children }) {
     const verifyToken = async () => {
       const token = localStorage.getItem("accessToken");
       if (!token) {
+        setIsLoading(false);
         return;
       }
 
       const payload: TokenPayload = jwtDecode(token);
-      if (!payload.role) return;
+      if (!payload.role) {
+        setIsLoading(false);
+        return;
+      }
 
       const domain = payload.role === "admin" ? "admin" : "users";
 
