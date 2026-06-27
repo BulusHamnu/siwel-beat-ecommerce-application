@@ -39,10 +39,10 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/auth" element={<Auth />} />
 
+                  <Route path="/cart" element={<Cart />} />
+
                   {/* User Routes */}
-                  <Route element={<UserRoutesGuard />}>
-                    <Route path="/cart" element={<Cart />} />
-                  </Route>
+                  <Route element={<UserRoutesGuard />}></Route>
 
                   {/* Not found page */}
                   <Route path="*" element={<NotFound />} />
