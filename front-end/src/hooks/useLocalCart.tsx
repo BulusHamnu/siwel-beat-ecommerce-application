@@ -14,7 +14,7 @@ const createProductSnapshot = (track: Track, license: string): CartItem => {
     price: license === "premium" ? track.premiumPrice : track.basicPrice,
     license: license,
     type: track.type,
-    status: track.status as any,
+    status: "active",
     newPrice: null,
     track: {
       id: track._id,
@@ -38,18 +38,17 @@ function useLocalCart() {
   const [status, setStatus] = useState<
     "idle" | "success" | "product-exists" | "failed"
   >("idle");
-  const [data, setData] = useState<LocalCart | null>(null);
+  // const [data, setData] = useState<LocalCart | null>(null);
 
   const retrieveLocalCart = () => {
     const cartString = localStorage.getItem("localCart");
 
     if (!cartString) {
-      setData(null);
-      return;
+      return null;
     }
 
     const cart: LocalCart = JSON.parse(cartString);
-    setData(cart);
+    return cart;
   };
 
   const addTrackToLocalCart = (track: Track, license: "basic" | "premium") => {
@@ -104,7 +103,6 @@ function useLocalCart() {
   };
 
   return {
-    data,
     status,
     retrieveLocalCart,
     addTrackToLocalCart,
