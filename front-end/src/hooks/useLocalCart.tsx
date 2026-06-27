@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type CartItem } from "../pages/cart";
 import type { Track } from "../components/trackCard";
 
@@ -38,18 +38,22 @@ function useLocalCart() {
   const [status, setStatus] = useState<
     "idle" | "success" | "product-exists" | "failed"
   >("idle");
-  // const [data, setData] = useState<LocalCart | null>(null);
+  const [data, setData] = useState<LocalCart | null>(null);
+  const [pendingLocalRemoval, setPendingLocalRemoval] = useState(false); //
 
-  const retrieveLocalCart = () => {
-    const cartString = localStorage.getItem("localCart");
+  useEffect(() => {
+    const retrieveLocalCart = () => {
+      const cartString = localStorage.getItem("localCart");
+      if (cartString) {
+        const cart: LocalCart = JSON.parse(cartString);
+        setData(cart);
+      } else {
+        setData(null);
+      }
+    };
 
-    if (!cartString) {
-      return null;
-    }
-
-    const cart: LocalCart = JSON.parse(cartString);
-    return cart;
-  };
+    retrieveLocalCart();
+  }, []);
 
   const addTrackToLocalCart = (track: Track, license: "basic" | "premium") => {
     try {
@@ -71,7 +75,7 @@ function useLocalCart() {
         const cart = JSON.stringify(localCart);
         localStorage.setItem("localCart", cart);
 
-        return;
+        setData(localCart);
       } else {
         const localCart = JSON.parse(cartString);
 
@@ -92,6 +96,8 @@ function useLocalCart() {
 
         const cart = JSON.stringify(localCart);
         localStorage.setItem("localCart", cart);
+
+        setData(localCart);
       }
 
       setStatus("success");
@@ -102,10 +108,39 @@ function useLocalCart() {
     }
   };
 
+  const removeFromLocalCart = (item: { trackId: string; license: string }) => {
+    setPendingLocalRemoval(true);
+
+    const cartString = localStorage.getItem("localCart");
+    if (!cartString) {
+      setData(null);
+      return;
+    }
+
+    const localCart: LocalCart = JSON.parse(cartString);
+
+    const newItems = localCart.items.filter((cartItem: CartItem) => {
+      const sameId = cartItem.productId === item.trackId;
+      const sameLicense = cartItem.license === item.license;
+      return !(sameId && sameLicense);
+    });
+
+    localCart.items = newItems;
+    localCart.subTotal = calculateSubTotal(newItems);
+
+    const cart = JSON.stringify(localCart);
+    localStorage.setItem("localCart", cart);
+
+    setData(localCart);
+    setPendingLocalRemoval(false);
+  };
+
   return {
     status,
-    retrieveLocalCart,
+    data,
     addTrackToLocalCart,
+    pendingLocalRemoval,
+    removeFromLocalCart,
   };
 }
 

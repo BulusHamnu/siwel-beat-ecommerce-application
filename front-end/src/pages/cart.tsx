@@ -1,5 +1,5 @@
 import { ChevronDown, Play, Pause } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { formatAmount } from "../helpers/helpers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -215,16 +215,19 @@ export function CartSummarySkeleton() {
 /* Product Item*/
 function Product({
   product,
+  pendingRemoval,
   addToSelectedItems,
   removeFromSelectedItems,
+  removeItemFromCart,
 }: {
   product: CartItem;
+  pendingRemoval: boolean;
   addToSelectedItems: (value: SelectedItem) => void;
   removeFromSelectedItems: (value: SelectedItem) => void;
+  removeItemFromCart: (value: { trackId: string; license: string }) => void;
 }) {
   const { playSong, isPlaying, currentSongId, stopSong } = usePlayer();
   const [itemBeenRemoved, setItemBeenRemoved] = useState<null | string>(null);
-  const queryClient = useQueryClient();
 
   function toggleSong(songId: string) {
     if (isPlaying && currentSongId === songId) {
@@ -233,36 +236,6 @@ function Product({
       playSong(songId);
     }
   }
-
-  const { mutate: removeItemFromCart, isPending } = useMutation({
-    mutationFn: async (data: { trackId: string; license: string }) => {
-      const res = await callApi<null>({
-        endpoint: "/users/me/cart",
-        body: data,
-        method: "patch",
-      });
-
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["cart"],
-      });
-
-      toast.success("Item removed from your cart.", {
-        duration: 3000,
-        id: "item-removed",
-        position: "top-center",
-      });
-    },
-    onError: () => {
-      toast.error("Failed to remove item from cart. Please try again.", {
-        duration: 3000,
-        id: "cart-remove-failed",
-        position: "top-center",
-      });
-    },
-  });
 
   return (
     <div className="bg-[#6EACDA]/10 grid  grid-cols-1 sm:grid-cols-[230px_auto] sm:gap-4 md:gap-5 h-fit p-5">
@@ -364,7 +337,7 @@ function Product({
             }}
             className="bg-red-600 p-2 w-24 h-10 text-md rounded cursor-pointer hover:bg-red-800 transition duration-300"
           >
-            {isPending && itemBeenRemoved === product.productId
+            {pendingRemoval && itemBeenRemoved === product.productId
               ? "Removing.."
               : "Remove"}
           </button>
@@ -400,7 +373,27 @@ export default function Cart() {
   );
 
   const { isAutheticated, isLoading: authIsLoading } = useAuth();
-  const { retrieveLocalCart } = useLocalCart();
+
+  const {
+    data: localCart,
+    removeFromLocalCart,
+    pendingLocalRemoval,
+  } = useLocalCart();
+
+  // Todo: Later we will implement bulk merging for local and cloud cart products.
+  useEffect(() => {
+    const mergeCarts = () => {
+      console.log({
+        localCart: localCart?.items.map((item): SelectedItem => {
+          return { productId: item.productId, license: item.license };
+        }),
+      });
+    };
+
+    if (isAutheticated) {
+      mergeCarts();
+    }
+  }, [isAutheticated, localCart]);
 
   const addToSelectedItems = (item: SelectedItem) => {
     setSelectedItems((prev) => {
@@ -426,6 +419,39 @@ export default function Cart() {
       return next;
     });
   };
+
+  const queryClient = useQueryClient();
+  const { mutate: removeItemFromCart, isPending: pendingRemoval } = useMutation(
+    {
+      mutationFn: async (data: { trackId: string; license: string }) => {
+        const res = await callApi<null>({
+          endpoint: "/users/me/cart",
+          body: data,
+          method: "patch",
+        });
+
+        return res.data;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["cart"],
+        });
+
+        toast.success("Item removed from your cart.", {
+          duration: 3000,
+          id: "item-removed",
+          position: "top-center",
+        });
+      },
+      onError: () => {
+        toast.error("Failed to remove item from cart. Please try again.", {
+          duration: 3000,
+          id: "cart-remove-failed",
+          position: "top-center",
+        });
+      },
+    },
+  );
 
   const { isLoading, data: cart } = useQuery({
     queryKey: ["cart"],
@@ -467,6 +493,8 @@ export default function Cart() {
                 <Product
                   addToSelectedItems={addToSelectedItems}
                   removeFromSelectedItems={removeFromSelectedItems}
+                  removeItemFromCart={removeItemFromCart}
+                  pendingRemoval={pendingRemoval}
                   key={item.productId + item.license}
                   product={item}
                 />
@@ -482,8 +510,38 @@ export default function Cart() {
       </CartPageFrame>
     );
   } else {
-    const localCart = retrieveLocalCart();
-    if (!localCart || localCart.items.length <= 0) {
+    if (localCart && localCart.items.length > 0) {
+      return (
+        <CartPageFrame totalItems={localCart.items.length}>
+          <AnimatePresence>
+            <motion.section
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8 }}
+              className={`grid grid-cols-1 lg:grid-cols-[auto_400px] gap-7`}
+            >
+              <div className="grid grid-col-1 md:grid-col-[200px_auto] gap-3">
+                {localCart.items.map((item) => (
+                  <Product
+                    addToSelectedItems={addToSelectedItems}
+                    removeFromSelectedItems={removeFromSelectedItems}
+                    removeItemFromCart={removeFromLocalCart}
+                    pendingRemoval={pendingLocalRemoval}
+                    key={item.productId + item.license}
+                    product={item}
+                  />
+                ))}
+              </div>
+
+              <CartSummary
+                products={Array.from(selectedItems.values())}
+                cartTotal={localCart.subTotal}
+              />
+            </motion.section>
+          </AnimatePresence>
+        </CartPageFrame>
+      );
+    } else {
       return (
         <CartPageFrame totalItems={0}>
           <AnimatePresence>
@@ -500,36 +558,6 @@ export default function Cart() {
             >
               Your cart is empty.
             </motion.h3>
-          </AnimatePresence>
-        </CartPageFrame>
-      );
-    } else {
-      // Product item need to be different
-      return (
-        <CartPageFrame totalItems={localCart.items.length}>
-          <AnimatePresence>
-            <motion.section
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              className={`grid grid-cols-1 lg:grid-cols-[auto_400px] gap-7`}
-            >
-              <div className="grid grid-col-1 md:grid-col-[200px_auto] gap-3">
-                {localCart.items.map((item) => (
-                  <Product
-                    addToSelectedItems={addToSelectedItems}
-                    removeFromSelectedItems={removeFromSelectedItems}
-                    key={item.productId + item.license}
-                    product={item}
-                  />
-                ))}
-              </div>
-
-              <CartSummary
-                products={Array.from(selectedItems.values())}
-                cartTotal={localCart.subTotal}
-              />
-            </motion.section>
           </AnimatePresence>
         </CartPageFrame>
       );
