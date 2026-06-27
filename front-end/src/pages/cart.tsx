@@ -8,7 +8,7 @@ import CartProductSkeleton from "../components/cartProductSkeleton";
 import toast from "react-hot-toast";
 import usePlayer from "../hooks/usePlayer";
 
-interface CartItem {
+export interface CartItem {
   name: string;
   productId: string;
   price: number;

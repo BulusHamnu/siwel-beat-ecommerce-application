@@ -6,6 +6,8 @@ import useLicenseModal from "../hooks/useLicenseModal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import callApi from "../lib/callApi";
 import { toast } from "react-hot-toast";
+import useAuth from "../hooks/useAuth";
+import useLocalCart from "../hooks/useLocalCart";
 
 function TabBtn({
   placeholder,
@@ -36,6 +38,54 @@ function TabBtn({
 function LicenseTerm({ type }: { type: "basic" | "premium" }) {
   const { data: track, hideLicenseModal } = useLicenseModal();
   const queryClient = useQueryClient();
+  const { isAutheticated } = useAuth();
+
+  // Local cart logic
+  const { addTrackToLocalCart, status } = useLocalCart();
+  useEffect(() => {
+    switch (status) {
+      case "success": {
+        toast.success("Track has been added to your cart.", {
+          duration: 3000,
+          id: "item-added-to-cart",
+          position: "top-center",
+        });
+
+        setTimeout(() => {
+          hideLicenseModal();
+        }, 500);
+
+        break;
+      }
+
+      case "product-exists": {
+        toast.error("A track with this license is already in your cart.", {
+          duration: 3000,
+          id: "track-license-exists",
+          position: "top-center",
+        });
+
+        setTimeout(() => {
+          hideLicenseModal();
+        }, 500);
+
+        break;
+      }
+
+      case "failed": {
+        toast.error(
+          "Couldn't add track to your cart. Please try again later.",
+          {
+            duration: 3000,
+            id: "add-to-cart-failed",
+            position: "top-center",
+          },
+        );
+        break;
+      }
+    }
+  }, [status, hideLicenseModal]);
+  //
 
   const { mutate: addTrackToCart, isPending } = useMutation({
     mutationFn: async (data: { trackId: string; license: string }) => {
@@ -134,7 +184,11 @@ function LicenseTerm({ type }: { type: "basic" | "premium" }) {
           transition: { duration: 0.3 },
         }}
         onClick={() => {
-          addTrackToCart({ trackId: track._id, license: type });
+          if (isAutheticated) {
+            addTrackToCart({ trackId: track._id, license: type });
+          } else {
+            addTrackToLocalCart(track, type);
+          }
         }}
         style={{ background: "#2E6D9B" }}
         className="button-primary w-full mt-4"

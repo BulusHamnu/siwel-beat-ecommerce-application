@@ -30,10 +30,10 @@ function App() {
 
       <QueryClientProvider client={queryClient}>
         <AudioPlayerProvider>
-          <LicenseModalProvider>
-            <LicenseModal />
-            <BrowserRouter>
-              <AuthContextProvider>
+          <BrowserRouter>
+            <AuthContextProvider>
+              <LicenseModalProvider>
+                <LicenseModal />
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Home />} />
@@ -47,9 +47,9 @@ function App() {
                   {/* Not found page */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </AuthContextProvider>
-            </BrowserRouter>
-          </LicenseModalProvider>
+              </LicenseModalProvider>
+            </AuthContextProvider>
+          </BrowserRouter>
         </AudioPlayerProvider>
       </QueryClientProvider>
     </div>
