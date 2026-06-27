@@ -11,6 +11,7 @@ import Header from "../components/header";
 import Footer from "../components/footer";
 import useAuth from "../hooks/useAuth";
 import useLocalCart from "../hooks/useLocalCart";
+import { MoonLoader } from "react-spinners";
 
 export interface CartItem {
   name: string;
@@ -226,7 +227,8 @@ function Product({
   removeFromSelectedItems: (value: SelectedItem) => void;
   removeItemFromCart: (value: { trackId: string; license: string }) => void;
 }) {
-  const { playSong, isPlaying, currentSongId, stopSong } = usePlayer();
+  const { playSong, isPlaying, isLoading, currentSongId, stopSong } =
+    usePlayer();
   const [itemBeenRemoved, setItemBeenRemoved] = useState<null | string>(null);
 
   function toggleSong(songId: string) {
@@ -252,7 +254,9 @@ function Product({
           }}
           className="grid place-items-center absolute top-0 left-0 right-0 bottom-0 p-2 bg-[rgba(255,255,255,0.4)] rounded-full h-fit w-fit m-auto"
         >
-          {isPlaying && currentSongId === product.productId ? (
+          {isLoading && currentSongId === product.productId ? (
+            <MoonLoader size={35} color="#1621ff" />
+          ) : isPlaying && currentSongId === product.productId ? (
             <Pause size={50} fill="black" className="cursor-pointer" />
           ) : (
             <Play size={50} fill="black" className="cursor-pointer" />
