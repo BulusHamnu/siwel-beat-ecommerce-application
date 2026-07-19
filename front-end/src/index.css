@@ -104,6 +104,19 @@ p {
   color: var(--text-color);
 }
 
+.section-headings {
+  margin-bottom: 1.5rem;
+
+  @media (min-width: 768px) {
+    margin-bottom: 2.5rem;
+  }
+}
+
+/* #licences,
+#about {
+  border: 2px solid white;
+} */
+
 form input {
   background-color: white;
   color: black;

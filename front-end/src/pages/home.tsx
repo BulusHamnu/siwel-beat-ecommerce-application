@@ -96,10 +96,10 @@ function ContactSection() {
       whileInView="visible"
       viewport={{ once: true }}
       id="contact"
-      className="grid grid-cols-1 md:grid-cols-2 place-items-center gap-10 p-4 md:p-7 mb-20"
+      className="grid grid-cols-1 md:grid-cols-2 place-items-center gap-10 p-4 md:p-7 mb-52"
     >
       <div className="w-full text-left place-self-start">
-        <p style={{ fontSize: "50px", marginBottom: "0.5rem" }}>Get In Touch</p>
+        <p style={{ fontSize: "50px", marginBottom: "0.8rem" }}>Get In Touch</p>
         <p style={{ marginBottom: "1rem" }}>
           If you have any inquire or any project for me to work on just drop me
           a message
@@ -202,9 +202,9 @@ function LastestTracksSection() {
   return (
     <motion.section
       id="lastest-tracks"
-      className="lastest-tracks mt-14 mb-14 md:mt-20 bg-[rgba(110,172,218,0.05)] text-white p-5 lg:px-10"
+      className="lastest-tracks mt-16 md:mt-24 bg-[rgba(110,172,218,0.05)] text-white p-5 lg:px-10"
     >
-      <h2 className="text-left pl-4 md:pl-14">
+      <h2 className="text-left pl-4 md:pl-14 section-headings">
         Latest Tracks From Siwel Beatz
       </h2>
 
@@ -252,13 +252,13 @@ function AboutSection() {
       whileInView="visible"
       viewport={{ once: true }}
       id="about"
-      className="mt-24 mb-10 lg:my-28"
+      className="my-32 lg:my-52"
     >
-      <h2 style={{ fontSize: "2.3rem" }} className="">
+      <h2 style={{ fontSize: "2.3rem" }} className="section-headings">
         About Siwel Draxx
       </h2>
       <div className="grid place-items-center grid-cols-1 min-[600px]:grid-cols-2 gap-6 py-7 p-5 lg:mx-28">
-        <div className="place-self-start cover-image w-full overflow-hidden rounded-md">
+        <div className="min-h-full place-self-start cover-image w-full overflow-hidden rounded-md shadow-md shadow-white/30 text-white">
           <img
             className="w-full h-full object-cover"
             src="/profile.png"
@@ -295,12 +295,13 @@ function LicensesSection() {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true }}
-      className="licences-terms my-24 lg:my-28"
+      id="licences"
+      className="licences-terms my-32 lg:my-52"
     >
-      <h2 style={{ fontSize: "2.3rem" }} className="">
+      <h2 style={{ fontSize: "2.3rem" }} className="section-headings">
         Licensing Terms
       </h2>
-      <div className=" flex flex-row flex-wrap gap-4 py-7 px-5 md:px-10 lg:px-24 items-center justify-center lg:justify-start">
+      <div className="flex flex-row flex-wrap gap-4 pt-7 px-5 md:px-10 lg:px-24 items-center justify-center lg:justify-start">
         <div className="border border-white p-3 rounded-md w-full max-w-100 text-left h-64">
           <h3 className="license-heading relative pb-2 mb-5">
             🎯 Basic License (Non-Exclusive)
@@ -345,9 +346,9 @@ function ServicesSection() {
       whileInView="visible"
       viewport={{ once: true }}
       id="services"
-      className="services my-24 lg:my-28"
+      className=""
     >
-      <h2 style={{ fontSize: "2.3rem" }} className="">
+      <h2 style={{ fontSize: "2.3rem" }} className="section-headings">
         My Services
       </h2>
       <div className=" flex flex-row flex-wrap gap-6 py-7 px-5 md:px-10 lg:px-24 items-center justify-center md:justify-start lg:justify-center">
