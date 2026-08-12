@@ -96,7 +96,7 @@ function ContactSection() {
       whileInView="visible"
       viewport={{ once: true }}
       id="contact"
-      className="grid grid-cols-1 md:grid-cols-2 place-items-center gap-10 p-4 md:p-7 mb-52"
+      className="grid grid-cols-1 md:grid-cols-2 place-items-center gap-10 p-4 md:p-7"
     >
       <div className="w-full text-left place-self-start">
         <p style={{ fontSize: "50px", marginBottom: "0.8rem" }}>Get In Touch</p>
@@ -202,7 +202,7 @@ function LastestTracksSection() {
   return (
     <motion.section
       id="lastest-tracks"
-      className="lastest-tracks mt-16 md:mt-24 bg-[rgba(110,172,218,0.05)] text-white p-5 lg:px-10"
+      className="lastest-tracks bg-[rgba(110,172,218,0.05)] text-white p-5 lg:px-10"
     >
       <h2 className="text-left pl-4 md:pl-14 section-headings">
         Latest Tracks From Siwel Beatz
@@ -252,7 +252,6 @@ function AboutSection() {
       whileInView="visible"
       viewport={{ once: true }}
       id="about"
-      className="my-32 lg:my-52"
     >
       <h2 style={{ fontSize: "2.3rem" }} className="section-headings">
         About Siwel Draxx
@@ -296,7 +295,7 @@ function LicensesSection() {
       whileInView="visible"
       viewport={{ once: true }}
       id="licences"
-      className="licences-terms my-32 lg:my-52"
+      className="licences-terms"
     >
       <h2 style={{ fontSize: "2.3rem" }} className="section-headings">
         Licensing Terms
@@ -455,21 +454,23 @@ function Home() {
   return (
     <>
       <Header />
-      <main className="">
-        <h1>Siwel Beats App</h1>
-        <div className="bg-white flex flex-row flex-nowrap items-center m-4 max-w-xl md:mx-auto">
-          <input
-            placeholder="Find the best beat for your song.."
-            className="border border-white min-h-full w-full p-2 focus:outline-none"
-            type="text"
-          />
-          <button className="cursor-pointer p-2 bg-[#03346E] m-0.5 h-12 w-16 flex flex-row items-center justify-center rounded">
-            <Search size={25} color="white" />
-          </button>
+      <main className="flex flex-col flex-nowrap min-w-full space-y-28 md:space-y-32 lg:space-y-36">
+        <div>
+          <h1>Siwel Beats App</h1>
+          <div className="bg-white flex flex-row flex-nowrap items-center m-4 max-w-xl md:mx-auto">
+            <input
+              placeholder="Find the best beat for your song.."
+              className="border border-white min-h-full w-full p-2 focus:outline-none"
+              type="text"
+            />
+            <button className="cursor-pointer p-2 bg-[#03346E] m-0.5 h-12 w-16 flex flex-row items-center justify-center rounded">
+              <Search size={25} color="white" />
+            </button>
+          </div>
+          <p className="text-md md:text-lg">
+            Find the right beat to make your next hit.
+          </p>
         </div>
-        <p className="text-md md:text-lg">
-          Find the right beat to make your next hit.
-        </p>
 
         <LastestTracksSection />
 

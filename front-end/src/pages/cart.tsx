@@ -362,7 +362,7 @@ function CartPageFrame({
   return (
     <>
       <Header />
-      <main className="mx-4 md:mx-10 mb-20 text-white">
+      <main className="mx-4 md:mx-10 mb-5 text-white">
         <h1 className="page-label">Cart ({totalItems})</h1>
         {children}
       </main>
