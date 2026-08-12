@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { User2, Mail, LockKeyhole, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useSearchParams } from "react-router-dom";
+import { NavLink, useParams } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -425,12 +425,12 @@ function LoginPanel() {
       <span className="text-right mt-5 block">
         <p className="whitespace-nowrap">
           Forgotten your password?
-          <Link
+          <NavLink
             className="text-blue-500 underline ml-1"
             to="/auth/forgot-password"
           >
             Reset it here.
-          </Link>
+          </NavLink>
         </p>
       </span>
     </motion.div>
@@ -439,11 +439,10 @@ function LoginPanel() {
 
 /* Auth page */
 function Auth() {
-  const [searchParams] = useSearchParams();
-  const action = searchParams.get("action");
+  const { slug } = useParams();
 
   const [activeTab, setActiveTab] = useState(() => {
-    return action === "login" ? "login" : "signup";
+    return slug === "login" ? "login" : "signup";
   });
 
   return (

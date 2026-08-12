@@ -40,6 +40,7 @@ function App() {
                   {/* Public Routes */}
                   <Route path="/" element={<Home />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/auth/:slug" element={<Auth />} />
 
                   <Route path="/cart" element={<Cart />} />
 
