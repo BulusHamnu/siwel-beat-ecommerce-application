@@ -11,6 +11,7 @@ import AuthContextProvider from "./components/authProvider";
 import NotFound from "./pages/notFound";
 import Cart from "./pages/cart";
 import UserRoutesGuard from "./components/userRoutesGuard";
+import ScrollToTop from "./components/scrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AudioPlayerProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <AuthContextProvider>
               <LicenseModalProvider>
                 <LicenseModal />
