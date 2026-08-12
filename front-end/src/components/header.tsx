@@ -207,21 +207,16 @@ function Header() {
         ></motion.div>
       )}
       <motion.header
-        layout
         className={`whitespace-nowrap h-15 bg-[#2E6D9B] flex flex-row flex-nowrap gap-3 p-4 md:px-6 lg:px-10 items-center justify-between fixed top-0 w-full`}
       >
         {/* Logo */}
-        <motion.div
-          layoutId="logo"
-          layout
-          className="logo h-9 w-9 border border-white rounded"
-        >
+        <div className="logo h-9 w-9 border border-white rounded">
           <img
             className="w-full h-full"
             src="logo.png"
             alt="Siwel Beats Logo"
           />
-        </motion.div>
+        </div>
 
         {/* NavBar */}
         <motion.nav
@@ -258,12 +253,12 @@ function Header() {
                 <LinkItem
                   setIsOpen={setIsOpen}
                   text="Sign Up"
-                  to={{ pathname: "/auth", search: "?action=signup" }}
+                  to={{ pathname: "/auth/signup" }}
                 />
                 <LinkItem
                   setIsOpen={setIsOpen}
                   text="Login"
-                  to={{ pathname: "/auth", search: "?action=login" }}
+                  to={{ pathname: "/auth/login" }}
                 />
               </>
             )}
@@ -274,11 +269,7 @@ function Header() {
         {isLoading && action !== "logout" ? (
           <div className="h-10 w-37.5 rounded bg-[#4f79b8]/55 animate-pulse" />
         ) : (
-          <motion.div
-            layout
-            layoutId="action-icons"
-            className="user-icons text-white flex flex-row flex-nowrap gap-6 lg:gap-10"
-          >
+          <div className="user-icons text-white flex flex-row flex-nowrap gap-6 lg:gap-10">
             {isAutheticated && user?.role === "admin" ? (
               <motion.button
                 onClick={() => alert("hii")}
@@ -338,7 +329,7 @@ function Header() {
             >
               {isOpen ? <X size={25} /> : <Menu size={25} />}
             </span>
-          </motion.div>
+          </div>
         )}
       </motion.header>
     </>
