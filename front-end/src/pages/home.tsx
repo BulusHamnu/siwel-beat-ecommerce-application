@@ -14,6 +14,7 @@ import { motion } from "motion/react";
 import { onViewVariants } from "../config/animation";
 import TrackCardSkeleton from "../components/trackCardSkeleton";
 import TracksContainer from "../components/tracksContainer";
+import useScrollToHash from "../hooks/useScrollToHash";
 
 function LicenseItem({ term }: { term: string }) {
   return (
@@ -451,11 +452,13 @@ function ServicesSection() {
 
 /* Home page */
 function Home() {
+  useScrollToHash();
+
   return (
     <>
       <Header />
       <main className="flex flex-col flex-nowrap min-w-full space-y-28 md:space-y-32 lg:space-y-36">
-        <div>
+        <div id="hero">
           <h1>Siwel Beats App</h1>
           <div className="bg-white flex flex-row flex-nowrap items-center m-4 max-w-xl md:mx-auto">
             <input

@@ -10,11 +10,12 @@ import {
   CreditCard,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { motion } from "motion/react";
 import toast from "react-hot-toast";
 import NotificationPanel from "./NotificationPanel";
+import useActiveSection from "../hooks/useActiveSession";
 
 type To =
   | string
@@ -26,12 +27,14 @@ type To =
 function LinkItem({
   text,
   to,
-  type,
+  sectionId,
+  activeSection,
   setIsOpen,
 }: {
   text: string;
   to: To;
-  type?: string;
+  sectionId?: string;
+  activeSection?: string;
   setIsOpen: (value: boolean) => void;
 }) {
   const linkRef = useRef<HTMLAnchorElement>(null);
@@ -42,21 +45,16 @@ function LinkItem({
   return (
     <li
       onClick={() => handleLiClick()}
-      className="cursor-pointer p-3 py-5 text-center max-md:text-lg md:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300"
+      className={`cursor-pointer p-3 py-5 text-center max-md:text-lg min-[950px]:p-1 w-full hover:bg-[#1c567e] transition-colors duration-300`}
     >
-      {type === "normal" ? (
-        <a
-          ref={linkRef}
-          onClick={() => setIsOpen(false)}
-          href={typeof to === "string" ? to : "#"}
-        >
-          {text}
-        </a>
-      ) : (
-        <NavLink ref={linkRef} onClick={() => setIsOpen(false)} to={to}>
-          {text}
-        </NavLink>
-      )}
+      <NavLink
+        className={`${activeSection && activeSection === sectionId ? "border-white border-b-2 font-bold" : ""}`}
+        ref={linkRef}
+        onClick={() => setIsOpen(false)}
+        to={to}
+      >
+        {text}
+      </NavLink>
     </li>
   );
 }
@@ -195,6 +193,15 @@ function Header() {
     };
   }, [isOpen]);
 
+  const activeSection = useActiveSection([
+    "hero",
+    "licences",
+    "services",
+    "about",
+    "contact",
+    "tracks",
+  ]);
+
   return (
     <>
       {isOpen && (
@@ -207,7 +214,7 @@ function Header() {
         ></motion.div>
       )}
       <motion.header
-        className={`whitespace-nowrap h-15 bg-[#2E6D9B] flex flex-row flex-nowrap gap-3 p-4 md:px-6 lg:px-10 items-center justify-between fixed top-0 w-full`}
+        className={`whitespace-nowrap h-15 bg-[#2E6D9B] flex flex-row flex-nowrap gap-3 p-2 md:px-6 lg:px-10 items-center justify-between fixed top-0 w-full`}
       >
         {/* Logo */}
         <div className="logo h-9 w-9 border border-white rounded">
@@ -220,32 +227,55 @@ function Header() {
 
         {/* NavBar */}
         <motion.nav
-          layoutId="navbar"
-          layout
-          className={`${isOpen ? "right-0 border-t border-b-white" : "-right-full"} bg-[#2E6D9B] text-white fixed top-15 max-md:h-full max-sm:w-[60vw] max-md:w-[40vw] md:w-fit md:static md:block transition-all duration-500 ease-in-out`}
+          className={`${isOpen ? "right-0 border-t border-b-white" : "-right-full"} bg-[#2E6D9B] text-white fixed top-15 transition-all duration-500 ease-in-out h-full min-[950px]:static max-md:w-[60vw] max-[950px]:w-[40vw]`}
         >
-          <ul className="flex flex-col md:flex-row md:flex-nowrap md:gap-7 text-md md:text-lg text-left md:text-center">
-            <LinkItem setIsOpen={setIsOpen} text="Home" to="/" />
+          <ul className="flex flex-col min-[950px]:flex-row flex-nowrap items-center justify-center md:gap-7 text-md min-[950px]:text-lg text-left max-[950px]:text-center">
+            <LinkItem
+              sectionId="hero"
+              activeSection={activeSection}
+              setIsOpen={setIsOpen}
+              text="Home"
+              to="/#hero"
+            />
 
             <LinkItem
+              sectionId="licences"
+              activeSection={activeSection}
+              setIsOpen={setIsOpen}
+              text="Licensing"
+              to="/#licences"
+            />
+
+            <LinkItem
+              sectionId="services"
+              activeSection={activeSection}
               setIsOpen={setIsOpen}
               text="Services"
               to="/#services"
-              type="normal"
             />
+
             <LinkItem
+              sectionId="about"
+              activeSection={activeSection}
               setIsOpen={setIsOpen}
               text="About"
               to="/#about"
-              type="normal"
             />
 
-            <LinkItem setIsOpen={setIsOpen} text="Tracks" to="/tracks" />
             <LinkItem
+              sectionId="contact"
+              activeSection={activeSection}
               setIsOpen={setIsOpen}
               text="Contact"
               to="/#contact"
-              type="normal"
+            />
+
+            <LinkItem
+              sectionId="tracks"
+              activeSection={activeSection}
+              setIsOpen={setIsOpen}
+              text="Tracks"
+              to="/tracks"
             />
 
             {!isAutheticated && (
@@ -280,12 +310,12 @@ function Header() {
             ) : (
               <>
                 {/* Cart Icon */}
-                <Link
+                <NavLink
                   to="/cart"
                   className="cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300"
                 >
                   <ShoppingCart size={25} />
-                </Link>
+                </NavLink>
                 {/* Notification Icon */}
                 <span className="p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 relative z-50">
                   <Bell
@@ -325,7 +355,7 @@ function Header() {
 
             <span
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 grid items-center"
+              className="min-[950px]:hidden cursor-pointer p-1 rounded hover:bg-[#1c567e] transition-colors duration-300 grid items-center"
             >
               {isOpen ? <X size={25} /> : <Menu size={25} />}
             </span>

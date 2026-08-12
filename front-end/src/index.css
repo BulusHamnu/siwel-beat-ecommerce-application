@@ -2,6 +2,10 @@
 @import url("https://fonts.googleapis.com/css2?family=Oregano:ital@0;1&display=swap");
 @import "tailwindcss";
 
+* {
+  box-sizing: border-box;
+}
+
 :root {
   --text-color: rgb(255, 255, 255);
   --background-color: #021526;
@@ -42,11 +46,6 @@ header {
     left: 0;
     right: 0;
   }
-}
-
-header nav a.active {
-  font-weight: bold;
-  border-bottom: 2px solid white;
 }
 
 .profile-menu a.active {
@@ -111,11 +110,6 @@ p {
     margin-bottom: 2.5rem;
   }
 }
-
-/* #licences,
-#about {
-  border: 2px solid white;
-} */
 
 form input {
   background-color: white;
