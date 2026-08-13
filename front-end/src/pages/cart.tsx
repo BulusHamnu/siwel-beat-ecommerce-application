@@ -220,21 +220,30 @@ function Product({
   addToSelectedItems,
   removeFromSelectedItems,
   removeItemFromCart,
+  nowPlayingLicenseType,
+  setNowPlayingLicenseType,
 }: {
   product: CartItem;
   pendingRemoval: boolean;
   addToSelectedItems: (value: SelectedItem) => void;
   removeFromSelectedItems: (value: SelectedItem) => void;
   removeItemFromCart: (value: { trackId: string; license: string }) => void;
+  nowPlayingLicenseType: string;
+  setNowPlayingLicenseType: (value: string) => void;
 }) {
   const { playSong, isPlaying, isLoading, currentSongId, stopSong } =
     usePlayer();
   const [itemBeenRemoved, setItemBeenRemoved] = useState<null | string>(null);
 
   function toggleSong(songId: string) {
-    if (isPlaying && currentSongId === songId) {
+    if (
+      isPlaying &&
+      currentSongId === songId &&
+      nowPlayingLicenseType === product.license
+    ) {
       stopSong();
     } else {
+      setNowPlayingLicenseType(product.license);
       playSong(songId);
     }
   }
@@ -254,9 +263,13 @@ function Product({
           }}
           className="grid place-items-center absolute top-0 left-0 right-0 bottom-0 p-2 bg-[rgba(255,255,255,0.4)] rounded-full h-fit w-fit m-auto"
         >
-          {isLoading && currentSongId === product.productId ? (
+          {isLoading &&
+          currentSongId === product.productId &&
+          nowPlayingLicenseType === product.license ? (
             <MoonLoader size={35} color="#1621ff" />
-          ) : isPlaying && currentSongId === product.productId ? (
+          ) : isPlaying &&
+            currentSongId === product.productId &&
+            nowPlayingLicenseType === product.license ? (
             <Pause size={50} fill="black" className="cursor-pointer" />
           ) : (
             <Play size={50} fill="black" className="cursor-pointer" />
@@ -377,6 +390,8 @@ export default function Cart() {
   );
 
   const { isAutheticated, isLoading: authIsLoading } = useAuth();
+
+  const [nowPlayingLicenseType, setNowPlayingLicenseType] = useState(""); // License type of the currently playing track. This helps to avoid showing playing icon on of the same license type track.
 
   const {
     data: localCart,
@@ -501,6 +516,8 @@ export default function Cart() {
                   pendingRemoval={pendingRemoval}
                   key={item.productId + item.license}
                   product={item}
+                  nowPlayingLicenseType={nowPlayingLicenseType}
+                  setNowPlayingLicenseType={setNowPlayingLicenseType}
                 />
               ))}
             </div>
@@ -533,6 +550,8 @@ export default function Cart() {
                     pendingRemoval={pendingLocalRemoval}
                     key={item.productId + item.license}
                     product={item}
+                    nowPlayingLicenseType={nowPlayingLicenseType}
+                    setNowPlayingLicenseType={setNowPlayingLicenseType}
                   />
                 ))}
               </div>

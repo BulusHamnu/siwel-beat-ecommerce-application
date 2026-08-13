@@ -373,7 +373,7 @@ function ServicesSection() {
       </h2>
       <div className=" flex flex-row flex-wrap gap-6 py-7 px-5 md:px-10 lg:px-24 items-center justify-center md:justify-start lg:justify-center">
         <div className="bg-white rounded-md w-full max-w-80 text-left h-full p-0.5">
-          <div className="cover-image w-full max-h-80 overflow-hidden relative rounded-md">
+          <div className="cover-image w-full max-h-80 min-h-80 overflow-hidden relative rounded-md">
             <img
               className="w-full h-full object-cover object-center"
               src="/custom-beat.png"
