@@ -24,7 +24,7 @@ export default function TracksContainer({ children }) {
             },
           },
         }}
-        className="grid grid-cols-1 min-[599px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 place-items-center"
+        className="grid grid-cols-1 min-[600px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-5 mb-5 md:mt-8 gap-4 "
       >
         {children}
       </motion.div>

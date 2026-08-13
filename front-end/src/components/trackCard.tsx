@@ -39,65 +39,63 @@ function TrackCard({ track }: { track: Track }) {
   }
 
   return (
-    <>
-      <div className="border border-white max-w-87.5 w-full p-2 bg-[#4278B9] cursor-pointer rounded-lg">
-        <div className="cover-image h-64 overflow-hidden relative">
-          <img
-            className="w-full h-full object-cover"
-            src={track.coverImageUrl}
-            alt={`${track.title} track cover`}
-          />
-          <div
-            onClick={() => {
-              toggleSong(track._id);
-            }}
-            className="grid place-items-center absolute top-0 left-0 right-0 bottom-0 p-2 bg-[rgba(255,255,255,0.4)] rounded-full h-fit w-fit m-auto"
-          >
-            {isLoading && currentSongId === track._id ? (
-              <MoonLoader size={35} color="#1621ff" />
-            ) : isPlaying && currentSongId === track._id ? (
-              <Pause size={50} fill="black" className="cursor-pointer" />
-            ) : (
-              <Play size={50} fill="black" className="cursor-pointer" />
-            )}
-          </div>
+    <div className="border border-white max-w-100 w-full p-2 bg-[#4278B9] cursor-pointer rounded-lg min-h-full flex flex-col flex-nowrap place-self-center">
+      <div className="cover-image min-h-64 max-h-64 overflow-hidden relative flex-1">
+        <img
+          className="w-full h-full object-cover"
+          src={track.coverImageUrl}
+          alt={`${track.title} track cover`}
+        />
+        <div
+          onClick={() => {
+            toggleSong(track._id);
+          }}
+          className="grid place-items-center absolute top-0 left-0 right-0 bottom-0 p-2 bg-[rgba(255,255,255,0.4)] rounded-full h-fit w-fit m-auto"
+        >
+          {isLoading && currentSongId === track._id ? (
+            <MoonLoader size={35} color="#1621ff" />
+          ) : isPlaying && currentSongId === track._id ? (
+            <Pause size={50} fill="black" className="cursor-pointer" />
+          ) : (
+            <Play size={50} fill="black" className="cursor-pointer" />
+          )}
         </div>
-        <div className="text-left p-4">
-          <p className="text-lg md:text-xl truncate w-full">{track.title}</p>
-          <div className="meta-data flex flex-row flex-nowrap gap-3 mt-2">
-            <p>Key: {track.key}</p>
-            <p>BPM: {track.bpm}</p>
-          </div>
-          <div className="tags mt-3 flex flex-row flex-wrap items-center gap-1">
-            <p>Tags:</p>
-            {track.tags.map((tag, index) => (
-              <span className="text-gray-700 font-semibold" key={index}>
-                #{tag}
-              </span>
-            ))}
-          </div>
-          <div className="bg-[#04254D] mt-3 flex flex-row flex-nowrap items-center justify-between p-2.5 px-4">
-            <p className="text-lg">
-              Price <span>{formatAmount(track.basicPrice)}</span>
-            </p>
-            <div className="flex flex-row gap-4 items-center flex-nowrap">
-              <span className="p-1 border border-white rounded cursor-pointer hover:bg-[#10458a] transition-colors duration-300">
-                <Heart size={22} />
-              </span>
-              <span
-                onClick={() => showLicenseModal(track)}
-                className="p-1 border border-white rounded cursor-pointer hover:bg-[#10458a] transition-colors duration-300"
-              >
-                <ShoppingCart size={22} />
-              </span>
-              {/* <span className="p-1 border border-white rounded cursor-pointer hover:bg-[#10458a] transition-colors duration-300">
+      </div>
+      <div className="text-left p-4 flex flex-col flex-nowrap flex-1 space-y-4">
+        <p className="text-lg md:text-xl truncate w-full">{track.title}</p>
+        <div className="meta-data flex flex-row flex-nowrap gap-3 mt-2">
+          <p>Key: {track.key}</p>
+          <p>BPM: {track.bpm}</p>
+        </div>
+        <div className="tags flex flex-row flex-wrap items-center gap-1">
+          <p>Tags:</p>
+          {track.tags.map((tag, index) => (
+            <span className="text-gray-700 font-semibold" key={index}>
+              #{tag}
+            </span>
+          ))}
+        </div>
+        <div className="bg-[#04254D] mt-auto flex flex-row flex-nowrap items-center justify-between p-2.5 px-4">
+          <p className="text-lg">
+            Price <span>{formatAmount(track.basicPrice)}</span>
+          </p>
+          <div className="flex flex-row gap-4 items-center flex-nowrap">
+            <span className="p-1 border border-white rounded cursor-pointer hover:bg-[#10458a] transition-colors duration-300">
+              <Heart size={22} />
+            </span>
+            <span
+              onClick={() => showLicenseModal(track)}
+              className="p-1 border border-white rounded cursor-pointer hover:bg-[#10458a] transition-colors duration-300"
+            >
+              <ShoppingCart size={22} />
+            </span>
+            {/* <span className="p-1 border border-white rounded cursor-pointer hover:bg-[#10458a] transition-colors duration-300">
               <Download size={22} />
             </span> */}
-            </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

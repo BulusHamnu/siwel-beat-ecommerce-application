@@ -182,7 +182,7 @@ function ContactSection() {
   );
 }
 
-function LastestTracksSection() {
+function HeroSection() {
   const {
     isLoading,
     data: tracks,
@@ -202,45 +202,65 @@ function LastestTracksSection() {
 
   return (
     <motion.section
-      id="lastest-tracks"
-      className="lastest-tracks bg-[rgba(110,172,218,0.05)] text-white p-5 lg:px-10"
+      id="hero"
+      className="text-white flex flex-col flex-nowrap space-y-20"
     >
-      <h2 className="text-left pl-4 md:pl-14 section-headings">
-        Latest Tracks From Siwel Beatz
-      </h2>
+      <div className="text-black">
+        <h1>Siwel Beats App</h1>
+        <div className="bg-white flex flex-row flex-nowrap items-center m-4 max-w-xl min-[600px]:mx-auto">
+          <input
+            id="hero-search-box"
+            placeholder="Find the best beat for your song.."
+            className="border border-white min-h-full w-full p-2 focus:outline-none"
+            type="text"
+          />
+          <button className="cursor-pointer p-2 bg-[#03346E] m-0.5 h-12 w-16 flex flex-row items-center justify-center rounded">
+            <Search size={25} color="white" />
+          </button>
+        </div>
+        <p className="text-md md:text-lg">
+          Find the right beat to make your next hit.
+        </p>
+      </div>
 
-      {error ? (
-        <p className="p-5">Unable to load lastest tracks.</p>
-      ) : isLoading ? (
-        <TracksContainer>
-          {Array.from({ length: 4 }).map((_, index) => (
-            <TrackCardSkeleton key={index} />
-          ))}
-        </TracksContainer>
-      ) : tracks && tracks.length > 0 ? (
-        <>
+      <div className="lastest-tracks bg-[rgba(110,172,218,0.05)] p-5 lg:px-10">
+        <h2 className="text-left pl-4 md:pl-14 ">
+          Latest Tracks From Siwel Beatz
+        </h2>
+
+        {error ? (
+          <p className="p-5">Unable to load lastest tracks.</p>
+        ) : isLoading ? (
           <TracksContainer>
-            {tracks.slice(0, 4).map((track) => (
-              <motion.div
-                variants={{
-                  hidden: { opacity: 0, y: 30 },
-                  visible: { opacity: 1, y: 0 },
-                  exit: { opacity: 0, y: -30 },
-                }}
-                key={track._id}
-              >
-                <TrackCard key={track._id} track={track} />
-              </motion.div>
+            {Array.from({ length: 4 }).map((_, index) => (
+              <TrackCardSkeleton key={index} />
             ))}
           </TracksContainer>
+        ) : tracks && tracks.length > 0 ? (
+          <>
+            <TracksContainer>
+              {tracks.slice(0, 4).map((track) => (
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 30 },
+                    visible: { opacity: 1, y: 0 },
+                    exit: { opacity: 0, y: -30 },
+                  }}
+                  key={track._id}
+                >
+                  <TrackCard key={track._id} track={track} />
+                </motion.div>
+              ))}
+            </TracksContainer>
 
-          {tracks.length > 4 && (
-            <Button className="my-3 text-xl w-44" text="Browse more tracks" />
-          )}
-        </>
-      ) : (
-        "No tracks available."
-      )}
+            {tracks.length > 4 && (
+              <Button className="my-3 text-xl w-44" text="Browse more tracks" />
+            )}
+          </>
+        ) : (
+          "No tracks available."
+        )}
+      </div>
     </motion.section>
   );
 }
@@ -458,31 +478,10 @@ function Home() {
     <>
       <Header />
       <main className="flex flex-col flex-nowrap min-w-full space-y-28 md:space-y-32 lg:space-y-36">
-        <div id="hero">
-          <h1>Siwel Beats App</h1>
-          <div className="bg-white flex flex-row flex-nowrap items-center m-4 max-w-xl md:mx-auto">
-            <input
-              placeholder="Find the best beat for your song.."
-              className="border border-white min-h-full w-full p-2 focus:outline-none"
-              type="text"
-            />
-            <button className="cursor-pointer p-2 bg-[#03346E] m-0.5 h-12 w-16 flex flex-row items-center justify-center rounded">
-              <Search size={25} color="white" />
-            </button>
-          </div>
-          <p className="text-md md:text-lg">
-            Find the right beat to make your next hit.
-          </p>
-        </div>
-
-        <LastestTracksSection />
-
+        <HeroSection />
         <LicensesSection />
-
         <ServicesSection />
-
         <AboutSection />
-
         <ContactSection />
       </main>
       <Footer />

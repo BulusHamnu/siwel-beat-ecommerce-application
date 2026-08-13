@@ -1,7 +1,7 @@
 /* Skeleton for track card */
 export default function TrackCardSkeleton() {
   return (
-    <div className="animate-pulse border border-blue-300 rounded-md p-2 max-w-87.5 w-full h-120 flex flex-col justify-between">
+    <div className="animate-pulse border border-blue-300 rounded-md p-2 max-w-100 w-full h-120 flex flex-col justify-between place-self-center">
       <div className="h-64 bg-slate-700 rounded" />
 
       <div className="p-3 flex flex-col">
